@@ -1,0 +1,180 @@
+{
+  "$id": "https://lri.dev/schema/lce-v0.1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Liminal Context Envelope",
+  "description": "LRI Layer 8 semantic context envelope for human-AI communication",
+  "type": "object",
+  "required": ["v", "intent", "policy"],
+  "properties": {
+    "v": {
+      "type": "integer",
+      "const": 1,
+      "description": "LCE schema version"
+    },
+    "intent": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "tell",
+            "propose",
+            "confirm",
+            "notify",
+            "sync",
+            "plan",
+            "agree",
+            "disagree",
+            "reflect"
+          ],
+          "description": "Communicative intent type"
+        },
+        "goal": {
+          "type": "string",
+          "description": "High-level goal of this interaction"
+        }
+      },
+      "additionalProperties": false
+    },
+    "affect": {
+      "type": "object",
+      "properties": {
+        "pad": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "description": "PAD emotional model: [Pleasure, Arousal, Dominance]"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Human-readable affect tags (e.g., 'curious', 'urgent')"
+        }
+      },
+      "additionalProperties": false
+    },
+    "meaning": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "Semantic topic or domain"
+        },
+        "ontology": {
+          "type": "string",
+          "format": "uri",
+          "description": "Reference ontology URI"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trust": {
+      "type": "object",
+      "properties": {
+        "proof": {
+          "type": "string",
+          "description": "Cryptographic proof of authenticity"
+        },
+        "attest": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Third-party attestations"
+        }
+      },
+      "additionalProperties": false
+    },
+    "memory": {
+      "type": "object",
+      "properties": {
+        "thread": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Conversation thread identifier"
+        },
+        "t": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp"
+        },
+        "ttl": {
+          "type": "string",
+          "description": "Time-to-live duration (ISO 8601)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": ["consent"],
+      "properties": {
+        "consent": {
+          "type": "string",
+          "enum": ["private", "team", "public"],
+          "description": "Data sharing consent level"
+        },
+        "share": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicit sharing whitelist"
+        },
+        "dp": {
+          "type": "string",
+          "description": "Differential privacy parameters"
+        }
+      },
+      "additionalProperties": false
+    },
+    "qos": {
+      "type": "object",
+      "properties": {
+        "coherence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Semantic coherence score"
+        },
+        "stability": {
+          "type": "string",
+          "description": "Context stability indicator"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trace": {
+      "type": "object",
+      "properties": {
+        "hop": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of intermediary hops"
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Chain of custody"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sig": {
+      "type": "string",
+      "description": "JWS signature over canonical JSON (JCS)"
+    }
+  },
+  "additionalProperties": false
+}

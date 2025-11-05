@@ -1,0 +1,21 @@
+{
+  "name": "lri-express-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Express + LRI example application",
+  "scripts": {
+    "dev": "ts-node index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-lri": "file:../../packages/node-lri"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

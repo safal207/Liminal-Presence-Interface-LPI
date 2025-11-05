@@ -1,0 +1,46 @@
+{
+  "name": "lri-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Liminal Resonance Interface - Layer 8 for Human-AI Communication",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lri/lri.git"
+  },
+  "keywords": [
+    "lri",
+    "semantic",
+    "context",
+    "ai",
+    "layer8",
+    "intent",
+    "affect",
+    "consent"
+  ],
+  "author": "LRI Contributors",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "rm -rf packages/*/dist packages/*/build examples/*/dist",
+    "validate": "npm run validate:schemas && npm run validate:vocab",
+    "validate:schemas": "ajv validate -s schemas/lce-v0.1.json -d 'schemas/examples/*.json' --spec=draft2020 || echo 'Install ajv-cli: npm install -g ajv-cli ajv-formats'",
+    "validate:vocab": "python -c \"import yaml; yaml.safe_load(open('vocab/intent.yaml')); yaml.safe_load(open('vocab/affect.yaml')); print('✓ Vocabularies valid')\" || echo 'Install PyYAML: pip install pyyaml'",
+    "docs:serve": "cd docs && python -m http.server 8000",
+    "example:express": "cd examples/express-app && npm install && npm run dev",
+    "example:fastapi": "cd examples/fastapi-app && pip install -r requirements.txt && python main.py"
+  },
+  "devDependencies": {
+    "ajv-cli": "^5.0.0",
+    "ajv-formats": "^2.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

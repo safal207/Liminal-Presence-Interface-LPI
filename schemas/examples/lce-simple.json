@@ -1,0 +1,22 @@
+{
+  "v": 1,
+  "intent": {
+    "type": "ask",
+    "goal": "Request weather information"
+  },
+  "affect": {
+    "pad": [0.3, 0.1, 0.0],
+    "tags": ["curious", "casual"]
+  },
+  "meaning": {
+    "topic": "weather",
+    "ontology": "https://schema.org/WeatherForecast"
+  },
+  "memory": {
+    "thread": "550e8400-e29b-41d4-a716-446655440000",
+    "t": "2025-01-15T10:30:00Z"
+  },
+  "policy": {
+    "consent": "private"
+  }
+}
