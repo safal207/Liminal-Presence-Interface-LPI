@@ -378,15 +378,30 @@ export class LRIWSServer {
     // Get breakdown
     const breakdown = this.lss.calculateCoherence(session.messages);
 
-    // Get awareness metrics
+    // Get awareness and obstacle metrics
     const awareness = session.awareness;
+    const obstacles = session.obstacles;
 
-    // Determine strategy (considering both coherence and awareness)
+    // Determine strategy (considering coherence, awareness, and obstacles)
     let strategy: 'refocus' | 'summarize' | 'clarify' | 'none' = 'none';
     let reason = '';
 
-    // Prioritize awareness-based interventions (more compassionate)
-    if (awareness.distraction > 0.6) {
+    // Highest priority: obstacles (specific communication barriers)
+    if (obstacles.vagueness > 0.6) {
+      strategy = 'clarify';
+      reason = 'Vagueness detected - expression lacks specificity and concrete details';
+    } else if (obstacles.contradiction > 0.5) {
+      strategy = 'clarify';
+      reason = 'Contradiction detected - conflicting statements in conversation';
+    } else if (obstacles.semanticGap > 0.5) {
+      strategy = 'refocus';
+      reason = 'Semantic gap detected - logical jumps without connection';
+    } else if (obstacles.comprehensionBarrier > 0.6) {
+      strategy = 'summarize';
+      reason = 'Comprehension barrier detected - communication is too complex';
+    }
+    // Second priority: awareness-based interventions (compassionate)
+    else if (awareness.distraction > 0.6) {
       strategy = 'refocus';
       reason = 'High distraction detected - scattered attention across topics';
     } else if (awareness.clarity < 0.5) {
@@ -395,7 +410,9 @@ export class LRIWSServer {
     } else if (awareness.presence < 0.5) {
       strategy = 'summarize';
       reason = 'Low presence - conversation losing continuity';
-    } else if (breakdown.semanticAlignment < 0.5) {
+    }
+    // Fallback: coherence-based
+    else if (breakdown.semanticAlignment < 0.5) {
       strategy = 'refocus';
       reason = 'Topic drift detected - multiple topics discussed';
     } else if (breakdown.intentSimilarity < 0.4) {
@@ -427,6 +444,13 @@ export class LRIWSServer {
         distraction: awareness.distraction,
         engagement: awareness.engagement,
         overall: awareness.overall,
+      },
+      obstacles: {
+        vagueness: obstacles.vagueness,
+        contradiction: obstacles.contradiction,
+        semanticGap: obstacles.semanticGap,
+        comprehensionBarrier: obstacles.comprehensionBarrier,
+        overall: obstacles.overall,
       },
       suggestedStrategy: strategy,
       reason,
@@ -607,6 +631,52 @@ export class LRIWSServer {
     }
 
     return this.lss.calculateAwareness(session.messages);
+  }
+
+  /**
+   * Get obstacle metrics for a session
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Obstacle metrics or null if LSS not enabled or session not found
+   */
+  async getObstacles(sessionId: string): Promise<any | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    const session = await this.lss.getSession(sessionId);
+    if (session) {
+      return session.obstacles;
+    }
+
+    // Try finding by thread in active connections
+    for (const { conn } of this.connections.values()) {
+      if (conn.thread === sessionId) {
+        const threadSession = await this.lss.getSession(conn.thread);
+        return threadSession?.obstacles ?? null;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get detailed obstacle breakdown
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Obstacle components or null if LSS not enabled or session not found
+   */
+  async getObstaclesBreakdown(sessionId: string): Promise<any | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    const session = await this.lss.getSession(sessionId);
+    if (!session) {
+      return null;
+    }
+
+    return this.lss.calculateObstacles(session.messages);
   }
 
   /**

@@ -1,0 +1,12 @@
+{
+  "name": "lri-obstacles-demo",
+  "version": "0.1.0",
+  "description": "Demo of Obstacle Detector (antarāya - Buddhist impediments)",
+  "private": true,
+  "scripts": {
+    "demo": "node demo.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}

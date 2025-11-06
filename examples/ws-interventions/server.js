@@ -67,6 +67,15 @@ async function main() {
       console.log(`     └─ Overall: ${info.awareness.overall.toFixed(3)} (combined awareness)`);
     }
 
+    if (info.obstacles) {
+      console.log(`   Obstacle Metrics (antarāya - impediments):`);
+      console.log(`     ├─ Vagueness: ${info.obstacles.vagueness.toFixed(3)} (unclear expression)`);
+      console.log(`     ├─ Contradiction: ${info.obstacles.contradiction.toFixed(3)} (conflicting statements)`);
+      console.log(`     ├─ Semantic Gap: ${info.obstacles.semanticGap.toFixed(3)} (logical jumps)`);
+      console.log(`     ├─ Comprehension Barrier: ${info.obstacles.comprehensionBarrier.toFixed(3)} (complexity)`);
+      console.log(`     └─ Overall: ${info.obstacles.overall.toFixed(3)} (combined obstacles)`);
+    }
+
     // Get history for context
     const history = await server.getHistory(sessionId);
 
@@ -103,6 +112,7 @@ async function main() {
     const message = payload.toString('utf-8');
     const coherence = await server.getCoherence(sessionId);
     const awareness = await server.getAwareness(sessionId);
+    const obstacles = await server.getObstacles(sessionId);
 
     console.log(`\n[${sessionId}] Message: "${message}"`);
     console.log(`   Intent: ${lce.intent?.type || 'unknown'}`);
@@ -111,6 +121,10 @@ async function main() {
 
     if (awareness) {
       console.log(`   Awareness: ${awareness.overall.toFixed(3)} (P:${awareness.presence.toFixed(2)} C:${awareness.clarity.toFixed(2)} D:${awareness.distraction.toFixed(2)} E:${awareness.engagement.toFixed(2)})`);
+    }
+
+    if (obstacles) {
+      console.log(`   Obstacles: ${obstacles.overall.toFixed(3)} (V:${obstacles.vagueness.toFixed(2)} C:${obstacles.contradiction.toFixed(2)} S:${obstacles.semanticGap.toFixed(2)} B:${obstacles.comprehensionBarrier.toFixed(2)})`);
     }
 
     // Normal response (echo for demo)

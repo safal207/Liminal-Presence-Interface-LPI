@@ -1,22 +1,28 @@
 # WebSocket with Auto-Interventions
 
-Demonstrates automatic coherence-based interventions with **Awareness Layer** (Padmasambhava-inspired) - the server detects when conversation coherence or awareness drops and automatically intervenes with compassionate redirection.
+Demonstrates automatic interventions with **Obstacle Detector** (antarāya), **Awareness Layer** (Padmasambhava-inspired), and coherence tracking - the server detects specific communication barriers and automatically intervenes with compassionate redirection.
 
 ## Features
 
-- **Automatic detection**: Server monitors coherence and awareness after each message
+- **Obstacle Detection**: Identifies specific impediments (vagueness, contradictions, semantic gaps, comprehension barriers)
 - **Awareness Layer**: Tracks presence, clarity, distraction, and engagement (inspired by Buddhist mindfulness)
+- **Coherence Tracking**: Monitors semantic alignment, intent consistency, and affect stability
 - **Smart strategies**: Chooses refocus/summarize/clarify based on what component is low
-- **Compassionate interventions**: Prioritizes awareness-based detection for gentler guidance
+- **Layered interventions**: Obstacles → Awareness → Coherence (highest to lowest priority)
 - **Cooldown system**: Prevents intervention spam (configurable)
 - **Context-aware**: Uses conversation history to generate relevant interventions
 
 ## How It Works
 
-1. **Monitor**: Server tracks coherence and awareness after each message
+1. **Monitor**: Server tracks obstacles, awareness, and coherence after each message
 2. **Detect**: When coherence < threshold (default 0.5), intervention triggered
-3. **Analyze**: Examines both awareness and coherence breakdown to determine best strategy:
-   - **Awareness-based (prioritized - more compassionate)**:
+3. **Analyze**: Examines metrics in priority order to determine best strategy:
+   - **Obstacle-based (highest priority - specific barriers)**:
+     - **Vagueness > 0.6** → CLARIFY (lacks specificity)
+     - **Contradiction > 0.5** → CLARIFY (conflicting statements)
+     - **Semantic Gap > 0.5** → REFOCUS (logical jumps)
+     - **Comprehension Barrier > 0.6** → SUMMARIZE (too complex)
+   - **Awareness-based (second priority - compassionate)**:
      - **Distraction > 0.6** → REFOCUS (scattered attention)
      - **Clarity < 0.5** → CLARIFY (unclear communication)
      - **Presence < 0.5** → SUMMARIZE (losing continuity)
@@ -26,6 +32,16 @@ Demonstrates automatic coherence-based interventions with **Awareness Layer** (P
      - **Affect < 0.5** → SUMMARIZE (emotional volatility)
 4. **Intervene**: Sends automatic message to guide conversation back
 5. **Cooldown**: Waits before next intervention (default 30s)
+
+## Obstacle Detector (antarāya - Buddhist concept of impediments)
+
+Detects specific communication barriers that prevent clear understanding:
+
+- **Vagueness** (0-1): Abstract/unclear expression lacking specifics (e.g., "thing", "stuff", "maybe")
+- **Contradiction** (0-1): Conflicts with previous statements (e.g., propose then disagree on same topic)
+- **Semantic Gap** (0-1): Logical jumps without connection (e.g., abrupt topic switches)
+- **Comprehension Barrier** (0-1): Language complexity preventing understanding (e.g., very long messages)
+- **Overall** (0-1): Combined obstacle level (higher = worse)
 
 ## Awareness Layer (Padmasambhava-Inspired)
 

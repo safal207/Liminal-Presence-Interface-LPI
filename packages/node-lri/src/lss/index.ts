@@ -45,6 +45,24 @@ export interface AwarenessMetrics {
 }
 
 /**
+ * Obstacle metrics (antarāya - Buddhist concept of impediments)
+ *
+ * Detects barriers that prevent clear understanding in communication
+ */
+export interface ObstacleMetrics {
+  /** Vagueness: Abstract/unclear expression without specifics (0-1, higher is worse) */
+  vagueness: number;
+  /** Contradiction: Conflicts with previous statements (0-1, higher is worse) */
+  contradiction: number;
+  /** Semantic Gap: Logical jumps without connection (0-1, higher is worse) */
+  semanticGap: number;
+  /** Comprehension Barrier: Language complexity preventing understanding (0-1, higher is worse) */
+  comprehensionBarrier: number;
+  /** Overall obstacle level (0-1, higher is worse) */
+  overall: number;
+}
+
+/**
  * Session data
  */
 export interface LSSSession {
@@ -56,6 +74,8 @@ export interface LSSSession {
   coherence: number;
   /** Current awareness metrics */
   awareness: AwarenessMetrics;
+  /** Current obstacle metrics */
+  obstacles: ObstacleMetrics;
   /** Session metadata */
   metadata: {
     createdAt: Date;
@@ -174,6 +194,13 @@ export class LSS {
           engagement: 1.0,
           overall: 1.0,
         },
+        obstacles: {
+          vagueness: 0.0,
+          contradiction: 0.0,
+          semanticGap: 0.0,
+          comprehensionBarrier: 0.0,
+          overall: 0.0,
+        },
         metadata: {
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -208,6 +235,11 @@ export class LSS {
     // Recalculate awareness
     if (session.messages.length >= 1) {
       session.awareness = this.calculateAwareness(session.messages);
+    }
+
+    // Recalculate obstacles
+    if (session.messages.length >= 1) {
+      session.obstacles = this.calculateObstacles(session.messages);
     }
   }
 
@@ -532,6 +564,233 @@ export class LSS {
   }
 
   /**
+   * Calculate obstacle metrics for message history
+   *
+   * Inspired by Buddhist concept of antarāya (impediments).
+   * Detects barriers that prevent clear understanding.
+   *
+   * @param messages - Message history
+   * @returns Obstacle metrics
+   */
+  calculateObstacles(messages: LSSMessage[]): ObstacleMetrics {
+    if (messages.length === 0) {
+      return {
+        vagueness: 0.0,
+        contradiction: 0.0,
+        semanticGap: 0.0,
+        comprehensionBarrier: 0.0,
+        overall: 0.0,
+      };
+    }
+
+    const vagueness = this.calculateVagueness(messages);
+    const contradiction = this.calculateContradiction(messages);
+    const semanticGap = this.calculateSemanticGap(messages);
+    const comprehensionBarrier = this.calculateComprehensionBarrier(messages);
+
+    // Overall obstacles: average of all components (higher = worse)
+    const overall = (vagueness + contradiction + semanticGap + comprehensionBarrier) / 4;
+
+    return {
+      vagueness: Math.max(0, Math.min(1, vagueness)),
+      contradiction: Math.max(0, Math.min(1, contradiction)),
+      semanticGap: Math.max(0, Math.min(1, semanticGap)),
+      comprehensionBarrier: Math.max(0, Math.min(1, comprehensionBarrier)),
+      overall: Math.max(0, Math.min(1, overall)),
+    };
+  }
+
+  /**
+   * Calculate vagueness - abstract/unclear expression
+   *
+   * Measures:
+   * - Presence of vague words (thing, stuff, maybe, perhaps)
+   * - Lack of specificity in meaning.topic
+   * - Missing concrete details
+   */
+  private calculateVagueness(messages: LSSMessage[]): number {
+    if (messages.length === 0) return 0.0;
+
+    const window = messages.slice(-5); // Last 5 messages
+    let vagueCount = 0;
+    let totalMessages = 0;
+
+    // List of vague indicators
+    const vagueWords = ['thing', 'stuff', 'maybe', 'perhaps', 'kind of', 'sort of', 'like', 'whatever', 'something', 'anything'];
+
+    for (const msg of window) {
+      totalMessages++;
+
+      // Check payload for vague words (if string)
+      if (typeof msg.payload === 'string') {
+        const lowerPayload = msg.payload.toLowerCase();
+        const vagueMatches = vagueWords.filter((word) => lowerPayload.includes(word)).length;
+        if (vagueMatches > 0) {
+          vagueCount += Math.min(1.0, vagueMatches / 3); // 3+ vague words = max
+        }
+      }
+
+      // Check for missing or generic topics
+      const topic = msg.lce.meaning?.topic;
+      if (!topic || topic === 'general' || topic === 'misc' || topic.length < 3) {
+        vagueCount += 0.5;
+      }
+    }
+
+    return Math.min(1.0, vagueCount / totalMessages);
+  }
+
+  /**
+   * Calculate contradiction - conflicts with previous statements
+   *
+   * Measures:
+   * - Intent reversals (propose → disagree on same topic)
+   * - Affect polarity flips (positive → negative suddenly)
+   * - Topic confusion (same topic with opposite intents)
+   */
+  private calculateContradiction(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 0.0;
+
+    const window = messages.slice(-10); // Last 10 messages
+    let contradictions = 0;
+
+    for (let i = 1; i < window.length; i++) {
+      const prev = window[i - 1];
+      const curr = window[i];
+
+      // Same topic but opposing intents
+      const prevTopic = prev.lce.meaning?.topic;
+      const currTopic = curr.lce.meaning?.topic;
+      const prevIntent = prev.lce.intent?.type;
+      const currIntent = curr.lce.intent?.type;
+
+      if (prevTopic && currTopic && prevTopic === currTopic) {
+        // Contradictory intent pairs
+        if (
+          (prevIntent === 'propose' && currIntent === 'disagree') ||
+          (prevIntent === 'agree' && currIntent === 'disagree') ||
+          (prevIntent === 'confirm' && currIntent === 'disagree')
+        ) {
+          contradictions++;
+        }
+      }
+
+      // Affect polarity flip (pleasure dimension)
+      const prevPad = prev.lce.affect?.pad;
+      const currPad = curr.lce.affect?.pad;
+      if (prevPad && currPad) {
+        const prevPleasure = prevPad[0];
+        const currPleasure = currPad[0];
+        // Strong flip: -0.5 to +0.5 or vice versa
+        if (Math.abs(prevPleasure - currPleasure) > 1.0) {
+          contradictions += 0.5;
+        }
+      }
+    }
+
+    return Math.min(1.0, contradictions / (window.length / 2));
+  }
+
+  /**
+   * Calculate semantic gap - logical jumps without connection
+   *
+   * Measures:
+   * - Topic switches without transition
+   * - Intent discontinuity
+   * - Missing context/thread continuity
+   */
+  private calculateSemanticGap(messages: LSSMessage[]): number {
+    if (messages.length < 3) return 0.0;
+
+    const window = messages.slice(-8); // Last 8 messages
+    let gaps = 0;
+
+    for (let i = 1; i < window.length; i++) {
+      const prev = window[i - 1];
+      const curr = window[i];
+
+      // Abrupt topic change without semantic similarity
+      const prevTopic = prev.lce.meaning?.topic;
+      const currTopic = curr.lce.meaning?.topic;
+
+      if (prevTopic && currTopic && prevTopic !== currTopic) {
+        // Check if topics are completely unrelated (no common words)
+        const prevWords = new Set(prevTopic.toLowerCase().split(/\s+/));
+        const currWords = new Set(currTopic.toLowerCase().split(/\s+/));
+        const commonWords = [...prevWords].filter((w) => currWords.has(w));
+
+        if (commonWords.length === 0 && prevTopic.length > 3 && currTopic.length > 3) {
+          gaps++;
+        }
+      }
+
+      // Intent discontinuity (e.g., ask → plan without tell)
+      const prevIntent = prev.lce.intent?.type;
+      const currIntent = curr.lce.intent?.type;
+
+      if (prevIntent === 'ask' && currIntent !== 'tell' && currIntent !== 'propose') {
+        gaps += 0.5; // Didn't answer the question
+      }
+    }
+
+    return Math.min(1.0, gaps / (window.length / 2));
+  }
+
+  /**
+   * Calculate comprehension barrier - language complexity
+   *
+   * Measures:
+   * - Payload length (very long = harder)
+   * - Nested intent complexity
+   * - Missing clarification after confusion
+   */
+  private calculateComprehensionBarrier(messages: LSSMessage[]): number {
+    if (messages.length === 0) return 0.0;
+
+    const window = messages.slice(-5); // Last 5 messages
+    let barrierScore = 0;
+
+    for (const msg of window) {
+      // Very long messages are harder to comprehend
+      if (typeof msg.payload === 'string') {
+        const wordCount = msg.payload.split(/\s+/).length;
+        if (wordCount > 100) {
+          barrierScore += Math.min(1.0, (wordCount - 100) / 100);
+        }
+      }
+
+      // Complex nested structures in payload
+      if (typeof msg.payload === 'object' && msg.payload !== null) {
+        const depth = this.getObjectDepth(msg.payload);
+        if (depth > 4) {
+          barrierScore += Math.min(0.5, (depth - 4) / 10);
+        }
+      }
+    }
+
+    return Math.min(1.0, barrierScore / window.length);
+  }
+
+  /**
+   * Get maximum depth of nested object
+   */
+  private getObjectDepth(obj: any, currentDepth = 0): number {
+    if (typeof obj !== 'object' || obj === null) {
+      return currentDepth;
+    }
+
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return currentDepth + 1;
+      return Math.max(...obj.map((item) => this.getObjectDepth(item, currentDepth + 1)));
+    }
+
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return currentDepth + 1;
+
+    return Math.max(...keys.map((key) => this.getObjectDepth(obj[key], currentDepth + 1)));
+  }
+
+  /**
    * Cosine similarity between two vectors
    */
   private cosineSimilarity(a: number[], b: number[]): number {
@@ -597,6 +856,13 @@ export class LSS {
       engagement: number;
       overall: number;
     };
+    averageObstacles: {
+      vagueness: number;
+      contradiction: number;
+      semanticGap: number;
+      comprehensionBarrier: number;
+      overall: number;
+    };
   } {
     const sessions = Array.from(this.sessions.values());
 
@@ -608,6 +874,14 @@ export class LSS {
       overall: 0,
     };
 
+    const avgObstacles = {
+      vagueness: 0,
+      contradiction: 0,
+      semanticGap: 0,
+      comprehensionBarrier: 0,
+      overall: 0,
+    };
+
     if (sessions.length > 0) {
       for (const session of sessions) {
         avgAwareness.presence += session.awareness.presence;
@@ -615,6 +889,12 @@ export class LSS {
         avgAwareness.distraction += session.awareness.distraction;
         avgAwareness.engagement += session.awareness.engagement;
         avgAwareness.overall += session.awareness.overall;
+
+        avgObstacles.vagueness += session.obstacles.vagueness;
+        avgObstacles.contradiction += session.obstacles.contradiction;
+        avgObstacles.semanticGap += session.obstacles.semanticGap;
+        avgObstacles.comprehensionBarrier += session.obstacles.comprehensionBarrier;
+        avgObstacles.overall += session.obstacles.overall;
       }
 
       avgAwareness.presence /= sessions.length;
@@ -622,6 +902,12 @@ export class LSS {
       avgAwareness.distraction /= sessions.length;
       avgAwareness.engagement /= sessions.length;
       avgAwareness.overall /= sessions.length;
+
+      avgObstacles.vagueness /= sessions.length;
+      avgObstacles.contradiction /= sessions.length;
+      avgObstacles.semanticGap /= sessions.length;
+      avgObstacles.comprehensionBarrier /= sessions.length;
+      avgObstacles.overall /= sessions.length;
     }
 
     return {
@@ -632,6 +918,7 @@ export class LSS {
           ? sessions.reduce((sum, s) => sum + s.coherence, 0) / sessions.length
           : 0,
       averageAwareness: avgAwareness,
+      averageObstacles: avgObstacles,
     };
   }
 }

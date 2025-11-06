@@ -163,6 +163,14 @@ export interface InterventionInfo {
     engagement: number;
     overall: number;
   };
+  /** Current obstacle metrics (antarāya) */
+  obstacles?: {
+    vagueness: number;
+    contradiction: number;
+    semanticGap: number;
+    comprehensionBarrier: number;
+    overall: number;
+  };
   /** Suggested intervention strategy */
   suggestedStrategy: InterventionStrategy;
   /** Reason for intervention */
