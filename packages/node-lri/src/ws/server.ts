@@ -290,8 +290,6 @@ export class LRIWSServer {
       throw new Error('Connection not found');
     }
 
-    const { conn } = connData;
-
     // Parse LRI frame
     const frame = parseLRIFrame(data);
 

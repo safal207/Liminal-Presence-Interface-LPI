@@ -119,7 +119,8 @@ export async function sign(
   options: LTPSignOptions = {}
 ): Promise<LCE & { sig: string }> {
   // Remove existing signature if present
-  const { sig: _, ...lceWithoutSig } = lce as any;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { sig, ...lceWithoutSig } = lce as any;
 
   // Canonicalize JSON (RFC 8785)
   const canonical = canonicalize(lceWithoutSig);

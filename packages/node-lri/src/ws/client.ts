@@ -11,7 +11,6 @@ import {
   LRIWSConnection,
   LRIWSClientHandlers,
   LHSHello,
-  LHSMirror,
   LHSBind,
   LHSSeal,
   isLHSMessage,
@@ -145,8 +144,6 @@ export class LRIWSClient {
 
           // Step 2: Mirror
           if (step === 'mirror' && msg.step === 'mirror') {
-            const mirror = msg as LHSMirror;
-
             // Send Bind
             const bind: LHSBind = {
               step: 'bind',

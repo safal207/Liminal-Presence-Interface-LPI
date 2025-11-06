@@ -18,6 +18,7 @@ function getValidator(): ValidateFunction {
     });
     addFormats(ajv);
     // Remove $schema field to avoid draft validation issues
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { $schema, ...schemaWithoutMeta } = lceSchema;
     validateFn = ajv.compile(schemaWithoutMeta);
   }
