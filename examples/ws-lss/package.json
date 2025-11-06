@@ -1,0 +1,13 @@
+{
+  "name": "lri-ws-lss-example",
+  "version": "0.1.0",
+  "description": "WebSocket + LSS coherence tracking example",
+  "private": true,
+  "scripts": {
+    "server": "node server.js",
+    "client": "node client.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}

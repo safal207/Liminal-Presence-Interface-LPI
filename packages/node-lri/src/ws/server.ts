@@ -7,6 +7,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { randomUUID } from 'crypto';
 import { LCE } from '../types';
 import { LTP } from '../ltp';
+import { LSS } from '../lss';
 import {
   LRIWSServerOptions,
   LRIWSConnection,
@@ -52,6 +53,7 @@ export class LRIWSServer {
   private wss: WebSocketServer;
   private options: Required<LRIWSServerOptions>;
   private connections: Map<string, { ws: WebSocket; conn: LRIWSConnection }> = new Map();
+  private lss?: LSS;
 
   // Public handler properties
   public onMessage?: LRIWSServerHandlers['onMessage'];
@@ -70,6 +72,13 @@ export class LRIWSServer {
       authenticate: options.authenticate ?? (async () => true),
       sessionTimeout: options.sessionTimeout ?? 3600000, // 1 hour
     };
+
+    // Initialize LSS if enabled
+    if (this.options.lss) {
+      this.lss = new LSS({
+        sessionTTL: this.options.sessionTimeout,
+      });
+    }
 
     // Start listening immediately
     this.wss = new WebSocketServer({
@@ -295,6 +304,12 @@ export class LRIWSServer {
     // Parse LRI frame
     const frame = parseLRIFrame(data);
 
+    // Store in LSS if enabled
+    if (this.lss) {
+      const threadId = conn.thread || sessionId;
+      await this.lss.store(threadId, frame.lce, frame.payload);
+    }
+
     // Call message handler with Buffer payload
     if (this.onMessage) {
       await this.onMessage(sessionId, frame.lce, frame.payload);
@@ -304,18 +319,24 @@ export class LRIWSServer {
   /**
    * Send message to client
    */
-  send(sessionId: string, lce: LCE, payload: unknown): void {
+  async send(sessionId: string, lce: LCE, payload: unknown): Promise<void> {
     const connData = this.connections.get(sessionId);
     if (!connData) {
       throw new Error('Connection not found');
     }
 
-    const { ws } = connData;
+    const { ws, conn } = connData;
 
     // Serialize payload
     const payloadStr =
       typeof payload === 'string' ? payload : JSON.stringify(payload);
     const payloadBuffer = Buffer.from(payloadStr, 'utf-8');
+
+    // Store in LSS if enabled (outgoing messages)
+    if (this.lss) {
+      const threadId = conn.thread || sessionId;
+      await this.lss.store(threadId, lce, payload);
+    }
 
     // Encode frame
     const frame = encodeLRIFrame(lce, payloadBuffer);
@@ -352,6 +373,80 @@ export class LRIWSServer {
   }
 
   /**
+   * Get conversation coherence for a session
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Coherence score (0-1) or null if LSS not enabled or session not found
+   */
+  async getCoherence(sessionId: string): Promise<number | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    // Try sessionId first, then check if it's a thread
+    const session = await this.lss.getSession(sessionId);
+    if (session) {
+      return session.coherence;
+    }
+
+    // Try finding by thread in active connections
+    for (const { conn } of this.connections.values()) {
+      if (conn.thread === sessionId) {
+        const threadSession = await this.lss.getSession(conn.thread);
+        return threadSession?.coherence ?? null;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get conversation history for a session
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Message history or null if LSS not enabled or session not found
+   */
+  async getHistory(sessionId: string): Promise<any[] | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    const session = await this.lss.getSession(sessionId);
+    if (session) {
+      return session.messages;
+    }
+
+    // Try finding by thread
+    for (const { conn } of this.connections.values()) {
+      if (conn.thread === sessionId) {
+        const threadSession = await this.lss.getSession(conn.thread);
+        return threadSession?.messages ?? null;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get detailed coherence breakdown
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Coherence components or null if LSS not enabled or session not found
+   */
+  async getCoherenceBreakdown(sessionId: string): Promise<any | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    const session = await this.lss.getSession(sessionId);
+    if (!session) {
+      return null;
+    }
+
+    return this.lss.calculateCoherence(session.messages);
+  }
+
+  /**
    * Close server and all connections
    */
   async close(): Promise<void> {
@@ -366,6 +461,11 @@ export class LRIWSServer {
         ws.close(1001, 'Server shutting down');
       }
       this.connections.clear();
+
+      // Cleanup LSS
+      if (this.lss) {
+        this.lss.destroy();
+      }
 
       // Close server
       this.wss.close(() => {
