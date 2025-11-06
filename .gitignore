@@ -27,6 +27,7 @@ build/
 *.d.ts
 *.map
 !*.config.js
+!.eslintrc.js
 packages/*/dist/
 packages/*/build/
 
