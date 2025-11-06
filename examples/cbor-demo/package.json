@@ -1,0 +1,12 @@
+{
+  "name": "lri-cbor-demo",
+  "version": "0.1.0",
+  "description": "CBOR vs JSON size comparison demo",
+  "private": true,
+  "scripts": {
+    "start": "node demo.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}
