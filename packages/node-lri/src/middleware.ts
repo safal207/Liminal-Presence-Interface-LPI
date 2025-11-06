@@ -59,6 +59,7 @@ export function lriMiddleware(opts: LRIMiddlewareOptions = {}) {
         }
 
         // Attach to request
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (req as any).lri = {
           lce,
           raw: json,
@@ -71,6 +72,7 @@ export function lriMiddleware(opts: LRIMiddlewareOptions = {}) {
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (required && !(req as any).lri) {
       return res.status(428).json({
         error: 'LCE header required',

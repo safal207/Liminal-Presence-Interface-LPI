@@ -10,7 +10,11 @@ let validateFn: ValidateFunction | null = null;
  */
 function getValidator(): ValidateFunction {
   if (!validateFn) {
-    const ajv = new Ajv({ allErrors: true, strict: false });
+    const ajv = new Ajv({
+      allErrors: true,
+      strict: false,
+      validateSchema: false, // Skip meta-schema validation to support draft 2020-12
+    });
     addFormats(ajv);
     validateFn = ajv.compile(lceSchema);
   }
