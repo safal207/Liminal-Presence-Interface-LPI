@@ -92,6 +92,12 @@ export interface LRIWSServerOptions {
   authenticate?: (auth: string) => Promise<boolean>;
   /** Session timeout in ms */
   sessionTimeout?: number;
+  /** Enable coherence-based interventions (requires lss: true) */
+  interventions?: boolean;
+  /** Coherence threshold for triggering intervention (default: 0.5) */
+  interventionThreshold?: number;
+  /** Minimum time between interventions in ms (default: 30000 = 30s) */
+  interventionCooldown?: number;
 }
 
 /**
@@ -131,6 +137,31 @@ export interface LRIWSConnection {
 }
 
 /**
+ * Intervention strategy when coherence drops
+ */
+export type InterventionStrategy = 'refocus' | 'summarize' | 'clarify' | 'none';
+
+/**
+ * Intervention info provided to callback
+ */
+export interface InterventionInfo {
+  /** Current coherence score */
+  coherence: number;
+  /** Coherence breakdown */
+  breakdown: {
+    intentSimilarity: number;
+    affectStability: number;
+    semanticAlignment: number;
+  };
+  /** Previous coherence (before this message) */
+  previousCoherence?: number;
+  /** Suggested intervention strategy */
+  suggestedStrategy: InterventionStrategy;
+  /** Reason for intervention */
+  reason: string;
+}
+
+/**
  * WebSocket server event handlers
  */
 export interface LRIWSServerHandlers {
@@ -142,6 +173,8 @@ export interface LRIWSServerHandlers {
   onDisconnect?: (sessionId: string) => void | Promise<void>;
   /** Error occurred */
   onError?: (sessionId: string, error: Error) => void | Promise<void>;
+  /** Coherence-based intervention triggered */
+  onIntervention?: (sessionId: string, info: InterventionInfo) => void | Promise<void>;
 }
 
 /**

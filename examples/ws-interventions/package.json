@@ -1,0 +1,13 @@
+{
+  "name": "lri-ws-interventions-example",
+  "version": "0.1.0",
+  "description": "WebSocket with automatic coherence-based interventions",
+  "private": true,
+  "scripts": {
+    "server": "node server.js",
+    "client": "node client.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}

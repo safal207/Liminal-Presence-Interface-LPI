@@ -55,11 +55,16 @@ export class LRIWSServer {
   private connections: Map<string, { ws: WebSocket; conn: LRIWSConnection }> = new Map();
   private lss?: LSS;
 
+  // Intervention tracking
+  private sessionCoherence: Map<string, number> = new Map(); // Previous coherence
+  private lastIntervention: Map<string, number> = new Map(); // Last intervention timestamp
+
   // Public handler properties
   public onMessage?: LRIWSServerHandlers['onMessage'];
   public onConnect?: LRIWSServerHandlers['onConnect'];
   public onDisconnect?: LRIWSServerHandlers['onDisconnect'];
   public onError?: LRIWSServerHandlers['onError'];
+  public onIntervention?: LRIWSServerHandlers['onIntervention'];
 
   constructor(options: LRIWSServerOptions = {}) {
     this.options = {
@@ -71,6 +76,9 @@ export class LRIWSServer {
       encodings: options.encodings ?? ['json'],
       authenticate: options.authenticate ?? (async () => true),
       sessionTimeout: options.sessionTimeout ?? 3600000, // 1 hour
+      interventions: options.interventions ?? false,
+      interventionThreshold: options.interventionThreshold ?? 0.5,
+      interventionCooldown: options.interventionCooldown ?? 30000, // 30 seconds
     };
 
     // Initialize LSS if enabled
@@ -78,6 +86,11 @@ export class LRIWSServer {
       this.lss = new LSS({
         sessionTTL: this.options.sessionTimeout,
       });
+    }
+
+    // Validate interventions require LSS
+    if (this.options.interventions && !this.options.lss) {
+      throw new Error('Interventions require LSS to be enabled (lss: true)');
     }
 
     // Start listening immediately
@@ -156,7 +169,15 @@ export class LRIWSServer {
       });
 
       ws.on('close', async () => {
+        const connData = this.connections.get(sessionId!);
+        const threadId = connData?.conn.thread || sessionId!;
+
         this.connections.delete(sessionId!);
+
+        // Cleanup intervention tracking
+        this.sessionCoherence.delete(threadId);
+        this.lastIntervention.delete(threadId);
+
         if (this.onDisconnect) {
           await this.onDisconnect(sessionId!);
         }
@@ -300,20 +321,96 @@ export class LRIWSServer {
     }
 
     const { conn } = connData;
+    const threadId = conn.thread || sessionId;
 
     // Parse LRI frame
     const frame = parseLRIFrame(data);
 
+    // Store previous coherence
+    const previousCoherence = this.sessionCoherence.get(threadId);
+
     // Store in LSS if enabled
     if (this.lss) {
-      const threadId = conn.thread || sessionId;
       await this.lss.store(threadId, frame.lce, frame.payload);
+
+      // Check for intervention if enabled
+      if (this.options.interventions && this.onIntervention) {
+        await this.checkIntervention(threadId, sessionId, previousCoherence);
+      }
     }
 
     // Call message handler with Buffer payload
     if (this.onMessage) {
       await this.onMessage(sessionId, frame.lce, frame.payload);
     }
+  }
+
+  /**
+   * Check if intervention is needed based on coherence
+   */
+  private async checkIntervention(
+    threadId: string,
+    sessionId: string,
+    previousCoherence?: number
+  ): Promise<void> {
+    if (!this.lss || !this.onIntervention) return;
+
+    const session = await this.lss.getSession(threadId);
+    if (!session || session.messages.length < 2) return;
+
+    const currentCoherence = session.coherence;
+
+    // Save current coherence for next time
+    this.sessionCoherence.set(threadId, currentCoherence);
+
+    // Check threshold
+    if (currentCoherence >= this.options.interventionThreshold) {
+      return;
+    }
+
+    // Check cooldown
+    const lastTime = this.lastIntervention.get(threadId) || 0;
+    const now = Date.now();
+    if (now - lastTime < this.options.interventionCooldown) {
+      return;
+    }
+
+    // Get breakdown
+    const breakdown = this.lss.calculateCoherence(session.messages);
+
+    // Determine strategy
+    let strategy: 'refocus' | 'summarize' | 'clarify' | 'none' = 'none';
+    let reason = '';
+
+    if (breakdown.semanticAlignment < 0.5) {
+      strategy = 'refocus';
+      reason = 'Topic drift detected - multiple topics discussed';
+    } else if (breakdown.intentSimilarity < 0.4) {
+      strategy = 'clarify';
+      reason = 'Intent inconsistency - unclear conversation direction';
+    } else if (breakdown.affectStability < 0.5) {
+      strategy = 'summarize';
+      reason = 'Emotional volatility - unstable affect detected';
+    } else {
+      strategy = 'refocus';
+      reason = 'General coherence drop - conversation losing focus';
+    }
+
+    // Update last intervention time
+    this.lastIntervention.set(threadId, now);
+
+    // Call intervention handler
+    await this.onIntervention(sessionId, {
+      coherence: currentCoherence,
+      breakdown: {
+        intentSimilarity: breakdown.intentSimilarity,
+        affectStability: breakdown.affectStability,
+        semanticAlignment: breakdown.semanticAlignment,
+      },
+      previousCoherence,
+      suggestedStrategy: strategy,
+      reason,
+    });
   }
 
   /**
@@ -461,6 +558,10 @@ export class LRIWSServer {
         ws.close(1001, 'Server shutting down');
       }
       this.connections.clear();
+
+      // Cleanup intervention tracking
+      this.sessionCoherence.clear();
+      this.lastIntervention.clear();
 
       // Cleanup LSS
       if (this.lss) {
