@@ -1,24 +1,41 @@
 # WebSocket with Auto-Interventions
 
-Demonstrates automatic coherence-based interventions - the server detects when conversation coherence drops and automatically intervenes to refocus the conversation.
+Demonstrates automatic coherence-based interventions with **Awareness Layer** (Padmasambhava-inspired) - the server detects when conversation coherence or awareness drops and automatically intervenes with compassionate redirection.
 
 ## Features
 
-- **Automatic detection**: Server monitors coherence after each message
+- **Automatic detection**: Server monitors coherence and awareness after each message
+- **Awareness Layer**: Tracks presence, clarity, distraction, and engagement (inspired by Buddhist mindfulness)
 - **Smart strategies**: Chooses refocus/summarize/clarify based on what component is low
+- **Compassionate interventions**: Prioritizes awareness-based detection for gentler guidance
 - **Cooldown system**: Prevents intervention spam (configurable)
 - **Context-aware**: Uses conversation history to generate relevant interventions
 
 ## How It Works
 
-1. **Monitor**: Server tracks coherence after each message
+1. **Monitor**: Server tracks coherence and awareness after each message
 2. **Detect**: When coherence < threshold (default 0.5), intervention triggered
-3. **Analyze**: Examines breakdown to determine best strategy:
-   - **Semantic < 0.5** → REFOCUS (topic drift)
-   - **Intent < 0.4** → CLARIFY (unclear direction)
-   - **Affect < 0.5** → SUMMARIZE (emotional volatility)
+3. **Analyze**: Examines both awareness and coherence breakdown to determine best strategy:
+   - **Awareness-based (prioritized - more compassionate)**:
+     - **Distraction > 0.6** → REFOCUS (scattered attention)
+     - **Clarity < 0.5** → CLARIFY (unclear communication)
+     - **Presence < 0.5** → SUMMARIZE (losing continuity)
+   - **Coherence-based (fallback)**:
+     - **Semantic < 0.5** → REFOCUS (topic drift)
+     - **Intent < 0.4** → CLARIFY (unclear direction)
+     - **Affect < 0.5** → SUMMARIZE (emotional volatility)
 4. **Intervene**: Sends automatic message to guide conversation back
 5. **Cooldown**: Waits before next intervention (default 30s)
+
+## Awareness Layer (Padmasambhava-Inspired)
+
+The awareness metrics track the quality of mindful presence in conversation:
+
+- **Presence** (0-1): "Here and now" quality - measured by consistent timing and recency
+- **Clarity** (0-1): Communication clearness - based on semantic alignment and coherence
+- **Distraction** (0-1): Scattered attention - topic jumping, intent chaos (lower is better)
+- **Engagement** (0-1): Depth of involvement - message frequency, response patterns
+- **Overall** (0-1): Combined awareness score
 
 ## Intervention Strategies
 
@@ -60,10 +77,15 @@ const server = new LRIWSServer({
 server.onIntervention = async (sessionId, info) => {
   console.log('Strategy:', info.suggestedStrategy);
   console.log('Reason:', info.reason);
+  console.log('Awareness:', info.awareness);
 
   // Send custom intervention message
   await server.send(sessionId, interventionLCE, message);
 };
+
+// Access awareness metrics
+const awareness = await server.getAwareness(sessionId);
+const breakdown = await server.getAwarenessBreakdown(sessionId);
 ```
 
 ### 2. Run Client
@@ -83,18 +105,26 @@ Client tests 4 scenarios:
 ```
 [session-123] Message: "What is TypeScript?"
    Coherence: 1.000 ✓
+   Awareness: 1.000 (P:1.00 C:1.00 D:0.00 E:1.00)
 
 [session-123] Message: "I need to buy groceries"
    Coherence: 0.421 ⚠️
+   Awareness: 0.612 (P:0.98 C:0.52 D:0.45 E:0.78)
 
 🚨 INTERVENTION TRIGGERED
    Coherence: 0.421 (was 0.821)
    Strategy: refocus
    Reason: Topic drift detected
-   Breakdown:
+   Coherence Breakdown:
      ├─ Intent: 0.464
      ├─ Affect: 0.952
      └─ Semantic: 0.333
+   Awareness Metrics (Padmasambhava-inspired):
+     ├─ Presence: 0.982 (here & now quality)
+     ├─ Clarity: 0.523 (communication clearness)
+     ├─ Distraction: 0.452 (scattered attention)
+     ├─ Engagement: 0.781 (depth of involvement)
+     └─ Overall: 0.612 (combined awareness)
    → Sent: "⚠️ I notice we've drifted from programming. Let's refocus..."
 ```
 

@@ -2,10 +2,12 @@
  * LSS (Liminal Session Store)
  *
  * Track conversation context, calculate coherence, detect drift.
+ * Now with Awareness Layer (inspired by Padmasambhava's teachings)
  *
  * Features:
  * - Session/thread storage in memory
  * - Coherence calculation (intent + affect + semantic)
+ * - Awareness tracking (presence, clarity, distraction, engagement)
  * - Context extraction from history
  * - Drift detection
  */
@@ -25,6 +27,24 @@ export interface LSSMessage {
 }
 
 /**
+ * Awareness metrics (Padmasambhava-inspired)
+ *
+ * Tracks quality of presence and engagement in conversation
+ */
+export interface AwarenessMetrics {
+  /** Presence: How "here and now" is the conversation (0-1) */
+  presence: number;
+  /** Clarity: How clear and understandable is the communication (0-1) */
+  clarity: number;
+  /** Distraction: Level of scattered attention (0-1, lower is better) */
+  distraction: number;
+  /** Engagement: Depth of involvement in conversation (0-1) */
+  engagement: number;
+  /** Overall awareness score (0-1) */
+  overall: number;
+}
+
+/**
  * Session data
  */
 export interface LSSSession {
@@ -34,6 +54,8 @@ export interface LSSSession {
   messages: LSSMessage[];
   /** Current coherence score */
   coherence: number;
+  /** Current awareness metrics */
+  awareness: AwarenessMetrics;
   /** Session metadata */
   metadata: {
     createdAt: Date;
@@ -145,6 +167,13 @@ export class LSS {
         threadId,
         messages: [],
         coherence: 1.0, // Start with perfect coherence
+        awareness: {
+          presence: 1.0,
+          clarity: 1.0,
+          distraction: 0.0,
+          engagement: 1.0,
+          overall: 1.0,
+        },
         metadata: {
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -174,6 +203,11 @@ export class LSS {
     if (session.messages.length >= 2) {
       const result = this.calculateCoherence(session.messages);
       session.coherence = result.overall;
+    }
+
+    // Recalculate awareness
+    if (session.messages.length >= 1) {
+      session.awareness = this.calculateAwareness(session.messages);
     }
   }
 
@@ -323,6 +357,181 @@ export class LSS {
   }
 
   /**
+   * Calculate awareness metrics for message history
+   *
+   * Inspired by Padmasambhava's teachings on mindfulness.
+   * Tracks quality of presence and engagement in conversation.
+   *
+   * @param messages - Message history
+   * @returns Awareness metrics
+   */
+  calculateAwareness(messages: LSSMessage[]): AwarenessMetrics {
+    if (messages.length === 0) {
+      return {
+        presence: 1.0,
+        clarity: 1.0,
+        distraction: 0.0,
+        engagement: 1.0,
+        overall: 1.0,
+      };
+    }
+
+    const presence = this.calculatePresence(messages);
+    const clarity = this.calculateClarity(messages);
+    const distraction = this.calculateDistraction(messages);
+    const engagement = this.calculateEngagement(messages);
+
+    // Overall awareness: average of positive metrics minus distraction
+    const overall = (presence + clarity + engagement) / 3 * (1 - distraction);
+
+    return {
+      presence: Math.max(0, Math.min(1, presence)),
+      clarity: Math.max(0, Math.min(1, clarity)),
+      distraction: Math.max(0, Math.min(1, distraction)),
+      engagement: Math.max(0, Math.min(1, engagement)),
+      overall: Math.max(0, Math.min(1, overall)),
+    };
+  }
+
+  /**
+   * Calculate presence - "here and now" quality
+   *
+   * Measures:
+   * - Consistent message timing (no long gaps)
+   * - Recent activity (not stale)
+   * - Steady rhythm
+   */
+  private calculatePresence(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 1.0;
+
+    const timestamps = messages.map((m) => m.timestamp.getTime());
+    const now = Date.now();
+    const mostRecent = timestamps[timestamps.length - 1];
+
+    // Recency score: decay over time (5 min = 0.5, 30 min = 0.1)
+    const ageMinutes = (now - mostRecent) / 60000;
+    const recencyScore = Math.exp(-ageMinutes / 10);
+
+    // Timing consistency: low variance = high presence
+    const intervals = [];
+    for (let i = 1; i < timestamps.length; i++) {
+      intervals.push(timestamps[i] - timestamps[i - 1]);
+    }
+
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    const variance = this.variance(intervals);
+    const consistencyScore = Math.exp(-variance / (avgInterval * avgInterval + 1));
+
+    return (recencyScore + consistencyScore) / 2;
+  }
+
+  /**
+   * Calculate clarity - communication clearness
+   *
+   * Based on:
+   * - Coherence (from existing metric)
+   * - Semantic alignment
+   * - Affect stability
+   */
+  private calculateClarity(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 1.0;
+
+    const coherence = this.calculateCoherence(messages);
+
+    // Clarity is weighted combination of coherence components
+    // Semantic alignment is most important for clarity
+    return (
+      0.5 * coherence.semanticAlignment +
+      0.3 * coherence.intentSimilarity +
+      0.2 * coherence.affectStability
+    );
+  }
+
+  /**
+   * Calculate distraction - scattered attention
+   *
+   * Measures:
+   * - Topic jumping (frequent changes)
+   * - Intent chaos (erratic patterns)
+   * - Affect volatility
+   */
+  private calculateDistraction(messages: LSSMessage[]): number {
+    if (messages.length < 3) return 0.0; // Need history for distraction
+
+    // Topic jumping: count unique topics in recent window
+    const window = messages.slice(-5); // Last 5 messages
+    const topics = window
+      .map((m) => m.lce.meaning?.topic)
+      .filter((t): t is string => t !== undefined);
+
+    const topicJumps = new Set(topics).size;
+    const topicDistraction = Math.min(1.0, (topicJumps - 1) / 4); // 5 different topics = max
+
+    // Intent chaos: variance in intent similarity
+    const intentSimilarity = this.calculateIntentSimilarity(window);
+    const intentDistraction = 1 - intentSimilarity;
+
+    // Affect volatility: high variance = high distraction
+    const pads = window
+      .map((m) => m.lce.affect?.pad)
+      .filter((pad): pad is [number, number, number] => pad !== undefined);
+
+    let affectDistraction = 0;
+    if (pads.length >= 2) {
+      const variances = [0, 1, 2].map((dim) => {
+        const values = pads.map((pad) => pad[dim]);
+        return this.variance(values);
+      });
+      const avgVariance = variances.reduce((a, b) => a + b, 0) / 3;
+      affectDistraction = Math.min(1.0, avgVariance * 5);
+    }
+
+    return (topicDistraction + intentDistraction + affectDistraction) / 3;
+  }
+
+  /**
+   * Calculate engagement - depth of involvement
+   *
+   * Measures:
+   * - Message frequency (active participation)
+   * - Intent diversity (rich interaction)
+   * - Response patterns (not just broadcasting)
+   */
+  private calculateEngagement(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 1.0;
+
+    const window = messages.slice(-10); // Last 10 messages
+
+    // Activity score: more recent messages = higher engagement
+    const timestamps = window.map((m) => m.timestamp.getTime());
+    const timespan = timestamps[timestamps.length - 1] - timestamps[0];
+    const messagesPerMinute = (window.length / (timespan / 60000)) || 0;
+    const activityScore = Math.min(1.0, messagesPerMinute / 2); // 2 msg/min = max
+
+    // Intent diversity: variety shows engagement (but not chaos)
+    const intents = window.map((m) => m.lce.intent?.type || 'tell');
+    const uniqueIntents = new Set(intents).size;
+    const diversityScore = Math.min(1.0, uniqueIntents / 4); // 4+ intents = good variety
+
+    // Response pattern: ask-tell pairs show engagement
+    let responsePatterns = 0;
+    for (let i = 1; i < intents.length; i++) {
+      const prev = intents[i - 1];
+      const curr = intents[i];
+      if (
+        (prev === 'ask' && curr === 'tell') ||
+        (prev === 'propose' && curr === 'confirm') ||
+        (prev === 'tell' && curr === 'ask')
+      ) {
+        responsePatterns++;
+      }
+    }
+    const patternScore = Math.min(1.0, responsePatterns / (intents.length / 2));
+
+    return (activityScore + diversityScore + patternScore) / 3;
+  }
+
+  /**
    * Cosine similarity between two vectors
    */
   private cosineSimilarity(a: number[], b: number[]): number {
@@ -381,8 +590,39 @@ export class LSS {
     sessionCount: number;
     totalMessages: number;
     averageCoherence: number;
+    averageAwareness: {
+      presence: number;
+      clarity: number;
+      distraction: number;
+      engagement: number;
+      overall: number;
+    };
   } {
     const sessions = Array.from(this.sessions.values());
+
+    const avgAwareness = {
+      presence: 0,
+      clarity: 0,
+      distraction: 0,
+      engagement: 0,
+      overall: 0,
+    };
+
+    if (sessions.length > 0) {
+      for (const session of sessions) {
+        avgAwareness.presence += session.awareness.presence;
+        avgAwareness.clarity += session.awareness.clarity;
+        avgAwareness.distraction += session.awareness.distraction;
+        avgAwareness.engagement += session.awareness.engagement;
+        avgAwareness.overall += session.awareness.overall;
+      }
+
+      avgAwareness.presence /= sessions.length;
+      avgAwareness.clarity /= sessions.length;
+      avgAwareness.distraction /= sessions.length;
+      avgAwareness.engagement /= sessions.length;
+      avgAwareness.overall /= sessions.length;
+    }
 
     return {
       sessionCount: sessions.length,
@@ -391,6 +631,7 @@ export class LSS {
         sessions.length > 0
           ? sessions.reduce((sum, s) => sum + s.coherence, 0) / sessions.length
           : 0,
+      averageAwareness: avgAwareness,
     };
   }
 }

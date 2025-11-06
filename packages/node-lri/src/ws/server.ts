@@ -378,11 +378,24 @@ export class LRIWSServer {
     // Get breakdown
     const breakdown = this.lss.calculateCoherence(session.messages);
 
-    // Determine strategy
+    // Get awareness metrics
+    const awareness = session.awareness;
+
+    // Determine strategy (considering both coherence and awareness)
     let strategy: 'refocus' | 'summarize' | 'clarify' | 'none' = 'none';
     let reason = '';
 
-    if (breakdown.semanticAlignment < 0.5) {
+    // Prioritize awareness-based interventions (more compassionate)
+    if (awareness.distraction > 0.6) {
+      strategy = 'refocus';
+      reason = 'High distraction detected - scattered attention across topics';
+    } else if (awareness.clarity < 0.5) {
+      strategy = 'clarify';
+      reason = 'Low clarity - communication needs clarification';
+    } else if (awareness.presence < 0.5) {
+      strategy = 'summarize';
+      reason = 'Low presence - conversation losing continuity';
+    } else if (breakdown.semanticAlignment < 0.5) {
       strategy = 'refocus';
       reason = 'Topic drift detected - multiple topics discussed';
     } else if (breakdown.intentSimilarity < 0.4) {
@@ -408,6 +421,13 @@ export class LRIWSServer {
         semanticAlignment: breakdown.semanticAlignment,
       },
       previousCoherence,
+      awareness: {
+        presence: awareness.presence,
+        clarity: awareness.clarity,
+        distraction: awareness.distraction,
+        engagement: awareness.engagement,
+        overall: awareness.overall,
+      },
       suggestedStrategy: strategy,
       reason,
     });
@@ -541,6 +561,52 @@ export class LRIWSServer {
     }
 
     return this.lss.calculateCoherence(session.messages);
+  }
+
+  /**
+   * Get awareness metrics for a session
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Awareness metrics or null if LSS not enabled or session not found
+   */
+  async getAwareness(sessionId: string): Promise<any | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    const session = await this.lss.getSession(sessionId);
+    if (session) {
+      return session.awareness;
+    }
+
+    // Try finding by thread in active connections
+    for (const { conn } of this.connections.values()) {
+      if (conn.thread === sessionId) {
+        const threadSession = await this.lss.getSession(conn.thread);
+        return threadSession?.awareness ?? null;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get detailed awareness breakdown
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Awareness components or null if LSS not enabled or session not found
+   */
+  async getAwarenessBreakdown(sessionId: string): Promise<any | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    const session = await this.lss.getSession(sessionId);
+    if (!session) {
+      return null;
+    }
+
+    return this.lss.calculateAwareness(session.messages);
   }
 
   /**

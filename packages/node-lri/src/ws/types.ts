@@ -155,6 +155,14 @@ export interface InterventionInfo {
   };
   /** Previous coherence (before this message) */
   previousCoherence?: number;
+  /** Current awareness metrics */
+  awareness?: {
+    presence: number;
+    clarity: number;
+    distraction: number;
+    engagement: number;
+    overall: number;
+  };
   /** Suggested intervention strategy */
   suggestedStrategy: InterventionStrategy;
   /** Reason for intervention */

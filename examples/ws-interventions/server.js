@@ -53,10 +53,19 @@ async function main() {
     console.log(`   Coherence: ${info.coherence.toFixed(3)} (was ${info.previousCoherence?.toFixed(3) || 'N/A'})`);
     console.log(`   Strategy: ${info.suggestedStrategy}`);
     console.log(`   Reason: ${info.reason}`);
-    console.log(`   Breakdown:`);
+    console.log(`   Coherence Breakdown:`);
     console.log(`     ├─ Intent: ${info.breakdown.intentSimilarity.toFixed(3)}`);
     console.log(`     ├─ Affect: ${info.breakdown.affectStability.toFixed(3)}`);
     console.log(`     └─ Semantic: ${info.breakdown.semanticAlignment.toFixed(3)}`);
+
+    if (info.awareness) {
+      console.log(`   Awareness Metrics (Padmasambhava-inspired):`);
+      console.log(`     ├─ Presence: ${info.awareness.presence.toFixed(3)} (here & now quality)`);
+      console.log(`     ├─ Clarity: ${info.awareness.clarity.toFixed(3)} (communication clearness)`);
+      console.log(`     ├─ Distraction: ${info.awareness.distraction.toFixed(3)} (scattered attention)`);
+      console.log(`     ├─ Engagement: ${info.awareness.engagement.toFixed(3)} (depth of involvement)`);
+      console.log(`     └─ Overall: ${info.awareness.overall.toFixed(3)} (combined awareness)`);
+    }
 
     // Get history for context
     const history = await server.getHistory(sessionId);
@@ -93,11 +102,16 @@ async function main() {
   server.onMessage = async (sessionId, lce, payload) => {
     const message = payload.toString('utf-8');
     const coherence = await server.getCoherence(sessionId);
+    const awareness = await server.getAwareness(sessionId);
 
     console.log(`\n[${sessionId}] Message: "${message}"`);
     console.log(`   Intent: ${lce.intent?.type || 'unknown'}`);
     console.log(`   Topic: ${lce.meaning?.topic || 'unknown'}`);
     console.log(`   Coherence: ${coherence?.toFixed(3)} ${coherence && coherence >= 0.7 ? '✓' : coherence && coherence < 0.5 ? '⚠️' : '~'}`);
+
+    if (awareness) {
+      console.log(`   Awareness: ${awareness.overall.toFixed(3)} (P:${awareness.presence.toFixed(2)} C:${awareness.clarity.toFixed(2)} D:${awareness.distraction.toFixed(2)} E:${awareness.engagement.toFixed(2)})`);
+    }
 
     // Normal response (echo for demo)
     await server.send(sessionId, {
