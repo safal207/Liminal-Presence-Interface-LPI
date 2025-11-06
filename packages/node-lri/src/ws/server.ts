@@ -6,6 +6,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { randomUUID } from 'crypto';
 import { LCE } from '../types';
+import { LTP } from '../ltp';
 import {
   LRIWSServerOptions,
   LRIWSConnection,
@@ -63,6 +64,7 @@ export class LRIWSServer {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
       ltp: options.ltp ?? false,
+      ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
       encodings: options.encodings ?? ['json'],
       authenticate: options.authenticate ?? (async () => true),
@@ -239,6 +241,27 @@ export class LRIWSServer {
                 Date.now() + this.options.sessionTimeout
               ).toISOString(),
             };
+
+            // Add LTP signature if enabled
+            if (this.options.ltp && this.options.ltpPrivateKey) {
+              try {
+                // Create minimal LCE for seal signature
+                const sealLCE: LCE = {
+                  v: 1,
+                  intent: { type: 'sync' },
+                  policy: { consent: 'private' },
+                  memory: {
+                    thread: conn.thread || conn.sessionId!,
+                    t: new Date().toISOString(),
+                  },
+                };
+
+                const signed = await LTP.sign(sealLCE, this.options.ltpPrivateKey);
+                seal.sig = signed.sig;
+              } catch (error) {
+                console.error('[LRI WS] LTP signing failed:', error);
+              }
+            }
 
             ws.send(JSON.stringify(seal));
             conn.ready = true;

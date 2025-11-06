@@ -186,7 +186,7 @@ lri/
 ### Planned (v0.2.0)
 
 - [x] LHS (Liminal Handshake Sequence) for WebSocket ✅
-- [ ] LTP (Liminal Trust Protocol) - JWS signatures
+- [x] LTP (Liminal Trust Protocol) - Ed25519 + JWS signatures ✅
 - [ ] LSS (Liminal Session Store) - coherence calculation
 - [ ] CBOR encoding for IoT
 - [ ] gRPC metadata adapter
@@ -251,6 +251,36 @@ Features:
 - **LCE Framing**: Length-prefixed encoding for metadata + payload
 - **Session Management**: Track multiple concurrent connections
 - **Context Preservation**: Thread continuity and affect metadata
+
+### LTP Cryptographic Signatures
+
+See [examples/ltp-signing](examples/ltp-signing/) for cryptographic signatures with Ed25519.
+
+```bash
+cd examples/ltp-signing
+npm install
+npm start
+```
+
+Features:
+- **Ed25519 Keys**: Generate and manage cryptographic key pairs
+- **JWS Signatures**: Sign LCE messages with JSON Web Signature
+- **Verification**: Validate message authenticity and integrity
+- **Tamper Detection**: Detect any modifications to signed messages
+
+```javascript
+const { ltp } = require('node-lri');
+
+// Generate keys
+const keys = await ltp.generateKeys();
+
+// Sign LCE
+const signed = await ltp.sign(lce, keys.privateKey);
+
+// Verify
+const valid = await ltp.verify(signed, keys.publicKey);
+console.log('Valid:', valid); // true
+```
 
 ## Contributing
 

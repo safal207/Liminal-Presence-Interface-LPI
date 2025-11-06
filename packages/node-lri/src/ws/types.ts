@@ -82,6 +82,8 @@ export interface LRIWSServerOptions {
   host?: string;
   /** Enable LTP signatures */
   ltp?: boolean;
+  /** LTP private key for signing (if ltp enabled) */
+  ltpPrivateKey?: any;
   /** Enable LSS session tracking */
   lss?: boolean;
   /** Supported encodings */
