@@ -1,113 +1,92 @@
-# Express + LRI Example
+# Express + LRI Demo Application
 
-> Complete example demonstrating LRI middleware usage with Express.js
+> Example Express server that shows how to integrate the `node-lri` middleware, parse LCE metadata, and shape responses based on intent.
 
-This example shows how to build an LRI-aware REST API server using Express.js and the `node-lri` SDK.
+## Prerequisites
 
-## Features Demonstrated
+- Node.js 18+
+- The repository checked out locally (the example imports middleware from `packages/node-lri`)
 
-- ✅ **LRI Middleware** - Global middleware for parsing LCE from requests
-- ✅ **Intent-aware routing** - Different responses based on intent type
-- ✅ **LCE response headers** - Attaching LCE metadata to responses
-- ✅ **Thread continuity** - Maintaining conversation context
-- ✅ **Schema validation** - Automatic LCE validation
-- ✅ **Graceful degradation** - Works with or without LCE headers
-
-## Quick Start
-
-### Installation
+## Setup
 
 ```bash
 cd examples/express-app
 npm install
 ```
 
-### Configure the middleware
+The example uses the latest sources from `packages/node-lri`. When developing locally you can run `npm run build --workspace node-lri` from the repository root to rebuild the SDK before restarting the example server.
 
-The project uses the latest `lriMiddleware` API that ships with the
-`node-lri` package. Register it once near the top of your Express app:
-
-```typescript
-import express from 'express';
-import { lriMiddleware } from 'node-lri';
-
-const app = express();
-
-app.use(
-  lriMiddleware({
-    required: false,   // Accept requests without LCE metadata
-    validate: true,    // Enforce schema validation (recommended)
-    headerName: 'LCE', // Override if your clients use a custom header name
-  })
-);
-```
-
-### Run the server
+## Running the server
 
 ```bash
 npm run dev
 ```
 
-Server will start on `http://localhost:3000`.
+The server listens on <http://localhost:3000>. The console prints helpful curl commands when it starts.
 
-### Try it out
+## Crafting LCE headers
 
-The repo includes a helper script that sends a few sample requests with valid
-LCE headers:
-
-```bash
-npm run demo
-```
-
-Need a quick header for manual testing? Use the helper from `node-lri`:
+You can generate a Base64 LCE header with the helper shipped in the SDK:
 
 ```bash
-node -e "const { createLCEHeader } = require('node-lri'); console.log(createLCEHeader({ v: 1, intent: { type: 'ask' }, policy: { consent: 'private' } }));"
+node -e "const { createLCEHeader } = require('node-lri'); const lce = { v: 1, intent: { type: 'ask', goal: 'Demo request' }, policy: { consent: 'private' } }; console.log(createLCEHeader(lce));"
 ```
 
-Copy the printed value into the curl examples below.
+Store the output in a shell variable for the examples below:
 
-## API Endpoints
+```bash
+LCE=$(node -e "const { createLCEHeader } = require('node-lri'); const lce = { v: 1, intent: { type: 'ask', goal: 'Demo request' }, policy: { consent: 'private' } }; process.stdout.write(createLCEHeader(lce));")
+```
 
-### 1. GET `/ping`
+## Demo requests and responses
 
-Simple health check endpoint that accepts optional LCE.
+### 1. `GET /ping`
 
-**Request:**
+Health-check endpoint that flips a boolean when a valid LCE header is present.
+
 ```bash
 curl http://localhost:3000/ping
 ```
 
-**Request with LCE:**
-```bash
-# Create LCE
-LCE=$(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64)
+Response:
 
-curl -H "LCE: $LCE" http://localhost:3000/ping
-```
-
-**Response:**
 ```json
 {
   "ok": true,
   "timestamp": "2025-01-15T10:30:00.000Z",
+  "receivedLCE": false
+}
+```
+
+Send the same request with an LCE header:
+
+```bash
+curl -H "LCE: $LCE" http://localhost:3000/ping
+```
+
+Expected response (the timestamp will vary):
+
+```json
+{
+  "ok": true,
+  "timestamp": "2025-01-15T10:30:01.000Z",
   "receivedLCE": true
 }
 ```
 
-### 2. POST `/echo`
+### 2. `POST /echo`
 
-Echo endpoint that mirrors your request and responds with LCE.
+Mirrors the JSON body and responds with a server-generated LCE header that continues the thread.
 
-**Request:**
 ```bash
 curl -X POST http://localhost:3000/echo \
   -H "Content-Type: application/json" \
-  -H "LCE: $(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64)" \
+  -H "LCE: $LCE" \
   -d '{"message": "Hello LRI!"}'
 ```
 
-**Response:**
+Response body:
+
 ```json
 {
   "echo": {
@@ -120,10 +99,13 @@ curl -X POST http://localhost:3000/echo \
       "goal": "Echo response"
     },
     "affect": {
-      "tags": ["helpful"]
+      "tags": [
+        "helpful"
+      ]
     },
     "memory": {
-      "t": "2025-01-15T10:30:00.000Z"
+      "thread": "<copied-from-request>",
+      "t": "2025-01-15T10:30:02.000Z"
     },
     "policy": {
       "consent": "private"
@@ -132,22 +114,34 @@ curl -X POST http://localhost:3000/echo \
 }
 ```
 
-**Response Headers:**
-```
-LCE: eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6InRlbGwifSwi...
-```
+The response also includes an `LCE` header. Decode it to inspect the server metadata:
 
-### 3. GET `/api/data`
-
-Intent-aware endpoint that responds differently based on intent type.
-
-**Ask Intent (request data):**
 ```bash
-curl -H "LCE: $(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64)" \
-  http://localhost:3000/api/data
+curl -i -X POST http://localhost:3000/echo \
+  -H "Content-Type: application/json" \
+  -H "LCE: $LCE" \
+  -d '{"message": "Inspect headers"}' | \ 
+  grep '^LCE:' | \ 
+  cut -d' ' -f2 | \ 
+  base64 --decode
 ```
 
-**Response:**
+### 3. `GET /api/data`
+
+Endpoint that tailors the payload based on the request intent.
+
+```bash
+SYNC_LCE=$(node -e "const { createLCEHeader } = require('node-lri'); const lce = { v: 1, intent: { type: 'sync' }, policy: { consent: 'private' }, qos: { coherence: 0.9 } }; process.stdout.write(createLCEHeader(lce));")
+```
+
+Ask for data:
+
+```bash
+curl -H "LCE: $LCE" http://localhost:3000/api/data
+```
+
+Response:
+
 ```json
 {
   "message": "Here is the data you requested",
@@ -155,242 +149,31 @@ curl -H "LCE: $(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"privat
 }
 ```
 
-**Sync Intent (synchronize context):**
-```bash
-curl -H "LCE: $(echo '{"v":1,"intent":{"type":"sync"},"qos":{"coherence":0.85},"policy":{"consent":"private"}}' | base64)" \
-  http://localhost:3000/api/data
-```
-
-**Response:**
-```json
-{
-  "message": "Context synchronized",
-  "coherence": 0.85
-}
-```
-
-**No LCE (default behavior):**
-```bash
-curl http://localhost:3000/api/data
-```
-
-**Response:**
-```json
-{
-  "message": "Data endpoint",
-  "intent": "unknown"
-}
-```
-
-## Code Walkthrough
-
-### 1. Apply LRI Middleware
-
-```typescript
-import { lriMiddleware } from 'node-lri';
-
-app.use(lriMiddleware({
-  required: false,  // LCE is optional (graceful degradation)
-  validate: true,   // Validate LCE against JSON Schema
-}));
-```
-
-The middleware:
-- Parses `LCE` header from requests
-- Decodes Base64 → JSON
-- Validates against schema
-- Attaches to `req.lri.lce`
-
-### 2. Access LCE in Endpoints
-
-```typescript
-app.get('/ping', (req: any, res) => {
-  const lce = req.lri?.lce;
-
-  // Access intent
-  console.log('Intent:', lce?.intent.type);
-
-  // Access affect
-  console.log('Affect:', lce?.affect?.tags);
-
-  res.json({ ok: true, receivedLCE: !!lce });
-});
-```
-
-### 3. Create Response LCE
-
-```typescript
-import { createLCEHeader, LCE } from 'node-lri';
-
-const responseLCE: LCE = {
-  v: 1,
-  intent: { type: 'tell', goal: 'Echo response' },
-  affect: { tags: ['helpful'] },
-  memory: {
-    thread: requestLCE?.memory?.thread, // Continue thread
-    t: new Date().toISOString(),
-  },
-  policy: { consent: 'private' },
-};
-
-// Attach to response
-res.setHeader('LCE', createLCEHeader(responseLCE));
-```
-
-### 4. Intent-based Routing
-
-```typescript
-app.get('/api/data', (req: any, res) => {
-  const intentType = req.lri?.lce?.intent.type || 'unknown';
-
-  switch (intentType) {
-    case 'ask':
-      // Respond with data
-      break;
-    case 'sync':
-      // Synchronize context
-      break;
-    default:
-      // Default behavior
-  }
-});
-```
-
-## Testing with curl
-
-### Helper Script
-
-Create a file `test.sh`:
+Synchronize context:
 
 ```bash
-#!/bin/bash
-
-# Encode LCE to Base64
-encode_lce() {
-  echo "$1" | base64 -w 0
-}
-
-# Test ping
-LCE=$(encode_lce '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}')
-curl -H "LCE: $LCE" http://localhost:3000/ping
-
-# Test echo
-curl -X POST http://localhost:3000/echo \
-  -H "Content-Type: application/json" \
-  -H "LCE: $LCE" \
-  -d '{"message": "Hello!"}'
-
-# Test intent-aware endpoint
-SYNC_LCE=$(encode_lce '{"v":1,"intent":{"type":"sync"},"policy":{"consent":"private"}}')
 curl -H "LCE: $SYNC_LCE" http://localhost:3000/api/data
 ```
 
-```bash
-chmod +x test.sh
-./test.sh
-```
+Response:
 
-## LCE Structure Reference
-
-Minimal LCE (required fields only):
 ```json
 {
-  "v": 1,
-  "intent": {"type": "ask"},
-  "policy": {"consent": "private"}
+  "message": "Context synchronized",
+  "coherence": 0.9
 }
 ```
 
-Full LCE with all fields:
-```json
-{
-  "v": 1,
-  "intent": {
-    "type": "ask",
-    "goal": "Get weather information"
-  },
-  "affect": {
-    "pad": [0.3, 0.2, 0.1],
-    "tags": ["curious"]
-  },
-  "memory": {
-    "thread": "550e8400-e29b-41d4-a716-446655440000",
-    "t": "2025-01-15T10:30:00Z"
-  },
-  "policy": {
-    "consent": "private"
-  },
-  "qos": {
-    "coherence": 0.87
-  }
-}
-```
+## Troubleshooting
 
-## Intent Types
+- **422 Invalid LCE** – Ensure your JSON payload matches the schema. Missing intent types or malformed fields will trigger validation errors when `validate: true` is enabled.
+- **428 LCE header required** – If you enable the `required` option in `index.ts`, every request must include the header.
+- **400 Malformed LCE header** – Verify that the header value is Base64 encoded JSON.
 
-| Intent | Description | Use Case |
-|--------|-------------|----------|
-| `ask` | Request information | Queries, questions |
-| `tell` | Provide information | Responses, statements |
-| `propose` | Suggest action | Recommendations |
-| `confirm` | Acknowledge | Confirmations |
-| `sync` | Synchronize context | Context alignment |
-| `notify` | Alert | Notifications |
+## Next steps
 
-## Production Considerations
+- Explore the WebSocket example in [`examples/ws-echo`](../ws-echo/).
+- Inspect the middleware implementation in [`packages/node-lri/src/middleware.ts`](../../packages/node-lri/src/middleware.ts).
+- Read the LCE schema reference in [`schemas/lce-v0.1.json`](../../schemas/lce-v0.1.json).
 
-### 1. Middleware options
-
-- `required` — Return HTTP 428 if an incoming request omits the header. Enable
-  this in production to guarantee that every request carries LCE metadata.
-- `validate` — Enforce schema validation (HTTP 422 on failure). Leave enabled
-  unless you explicitly want to accept partially formed payloads.
-- `headerName` — Override when integrating with legacy clients that use a
-  custom header.
-
-### 2. Logging
-
-```typescript
-app.use((req: any, res, next) => {
-  const lce = req.lri?.lce;
-  if (lce) {
-    console.log({
-      intent: lce.intent.type,
-      consent: lce.policy.consent,
-      thread: lce.memory?.thread,
-    });
-  }
-  next();
-});
-```
-
-### 3. Rate Limiting
-
-```typescript
-import rateLimit from 'express-rate-limit';
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-
-app.use('/api/', limiter);
-```
-
-## Next Steps
-
-- **WebSocket Support:** See [ws-echo example](../ws-echo/)
-- **Cryptographic Signatures:** See [ltp-signing example](../ltp-signing/)
-- **Coherence Tracking:** See [lss-coherence example](../lss-coherence/)
-- **Python/FastAPI:** See [fastapi-app example](../fastapi-app/)
-
-## Resources
-
-- [LRI Documentation](../../docs/getting-started.md)
-- [Node SDK API](../../packages/node-lri/)
-- [LCE Schema](../../schemas/lce-v0.1.json)
-- [RFC-000](../../docs/rfcs/rfc-000.md)
-
-## License
-
-MIT - See [LICENSE](../../LICENSE)
+MIT © LRI Contributors

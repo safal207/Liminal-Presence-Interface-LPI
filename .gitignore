@@ -29,6 +29,7 @@ build/
 !vocab/dist/**
 *.js
 *.d.ts
+!packages/node-lri/src/types/**/*.d.ts
 *.map
 !*.config.js
 !.eslintrc.js
