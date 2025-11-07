@@ -1,71 +1,78 @@
 {
+  "description": "Shared LTP canonicalization and Ed25519 signature vectors",
   "vectors": [
     {
-      "name": "status-check",
+      "name": "basic-lce",
       "lce": {
         "v": 1,
-        "intent": {"type": "tell", "name": "status"},
-        "policy": {"consent": "private", "aud": "liminal"},
-        "subject": {"id": "user-123", "roles": ["alpha", "beta"]},
-        "timestamp": "2024-05-01T12:00:00Z"
+        "intent": {
+          "type": "tell",
+          "audience": [
+            "alpha",
+            "beta"
+          ]
+        },
+        "policy": {
+          "consent": "public",
+          "expires": "2025-01-01T00:00:00Z"
+        },
+        "payload": {
+          "msg": "Hello, liminal world!",
+          "count": 2
+        }
       },
-      "canonical": "{\"intent\":{\"name\":\"status\",\"type\":\"tell\"},\"policy\":{\"aud\":\"liminal\",\"consent\":\"private\"},\"subject\":{\"id\":\"user-123\",\"roles\":[\"alpha\",\"beta\"]},\"timestamp\":\"2024-05-01T12:00:00Z\",\"v\":1}",
+      "canonical": "{\"intent\":{\"audience\":[\"alpha\",\"beta\"],\"type\":\"tell\"},\"payload\":{\"count\":2,\"msg\":\"Hello, liminal world!\"},\"policy\":{\"consent\":\"public\",\"expires\":\"2025-01-01T00:00:00Z\"},\"v\":1}",
       "key": {
-        "public": "MuwOTR87JRAswQ6-bI9DOT78283yqdcTrXylfyP-mAw",
-        "private": "j9vsqrCasqaTCrMFZFMjpET-c3sCtv6Au8rznjP8Ub4",
         "jwk": {
           "kty": "OKP",
           "crv": "Ed25519",
-          "x": "MuwOTR87JRAswQ6-bI9DOT78283yqdcTrXylfyP-mAw",
-          "d": "j9vsqrCasqaTCrMFZFMjpET-c3sCtv6Au8rznjP8Ub4"
+          "d": "0aoSj9GPkznIHIFkgDIVogXSBopXTwJgvj0JQc_vIv0",
+          "x": "OW2pIBP_zGAs1eCkVZN-Zj60nd6wzTQE4hoo5JHNn3Y"
         }
       },
-      "signature": "SobU3pA5vmqoDN0aCtnr_gnfFmvJPVIjqRLCCdH-pCU5PgliM1jMzrzGUa59hDVte7fzynOdx0hU5i3CMvplBQ"
+      "signature": "qy9FzsZ9fqFY8_H6zSrqZTYFSE9QqhqzPq7f0fNBRC10bvkG5ixpgzUCzpviAozYSnWAdV8ZgUUSXyJ67bSyDw"
     },
     {
-      "name": "consent-update",
+      "name": "complex-lce",
       "lce": {
         "v": 1,
-        "intent": {"type": "notify", "event": "consent.update"},
-        "policy": {"consent": "team", "share": ["ops", "sre"]},
-        "trust": {"level": "verified"},
-        "trace": {"span": "span-789"}
+        "intent": {
+          "type": "ask",
+          "topic": "thresholds"
+        },
+        "policy": {
+          "consent": "private",
+          "retention": {
+            "ttl": 3600
+          }
+        },
+        "payload": {
+          "nested": [
+            {
+              "z": 2,
+              "a": 1
+            },
+            {
+              "values": [
+                3.14,
+                2.72
+              ]
+            }
+          ],
+          "active": true,
+          "meta": null
+        }
       },
-      "canonical": "{\"intent\":{\"event\":\"consent.update\",\"type\":\"notify\"},\"policy\":{\"consent\":\"team\",\"share\":[\"ops\",\"sre\"]},\"trace\":{\"span\":\"span-789\"},\"trust\":{\"level\":\"verified\"},\"v\":1}",
+      "canonical": "{\"intent\":{\"topic\":\"thresholds\",\"type\":\"ask\"},\"payload\":{\"active\":true,\"meta\":null,\"nested\":[{\"a\":1,\"z\":2},{\"values\":[3.14,2.72]}]},\"policy\":{\"consent\":\"private\",\"retention\":{\"ttl\":3600}},\"v\":1}",
       "key": {
-        "public": "JGtMDX_PS8Th-rQImKFZMz41sWXG9PtShSy3e6GKGSw",
-        "private": "hNz36Iq2dgIF2xE6OXSArTjECpiPk0MVikCCCJ5B7Zk",
         "jwk": {
           "kty": "OKP",
           "crv": "Ed25519",
-          "x": "JGtMDX_PS8Th-rQImKFZMz41sWXG9PtShSy3e6GKGSw",
-          "d": "hNz36Iq2dgIF2xE6OXSArTjECpiPk0MVikCCCJ5B7Zk"
+          "d": "m7Vq3hzCt0zMQWSXINHaKdrmzpebS7rgVvV5xamtFyo",
+          "x": "T3Op-2BJJ1AQsSHZ5mRoPjVvunPgvTW9_Vh3Wuc5k0M"
         }
       },
-      "signature": "lwONd3nAy7wHWRpsVceWnbyxF0V1Yql9_4hPYgxIpUMJGG01AlpMWAa1h31ddS-nUXH4p09fX6s4M3a5__rjCw"
-    },
-    {
-      "name": "affect-shift",
-      "lce": {
-        "v": 1,
-        "intent": {"type": "reflect", "topic": "alignment"},
-        "affect": {"pad": [0.2, -0.1, 0.6], "tags": ["curious", "calm"]},
-        "memory": {"thread": "align-42", "turn": 7},
-        "policy": {"consent": "public"},
-        "qos": {"coherence": 0.82}
-      },
-      "canonical": "{\"affect\":{\"pad\":[0.2,-0.1,0.6],\"tags\":[\"curious\",\"calm\"]},\"intent\":{\"topic\":\"alignment\",\"type\":\"reflect\"},\"memory\":{\"thread\":\"align-42\",\"turn\":7},\"policy\":{\"consent\":\"public\"},\"qos\":{\"coherence\":0.82},\"v\":1}",
-      "key": {
-        "public": "_FN9G8Y9j07sHO1FXrOeup1HYmMqqzBHBnH1YVxcsfU",
-        "private": "5zVbTSCAnUYFgiqyHFOGWyJKiKDaINgpiSjKxISub3E",
-        "jwk": {
-          "kty": "OKP",
-          "crv": "Ed25519",
-          "x": "_FN9G8Y9j07sHO1FXrOeup1HYmMqqzBHBnH1YVxcsfU",
-          "d": "5zVbTSCAnUYFgiqyHFOGWyJKiKDaINgpiSjKxISub3E"
-        }
-      },
-      "signature": "pjDIuTjQSBK199Ld8WHqpWqiQcwxDeco9Y0ANWpRqNYkYzARQ0vRrSItiQsdth6EkQI6XSB92P1PuaatzCYWCg"
+      "signature": "OYxWa433qY4GlyiZMBIGk4m57H2CGycANgbuQkjg_S1OyuREKLGMbp-0KiZaizYZA0VTAyc7LhOo9SfoH-4eDQ"
     }
   ]
 }
