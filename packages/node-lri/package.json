@@ -13,7 +13,13 @@
     "lint:fix": "eslint 'src/**/*.ts' --ignore-pattern 'src/__tests__/**' --fix",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["lri", "semantic", "context", "ai", "layer8"],
+  "keywords": [
+    "lri",
+    "semantic",
+    "context",
+    "ai",
+    "layer8"
+  ],
   "author": "LRI Contributors",
   "license": "MIT",
   "dependencies": {
@@ -22,6 +28,7 @@
     "ajv-formats": "^2.1.1",
     "ajv-formats-draft2019": "^1.6.1",
     "canonicalize": "^2.0.0",
+    "cbor": "^10.0.11",
     "jose": "^5.2.0",
     "ws": "^8.16.0"
   },
