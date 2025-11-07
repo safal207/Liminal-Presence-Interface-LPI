@@ -39,7 +39,7 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       client.on('open', () => {
         client.close();
         done();
@@ -52,7 +52,7 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -100,7 +100,7 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
 
       client.on('close', (code) => {
         expect(code).toBe(1002); // Protocol error
@@ -117,7 +117,7 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
 
       client.on('close', (code) => {
         expect(code).toBe(1002);
@@ -146,7 +146,7 @@ describe('LRIWSServer', () => {
         receivedPayload = payload.toString('utf-8');
       };
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -198,7 +198,7 @@ describe('LRIWSServer', () => {
         connectedSessionId = sessionId;
       };
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -241,7 +241,7 @@ describe('LRIWSServer', () => {
         done();
       };
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -275,7 +275,7 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
       let sessionId: string;
 
@@ -335,8 +335,8 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client1 = new WebSocket(`ws://localhost:${port}`);
-      const client2 = new WebSocket(`ws://localhost:${port}`);
+      const client1 = new WebSocket(`ws://127.0.0.1:${port}`);
+      const client2 = new WebSocket(`ws://127.0.0.1:${port}`);
 
       let client1Ready = false;
       let client2Ready = false;
@@ -389,7 +389,7 @@ describe('LRIWSServer', () => {
       const port = getTestPort();
       server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${port}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
