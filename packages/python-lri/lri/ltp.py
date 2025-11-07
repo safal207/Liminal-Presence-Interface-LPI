@@ -128,6 +128,19 @@ def verify(lce_dict: dict, public_key: Ed25519PublicKey) -> bool:
 
         header_b64, payload_b64, signature_b64 = parts
 
+        # Verify the payload matches current LCE data
+        # Remove signature from lce_dict before canonicalizing
+        lce_copy = {k: v for k, v in lce_dict.items() if k != "sig"}
+        expected_payload = _canonicalize_json(lce_copy)
+
+        # Decode payload from JWS
+        payload_b64_padded = payload_b64 + "=" * (4 - len(payload_b64) % 4)
+        actual_payload = base64.urlsafe_b64decode(payload_b64_padded).decode("utf-8")
+
+        # Check if payload matches (tamper detection)
+        if actual_payload != expected_payload:
+            return False
+
         # Reconstruct signing input
         signing_input = f"{header_b64}.{payload_b64}"
 
