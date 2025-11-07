@@ -1,0 +1,12 @@
+{
+  "name": "lri-lss-example",
+  "version": "0.1.0",
+  "description": "LSS (Liminal Session Store) coherence tracking example",
+  "private": true,
+  "scripts": {
+    "start": "node example.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}

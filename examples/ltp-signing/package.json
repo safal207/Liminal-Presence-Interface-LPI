@@ -1,0 +1,12 @@
+{
+  "name": "lri-ltp-example",
+  "version": "0.1.0",
+  "description": "LTP (Liminal Trust Protocol) signing example",
+  "private": true,
+  "scripts": {
+    "start": "node example.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}
