@@ -7,6 +7,7 @@ This example shows how to build an LRI-aware REST API server using FastAPI and t
 ## Features Demonstrated
 
 - ✅ **LRI Request Parsing** - Parse LCE from request headers
+- ✅ **FastAPI Depends helper** - Inject validated `LCE` objects directly
 - ✅ **Intent-aware routing** - Different responses based on intent type
 - ✅ **LCE response headers** - Attaching LCE metadata to responses
 - ✅ **Pydantic validation** - Type-safe LCE models
@@ -194,54 +195,65 @@ The `LRI` class provides:
 
 ### 2. Parse LCE in Endpoints
 
-```python
-@app.get("/ping")
-async def ping(request: Request):
-    # Parse LCE from request (optional)
-    lce = await lri.parse_request(request, required=False)
+Use the dependency helper to inject an optional `LCE` directly into the route:
 
+```python
+from typing import Optional
+from fastapi import Depends
+
+
+@app.get("/ping")
+async def ping(lce: Optional[LCE] = Depends(lri.dependency())):
     if lce:
         print(f"Intent: {lce.intent.type}")
-        if lce.affect and lce.affect.tags:
-            print(f"Affect: {lce.affect.tags}")
+```
 
-    return {
-        "ok": True,
-        "received_lce": lce is not None
-    }
+Require the header when you need it:
+
+```python
+@app.post("/echo")
+async def echo(
+    body: dict,
+    lce: Optional[LCE] = Depends(lri.dependency(required=True))
+):
+    return {"echo": body, "intent": lce.intent.type}
 ```
 
 ### 3. Create Response LCE
 
 ```python
-from lri import LCE, Intent, Policy
+from typing import Optional
+from fastapi import Depends
 from fastapi.responses import JSONResponse
+from lri import LCE, Intent, Policy
+
 
 @app.post("/echo")
-async def echo(request: Request, body: dict):
-    request_lce = await lri.parse_request(request, required=False)
-
-    # Create response LCE
+async def echo(
+    body: dict,
+    lce: Optional[LCE] = Depends(lri.dependency()),
+):
     response_lce = LCE(
         v=1,
         intent=Intent(type="tell", goal="Echo response"),
-        policy=Policy(consent="private")
+        policy=Policy(consent=lce.policy.consent if lce else "private")
     )
 
-    # Create response with LCE header
     response = JSONResponse(content={"echo": body})
     response.headers["LCE"] = lri.create_header(response_lce)
     response.headers["Content-Type"] = "application/liminal.lce+json"
-
     return response
 ```
 
 ### 4. Intent-based Logic
 
 ```python
+from typing import Optional
+from fastapi import Depends
+
+
 @app.get("/api/data")
-async def get_data(request: Request):
-    lce = await lri.parse_request(request, required=False)
+async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
     intent_type = lce.intent.type if lce else "unknown"
 
     if intent_type == "ask":
@@ -249,16 +261,15 @@ async def get_data(request: Request):
             "message": "Here is the data you requested",
             "data": [1, 2, 3, 4, 5]
         }
-    elif intent_type == "sync":
+    if intent_type == "sync" and lce and lce.qos:
         return {
             "message": "Context synchronized",
-            "coherence": lce.qos.coherence if lce and lce.qos else 0.5
+            "coherence": lce.qos.coherence or 0.5
         }
-    else:
-        return {
-            "message": "Data endpoint",
-            "intent": intent_type
-        }
+    return {
+        "message": "Data endpoint",
+        "intent": intent_type
+    }
 ```
 
 ## Testing with Python

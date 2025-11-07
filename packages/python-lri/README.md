@@ -16,25 +16,53 @@ pip install python-lri
 
 ### FastAPI Integration
 
+#### Dependency Injection with `Depends`
+
 ```python
-from fastapi import FastAPI, Request
-from lri import LRI, LCE, Intent, Policy
+from typing import Optional
+
+from fastapi import Depends, FastAPI
+from lri import LCE, LRI
 
 app = FastAPI()
 lri = LRI()
 
+
+@app.post("/events")
+async def ingest_event(
+    payload: dict,
+    lce: Optional[LCE] = Depends(lri.dependency(required=True)),
+):
+    return {"intent": lce.intent.type, "payload": payload}
+
+
+@app.get("/optional")
+async def optional_context(
+    lce: Optional[LCE] = Depends(lri.dependency())
+):
+    return {"intent": lce.intent.type if lce else None}
+```
+
+The dependency helper wraps `parse_request` and delivers an `LCE` (or `None`)
+directly to your route handler. Set `required=True` to enforce the presence of
+the header, otherwise requests without LCE metadata will still succeed.
+
+#### Manual Parsing (Advanced)
+
+You can still call `parse_request` manually if you need fine-grained control:
+
+```python
+from fastapi import FastAPI, Request
+from lri import LRI
+
+app = FastAPI()
+lri = LRI()
+
+
 @app.get("/api/data")
 async def get_data(request: Request):
-    # Parse LCE from request
     lce = await lri.parse_request(request, required=False)
-
-    # Access LCE metadata
-    if lce:
-        print(f"Intent: {lce.intent.type}")
-        print(f"Affect: {lce.affect.tags if lce.affect else None}")
-        print(f"Thread: {lce.memory.thread if lce.memory else None}")
-
-    return {"ok": True}
+    return {"ok": True, "intent": lce.intent.type if lce else None}
 ```
 
 ### Creating LCE Headers
@@ -104,6 +132,38 @@ Validate LCE against schema. Returns list of errors or None if valid.
 ## Examples
 
 See [examples/fastapi-app](../../examples/fastapi-app) for a complete example.
+
+### Example Payloads
+
+```json
+{
+  "v": 1,
+  "intent": {"type": "ask", "goal": "Retrieve dataset"},
+  "policy": {"consent": "team"},
+  "memory": {"thread": "b1f3f7d2-8a9d-4d0a"}
+}
+```
+
+Base64-encode the payload to create an `LCE` header:
+
+```bash
+echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64
+```
+
+### Error Handling
+
+`LRI.parse_request` and the dependency helper raise `HTTPException` with
+structured error payloads:
+
+| Status | Scenario | Detail payload |
+| ------ | -------- | -------------- |
+| `400` | Base64 decode or JSON parse failure | `{"error": "Malformed LCE header", "message": "..."}` |
+| `422` | Schema errors | `{"error": "Invalid LCE", "details": [...]}` |
+| `422` | Pydantic model errors | `{"error": "LCE validation failed", "message": "..."}` |
+| `428` | Header required but missing | `{"error": "LCE header required", "header": "LCE"}` |
+
+Use these shapes to build consistent client-side error handling and automated
+tests.
 
 ## Current Limitations
 
