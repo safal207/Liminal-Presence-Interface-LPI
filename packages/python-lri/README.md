@@ -18,10 +18,15 @@ pip install python-lri
 
 #### Dependency Injection with `Depends`
 
+Use `LRI.dependency()` anywhere you would normally inject request state. The
+helper handles header parsing, validation, and converting the payload into the
+`LCE` Pydantic model.
+
 ```python
 from typing import Optional
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from lri import LCE, LRI
 
 app = FastAPI()
@@ -31,21 +36,31 @@ lri = LRI()
 @app.post("/events")
 async def ingest_event(
     payload: dict,
-    lce: Optional[LCE] = Depends(lri.dependency(required=True)),
+    lce: LCE = Depends(lri.dependency(required=True)),
 ):
+    """Require LCE metadata for write operations."""
     return {"intent": lce.intent.type, "payload": payload}
 
 
 @app.get("/optional")
 async def optional_context(
-    lce: Optional[LCE] = Depends(lri.dependency())
+    lce: Optional[LCE] = Depends(lri.dependency()),
 ):
+    """Gracefully degrade when the header is absent."""
     return {"intent": lce.intent.type if lce else None}
+
+
+@app.exception_handler(HTTPException)
+async def handle_http_exception(_, exc: HTTPException):
+    """Pass through structured LRI errors in a predictable JSON shape."""
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 ```
 
 The dependency helper wraps `parse_request` and delivers an `LCE` (or `None`)
 directly to your route handler. Set `required=True` to enforce the presence of
-the header, otherwise requests without LCE metadata will still succeed.
+the header, otherwise requests without LCE metadata will still succeed. Because
+the helper raises `HTTPException`, standard FastAPI exception handlers can be
+used to customise error responses (see example above).
 
 #### Manual Parsing (Advanced)
 
@@ -144,6 +159,15 @@ See [examples/fastapi-app](../../examples/fastapi-app) for a complete example.
 }
 ```
 
+```json
+{
+  "v": 1,
+  "intent": {"type": "tell", "goal": "Stream update"},
+  "policy": {"consent": "private"},
+  "affect": {"tags": ["supportive"]}
+}
+```
+
 Base64-encode the payload to create an `LCE` header:
 
 ```bash
@@ -153,7 +177,21 @@ echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64
 ### Error Handling
 
 `LRI.parse_request` and the dependency helper raise `HTTPException` with
-structured error payloads:
+structured error payloads that you can expose directly or transform inside a
+global exception handler:
+
+```python
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+
+@app.exception_handler(HTTPException)
+async def format_lri_errors(_, exc: HTTPException):
+    # Return a consistent envelope for clients and tests.
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+```
 
 | Status | Scenario | Detail payload |
 | ------ | -------- | -------------- |

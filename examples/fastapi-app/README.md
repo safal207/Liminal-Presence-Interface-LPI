@@ -7,12 +7,13 @@ This example shows how to build an LRI-aware REST API server using FastAPI and t
 ## Features Demonstrated
 
 - ✅ **LRI Request Parsing** - Parse LCE from request headers
-- ✅ **FastAPI Depends helper** - Inject validated `LCE` objects directly
+- ✅ **FastAPI Depends helper** - Inject validated `LCE` objects directly (optional & required)
 - ✅ **Intent-aware routing** - Different responses based on intent type
 - ✅ **LCE response headers** - Attaching LCE metadata to responses
 - ✅ **Pydantic validation** - Type-safe LCE models
 - ✅ **Async/await** - Modern Python async patterns
 - ✅ **Graceful degradation** - Works with or without LCE headers
+- ✅ **Structured errors** - Global handler keeps `HTTPException.detail` stable
 
 ## Quick Start
 
@@ -60,7 +61,7 @@ curl http://localhost:8000/
 {
   "name": "LRI FastAPI Example",
   "version": "0.1.0",
-  "endpoints": ["/ping", "/echo", "/api/data"],
+  "endpoints": ["/ping", "/echo", "/ingest", "/api/data"],
   "lri": {
     "version": "0.1",
     "header": "LCE",
@@ -97,7 +98,7 @@ curl -H "LCE: $LCE" http://localhost:8000/ping
 
 ### 3. POST `/echo`
 
-Echo endpoint that mirrors your request and responds with LCE.
+Echo endpoint that mirrors your request and responds with fresh LCE metadata.
 
 **Request:**
 ```bash
@@ -132,7 +133,37 @@ LCE: eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6InRlbGwifSwi...
 Content-Type: application/liminal.lce+json
 ```
 
-### 4. GET `/api/data`
+### 4. POST `/ingest`
+
+Write endpoint that **requires** an LCE header. Demonstrates `Depends(lri.dependency(required=True))`.
+
+**Request:**
+```bash
+curl -X POST http://localhost:8000/ingest \
+  -H "Content-Type: application/json" \
+  -H "LCE: $(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"team"}}' | base64)" \
+  -d '{"message": "ping"}'
+```
+
+**Response:**
+```json
+{
+  "intent": "ask",
+  "echo": "ping"
+}
+```
+
+**Missing header:**
+```json
+{
+  "detail": {
+    "error": "LCE header required",
+    "header": "LCE"
+  }
+}
+```
+
+### 5. GET `/api/data`
 
 Intent-aware endpoint that responds differently based on intent type.
 
@@ -195,29 +226,36 @@ The `LRI` class provides:
 
 ### 2. Parse LCE in Endpoints
 
-Use the dependency helper to inject an optional `LCE` directly into the route:
+Use the dependency helper to inject an optional `LCE` directly into the route or
+require it when necessary:
 
 ```python
 from typing import Optional
-from fastapi import Depends
+from fastapi import Depends, HTTPException
+from fastapi.responses import JSONResponse
+from lri import LCE
+
+
+@app.exception_handler(HTTPException)
+async def passthrough_http_exception(_, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.get("/ping")
 async def ping(lce: Optional[LCE] = Depends(lri.dependency())):
-    if lce:
-        print(f"Intent: {lce.intent.type}")
-```
+    return {"ok": True, "received_lce": lce is not None}
 
-Require the header when you need it:
 
-```python
-@app.post("/echo")
-async def echo(
-    body: dict,
-    lce: Optional[LCE] = Depends(lri.dependency(required=True))
+@app.post("/ingest")
+async def ingest(
+    payload: dict,
+    lce: LCE = Depends(lri.dependency(required=True)),
 ):
-    return {"echo": body, "intent": lce.intent.type}
+    return {"intent": lce.intent.type, "echo": payload.get("message", "")}
 ```
+
+The shared handler keeps all `HTTPException` payloads consistent with the SDK
+documentation so tests can assert on the `detail` envelope.
 
 ### 3. Create Response LCE
 
@@ -271,6 +309,21 @@ async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
         "intent": intent_type
     }
 ```
+
+### 5. Structured HTTP Exceptions
+
+```python
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+
+
+@app.exception_handler(HTTPException)
+async def passthrough_http_exception(_, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+```
+
+The handler mirrors what the SDK documentation describes, so automated tests can
+assert on the `detail` field without special cases.
 
 ## Testing with Python
 

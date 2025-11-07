@@ -6,7 +6,7 @@ Demonstrates LRI usage with FastAPI
 
 from datetime import datetime
 from typing import Optional
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 import sys
 from pathlib import Path
@@ -18,6 +18,12 @@ from lri import LRI, LCE, Intent, Policy
 
 app = FastAPI(title="LRI FastAPI Example")
 lri = LRI()
+
+
+@app.exception_handler(HTTPException)
+async def passthrough_http_exception(_, exc: HTTPException):
+    """Return structured errors so clients and tests can rely on the format."""
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.get("/ping")
@@ -58,6 +64,15 @@ async def echo(body: dict, lce: Optional[LCE] = Depends(lri.dependency())):
     return response
 
 
+@app.post("/ingest")
+async def ingest(
+    payload: dict,
+    lce: LCE = Depends(lri.dependency(required=True)),
+):
+    """Require an LCE header before accepting data writes."""
+    return {"intent": lce.intent.type, "echo": payload.get("message", "")}
+
+
 @app.get("/api/data")
 async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
     """Intent-aware endpoint"""
@@ -90,6 +105,7 @@ async def root():
         "endpoints": [
             "/ping",
             "/echo",
+            "/ingest",
             "/api/data",
         ],
         "lri": {

@@ -8,7 +8,8 @@ import pytest
 from fastapi import Depends, FastAPI, Response
 from fastapi.testclient import TestClient
 
-from lri import LCE, Intent, LRI, Policy
+from lri.lri import LRI
+from lri.types import LCE, Intent, Policy
 
 
 def _decode_lce_header(header_value: str) -> dict:
@@ -75,26 +76,33 @@ def _build_header(
     return base64.b64encode(header_bytes).decode("utf-8")
 
 
-def test_optional_dependency_handles_missing_header(fastapi_dependency_app):
+def test_dependency_accepts_valid_requests(fastapi_dependency_app):
     lri, client = fastapi_dependency_app
+
+    # Optional dependency should succeed without headers.
     response = client.get("/optional")
     assert response.status_code == 200
     assert response.json() == {"intent": None}
 
+    # Required dependency should accept a valid header and payload.
     header = lri.create_header(
-        LCE(v=1, intent=Intent(type="notify"), policy=Policy(consent="team"))
+        LCE(v=1, intent=Intent(type="ask"), policy=Policy(consent="team"))
     )
-    response = client.get("/optional", headers={lri.header_name: header})
+    response = client.post(
+        "/ingest",
+        json={"message": "ping"},
+        headers={lri.header_name: header},
+    )
     assert response.status_code == 200
-    assert response.json() == {"intent": "notify"}
+    assert response.json() == {"intent": "ask", "echo": "ping"}
 
 
 def test_required_dependency_rejects_missing_header(fastapi_dependency_app):
-    _, client = fastapi_dependency_app
+    lri, client = fastapi_dependency_app
     response = client.post("/ingest", json={"message": "ping"})
     assert response.status_code == 428
     assert response.json() == {
-        "detail": {"error": "LCE header required", "header": "LCE"}
+        "detail": {"error": "LCE header required", "header": lri.header_name}
     }
 
 
@@ -106,12 +114,17 @@ def test_dependency_returns_422_with_schema_errors(fastapi_dependency_app):
         overrides={"intent": {"type": "invalid"}},
     )
 
-    response = client.post("/ingest", json={"message": "ping"}, headers={"LCE": header})
+    response = client.post(
+        "/ingest",
+        json={"message": "ping"},
+        headers={lri.header_name: header},
+    )
 
     assert response.status_code == 422
     detail = response.json()["detail"]
     assert detail["error"] == "Invalid LCE"
-    assert any(err["path"].startswith("/intent") for err in detail["details"])
+    assert isinstance(detail["details"], list) and detail["details"]
+    assert all("path" in err and err["path"].startswith("/intent") for err in detail["details"])
 
 
 def test_dependency_returns_422_with_model_errors(fastapi_dependency_app):
@@ -122,7 +135,11 @@ def test_dependency_returns_422_with_model_errors(fastapi_dependency_app):
         overrides={"unexpected": "value"},
     )
 
-    response = client.post("/ingest", json={"message": "ping"}, headers={"LCE": header})
+    response = client.post(
+        "/ingest",
+        json={"message": "ping"},
+        headers={lri.header_name: header},
+    )
 
     assert response.status_code == 422
     detail = response.json()["detail"]
