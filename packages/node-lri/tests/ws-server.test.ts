@@ -14,8 +14,8 @@ describe('LRIWSServer', () => {
   afterEach(async () => {
     if (server) {
       await server.close();
-      // Give extra time for socket cleanup
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Give extra time for socket cleanup - increased for CI reliability
+      await new Promise((resolve) => setTimeout(resolve, 500));
       server = null as any;
     }
   });
