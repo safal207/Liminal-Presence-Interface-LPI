@@ -1,0 +1,41 @@
+{
+  "name": "@lri/anthropic",
+  "version": "0.1.0",
+  "description": "Anthropic SDK wrapper with LRI (Liminal Resonance Interface) support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "lri",
+    "anthropic",
+    "claude",
+    "semantic",
+    "intent",
+    "affect",
+    "layer8"
+  ],
+  "author": "LRI Contributors",
+  "license": "MIT",
+  "peerDependencies": {
+    "@anthropic-ai/sdk": "^0.17.0"
+  },
+  "dependencies": {
+    "node-lri": "file:../node-lri"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.17.1",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lri/lri.git",
+    "directory": "packages/lri-anthropic"
+  }
+}

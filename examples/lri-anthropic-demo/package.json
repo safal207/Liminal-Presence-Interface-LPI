@@ -1,0 +1,21 @@
+{
+  "name": "lri-anthropic-demo",
+  "version": "0.1.0",
+  "description": "Demo of @lri/anthropic wrapper with various use cases",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo": "node demo.js"
+  },
+  "dependencies": {
+    "@lri/anthropic": "file:../../packages/lri-anthropic",
+    "@anthropic-ai/sdk": "^0.17.1",
+    "dotenv": "^16.4.1"
+  },
+  "keywords": [
+    "lri",
+    "anthropic",
+    "claude",
+    "demo"
+  ]
+}
