@@ -9,7 +9,11 @@ import { encodeLRIFrame } from '../src/ws/types';
 
 describe('LRIWSServer', () => {
   let server: LRIWSServer;
-  let portCounter = 10000; // Start from port 10000, each test gets unique port
+  // Use PID-based port range to avoid conflicts between parallel Jest workers
+  // Each worker gets 50 ports starting from a unique base
+  // Range: 10000-14950 (supports up to 99 parallel workers)
+  const PORT_BASE = 10000 + (process.pid % 100) * 50;
+  let portCounter = PORT_BASE;
 
   // Helper function to get a unique port for each test
   const getTestPort = () => portCounter++;
