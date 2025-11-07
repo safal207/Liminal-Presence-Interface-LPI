@@ -1,10 +1,10 @@
 # LHS-001: Liminal Handshake Sequence (Hello → Mirror → Bind → Seal → Flow)
 
-**Status:** Draft  
-**Author(s):** LRI Protocol Working Group  
-**Created:** 2025-01-20  
-**Updated:** 2025-01-20  
-**Version:** 0.1.0
+**Status:** Final
+**Author(s):** LRI Protocol Working Group
+**Created:** 2025-01-20
+**Updated:** 2025-02-15
+**Version:** 1.0.0
 
 ---
 
@@ -15,15 +15,18 @@
 - [2. Sequence Overview](#2-sequence-overview)
   - [2.1 Roles](#21-roles)
   - [2.2 Message Envelope](#22-message-envelope)
+  - [2.3 Timing Expectations](#23-timing-expectations)
 - [3. Step Narratives](#3-step-narratives)
   - [3.1 Hello](#31-hello)
   - [3.2 Mirror](#32-mirror)
   - [3.3 Bind](#33-bind)
   - [3.4 Seal](#34-seal)
   - [3.5 Flow](#35-flow)
-- [4. State Machines](#4-state-machines)
+- [4. State & Timing Models](#4-state--timing-models)
   - [4.1 Client State Machine](#41-client-state-machine)
   - [4.2 Server State Machine](#42-server-state-machine)
+  - [4.3 Temporal Sequence Diagram](#43-temporal-sequence-diagram)
+  - [4.4 Timing Budget Timeline](#44-timing-budget-timeline)
 - [5. Transport Bindings](#5-transport-bindings)
   - [5.1 HTTP Negotiation Headers](#51-http-negotiation-headers)
   - [5.2 WebSocket First Frames](#52-websocket-first-frames)
@@ -94,6 +97,19 @@ All LHS messages share a JSON envelope with a `step` discriminator. Additional f
 
 Identifiers (`client_id`, `server_id`, `session_id`, `thread`) are opaque strings. Feature flags reference the capability names defined in [RFC-000](../rfcs/rfc-000.md).
 
+### 2.3 Timing Expectations
+
+Default watchdogs for each phase are shown below. Implementations MAY shorten the durations when transport latency is predictable but MUST communicate custom budgets in deployment documentation.
+
+| Phase | Default Watchdog | Notes |
+|-------|------------------|-------|
+| Hello → Mirror | 2.0 s | Includes client transmission and server validation of advertised features. |
+| Mirror → Bind | 1.5 s | Client preparation of authentication material; extend when out-of-band sign-in is required. |
+| Bind → Seal | 2.5 s | Server authorization and session provisioning. |
+| Seal → Flow | 1.0 s | Client verification of signatures and initiation of first Flow payload. |
+
+If the responder advertises a `session_window` in Mirror, that value supersedes the Seal → Flow default. Flow SHOULD begin at least 500 ms before the `session_window` elapses to allow for retransmission if Seal acknowledgment is lost.
+
 ---
 
 ## 3. Step Narratives
@@ -121,6 +137,14 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 - Reject if `lri_version` is unsupported.
 - Reject if `encodings` is empty.
 - Reject if payload exceeds negotiated size limits (default 4 KB).
+
+**Preconditions:** Client transport session is open and TLS is negotiated. Cached `client_id` SHOULD be stable across resumptions.
+
+**On Success:** Client enters `AwaitingMirror`; server logs the request parameters and prepares Mirror synthesis.
+
+**Timeout Window:** 2 s by default (see [Section 2.3](#23-timing-expectations)).
+
+**Failure Modes:** Version downgrade attempts, feature policy violations, malformed JSON, or exceeded size budget.
 
 **Transition:** Successful Hello transitions the client to `AwaitingMirror` and the server to `EvaluatingHello`.
 
@@ -153,6 +177,14 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 
 **Narrative:** Mirror confirms the negotiated protocol surface. Clients MUST respect the returned encoding and feature subset. When `session_window` is provided, the client must begin Flow before expiry or restart negotiation.
 
+**Preconditions:** Server completed Hello validation and has access to policy configuration (required features, supported versions).
+
+**On Success:** Client caches negotiated parameters (`lri_version`, `encoding`, `features`) and prepares Bind. Server transitions to `AwaitingBind` with pending session context.
+
+**Timeout Window:** 1.5 s. Clients SHOULD retransmit Hello once before aborting if Mirror does not arrive.
+
+**Failure Modes:** Server policy rejection, unsupported encoding, invalid `session_window`, or TLS renegotiation requirements.
+
 **Transition:** Client moves to `PreparingBind`; server advances to `AwaitingBind`.
 
 **Example:**
@@ -182,6 +214,14 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 | `metadata` | object | ⚠️ | Arbitrary key/value pairs relevant to session initialization. |
 
 **Narrative:** Bind attaches all contextual state necessary for the server to allocate resources. Servers MUST treat unknown keys in `metadata` as opaque. Authentication failures at this step terminate the handshake with an explicit error.
+
+**Preconditions:** Client has validated Mirror, possesses necessary credentials, and ensures thread identifier uniqueness per concurrent session.
+
+**On Success:** Server associates the provided context with a provisional session, generates audit entries, and proceeds to Seal emission.
+
+**Timeout Window:** 2.5 s. Servers MAY extend the window for external identity providers but MUST signal delays via retryable errors.
+
+**Failure Modes:** Credential rejection, unsupported metadata keys that violate policy, replay detection triggers, or resource exhaustion.
 
 **Transition:** Client enters `AwaitingSeal`; server processes Bind and either issues Seal or aborts with an error.
 
@@ -214,6 +254,14 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 
 **Narrative:** Seal affirms that the server accepts the negotiated parameters. When `sig` is present, clients MUST verify the signature before entering Flow. Expired sessions MUST renegotiate.
 
+**Preconditions:** Server successfully authenticated Bind and generated a session identifier. Optional signatures require access to configured key material.
+
+**On Success:** Both peers mark the session as active, and clients unlock Flow transmission using the negotiated encoding.
+
+**Timeout Window:** 1.0 s for delivery plus 500 ms for client-side signature verification.
+
+**Failure Modes:** Signature verification failures, expired attestation keys, duplicate `session_id`, or integrity mismatches between Hello/Bind transcripts.
+
 **Transition:** Both peers enter the `Flow` state upon Seal acceptance. Clients that fail signature verification MUST abort and report the failure.
 
 **Example:**
@@ -233,6 +281,14 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 
 **Narrative:** Flow is not a standalone handshake message; it is the state entered after a valid Seal. Transports MAY emit an optional `flow` acknowledgement carrying the `session_id` (and optionally the negotiated `thread`) for observability, but they MUST NOT introduce new negotiation parameters at this stage. All subsequent communication MUST include LCE metadata according to the negotiated encoding.
 
+**Preconditions:** Seal verified by both peers; `session_window` (if provided) has not elapsed.
+
+**On Success:** Bi-directional LCE exchange continues until termination or re-handshake. Monitoring systems SHOULD track throughput and latency metrics per `session_id`.
+
+**Timeout Window:** Governed by transport keep-alive and policy; recommended idle timeout is 60 s with keep-alive pings every 20 s.
+
+**Failure Modes:** Idle timeout, policy revocation, resource reclamation, or detection of integrity violations in Flow frames.
+
 **Exit Conditions:**
 
 - Session expiry (`expires` elapsed).
@@ -241,7 +297,7 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 
 ---
 
-## 4. State Machines
+## 4. State & Timing Models
 
 The following diagrams are normative for implementations. Additional transient substates are permitted provided that external behaviors remain equivalent.
 
@@ -288,6 +344,38 @@ stateDiagram-v2
     Rehandshake --> EvaluatingHello
     Rejected --> Terminated
     Terminated --> [*]
+```
+
+### 4.3 Temporal Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server
+    C->>S: Hello (capabilities, encodings)
+    Note right of S: Validate version & features
+    S-->>C: Mirror (negotiated surface)
+    Note left of C: Cache encoding + granted features
+    C->>S: Bind (thread, auth, metadata)
+    Note right of S: Authenticate & allocate session
+    S-->>C: Seal (session_id, signature, expiry)
+    C->>S: Flow Ack (optional)
+    S-->>C: Flow Payloads (bidirectional)
+```
+
+### 4.4 Timing Budget Timeline
+
+```mermaid
+timeline
+    title LHS Nominal Timing Budget
+    0 ms : Client sends Hello
+    200 ms : Server responds with Mirror
+    350 ms : Client delivers Bind
+    650 ms : Server issues Seal
+    700 ms : Optional Flow acknowledgement
+    800 ms : Regular Flow payloads begin
+    5000 ms : Mirror session_window expiry example
 ```
 
 ---

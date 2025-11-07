@@ -1,5 +1,5 @@
 {
-  "description": "HTTP negotiation illustrating the Hello → Mirror → Bind → Seal → Flow sequence using finalized LRI-LHS headers.",
+  "description": "HTTP negotiation illustrating the Hello \u2192 Mirror \u2192 Bind \u2192 Seal \u2192 Flow sequence using finalized LRI-LHS headers.",
   "sequence": [
     {
       "step": "hello",
@@ -49,7 +49,7 @@
         "headers": {
           "Content-Type": "application/json",
           "LRI-LHS-Step": "seal",
-          "LRI-LHS": "eyJzdGVwIjoic2VhbCIsInNlc3Npb25faWQiOiJhMWYxZjk0Yy00ZTlmLTRhNjQtOTRjNS1jY2Q4ZDRhODJiNTIiLCJzaWciOiJleUpoYkdjaU9pSkZaRVJUUVNKOi4uc2lnbmF0dXJlIiwiZXhwaXJlcyI6IjIwMjUtMDEtMzFUMTI6MDA6MDBaIn0="
+          "LRI-LHS": "eyJzdGVwIjoic2VhbCIsInNlc3Npb25faWQiOiJhMWYxZjk0Yy00ZTlmLTRhNjQtOTRjNS1jY2Q4ZDRhODJiNTIiLCJzaWciOiJleUpoYkdjaU9pSkZaRVJUUVNKOS4uc2lnbmF0dXJlIiwiZXhwaXJlcyI6IjIwMjUtMDEtMzFUMTI6MDA6MDBaIn0="
         },
         "body": {
           "session_id": "a1f1f94c-4e9f-4a64-94c5-ccd8d4a82b52",
@@ -81,7 +81,7 @@
           "LCE": "eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6InRlbGwiLCJnb2FsIjoiUHJvdmlkZSBjdXJyZW50IHdlYXRoZXIifSwicG9saWN5Ijp7ImNvbnNlbnQiOiJwcml2YXRlIn0sIm1lbW9yeSI6eyJ0aHJlYWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifX0="
         },
         "body": {
-          "message": "It is 72°F and clear above Brooklyn."
+          "message": "It is 72\u00b0F and clear above Brooklyn."
         }
       }
     }

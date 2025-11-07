@@ -191,7 +191,7 @@ lri/
 - ✅ Python SDK (FastAPI integration)
 - ✅ Base64 HTTP header encoding
 - ✅ Schema validation
-- ✅ LHS (Liminal Handshake Sequence) for WebSocket
+- ✅ LHS (Liminal Handshake Sequence) specification and transport transcripts
 - ✅ LTP (Liminal Trust Protocol) - Ed25519 + JWS signatures
 - ✅ LSS (Liminal Session Store) - coherence calculation
 - ✅ CBOR encoding for IoT
