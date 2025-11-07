@@ -1,0 +1,77 @@
+{
+  "description": "WebSocket handshake frames for the Liminal Handshake Sequence, followed by the first binary Flow frame.",
+  "frames": {
+    "client_to_server": [
+      {
+        "index": 1,
+        "opcode": "text",
+        "payload": {
+          "step": "hello",
+          "lri_version": "0.2",
+          "encodings": ["json", "cbor"],
+          "features": ["ltp", "lss"],
+          "client_id": "agent-458"
+        }
+      },
+      {
+        "index": 3,
+        "opcode": "text",
+        "payload": {
+          "step": "bind",
+          "thread": "550e8400-e29b-41d4-a716-446655440000",
+          "auth": "Bearer eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+          "metadata": {
+            "locale": "en-US",
+            "timezone": "America/New_York"
+          }
+        }
+      }
+    ],
+    "server_to_client": [
+      {
+        "index": 2,
+        "opcode": "text",
+        "payload": {
+          "step": "mirror",
+          "lri_version": "0.2",
+          "encoding": "json",
+          "features": ["ltp"],
+          "session_window": 300,
+          "server_id": "gateway-nyc"
+        }
+      },
+      {
+        "index": 4,
+        "opcode": "text",
+        "payload": {
+          "step": "seal",
+          "session_id": "a1f1f94c-4e9f-4a64-94c5-ccd8d4a82b52",
+          "sig": "eyJhbGciOiJFZERTQSJ9..signature",
+          "expires": "2025-01-31T12:00:00Z"
+        }
+      }
+    ],
+    "flow": {
+      "binary_frame": {
+        "index": 5,
+        "opcode": "binary",
+        "lce_length": 154,
+        "lce": {
+          "v": 1,
+          "intent": {
+            "type": "ask",
+            "goal": "Request current weather"
+          },
+          "policy": {
+            "consent": "private"
+          },
+          "memory": {
+            "thread": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        },
+        "payload_utf8": "What's the weather in Brooklyn today?",
+        "encoded_base64": "AAAAmnsidiI6MSwiaW50ZW50Ijp7InR5cGUiOiJhc2siLCJnb2FsIjoiUmVxdWVzdCBjdXJyZW50IHdlYXRoZXIifSwicG9saWN5Ijp7ImNvbnNlbnQiOiJwcml2YXRlIn0sIm1lbW9yeSI6eyJ0aHJlYWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifX1XaGF0J3MgdGhlIHdlYXRoZXIgaW4gQnJvb2tseW4gdG9kYXk/"
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "description": "HTTP negotiation illustrating the Hello → Mirror → Bind → Seal → Flow sequence using finalized LRI-LHS headers.",
+  "sequence": [
+    {
+      "step": "hello",
+      "request": {
+        "method": "POST",
+        "url": "https://api.example.com/lri/connect",
+        "headers": {
+          "Accept": "application/json",
+          "LRI-LHS-Step": "hello",
+          "LRI-LHS": "eyJzdGVwIjoiaGVsbG8iLCJscmlfdmVyc2lvbiI6IjAuMiIsImVuY29kaW5ncyI6WyJqc29uIiwiY2JvciJdLCJmZWF0dXJlcyI6WyJsdHAiLCJsc3MiXSwiY2xpZW50X2lkIjoiYWdlbnQtNDU4In0="
+        },
+        "body": {}
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "LRI-LHS-Step": "mirror",
+          "LRI-LHS": "eyJzdGVwIjoibWlycm9yIiwibHJpX3ZlcnNpb24iOiIwLjIiLCJlbmNvZGluZyI6Impzb24iLCJmZWF0dXJlcyI6WyJsdHAiXSwic2Vzc2lvbl93aW5kb3ciOjMwMCwic2VydmVyX2lkIjoiZ2F0ZXdheS1ueWMifQ=="
+        },
+        "body": {
+          "message": "Negotiation window 300s"
+        }
+      }
+    },
+    {
+      "step": "bind",
+      "request": {
+        "method": "POST",
+        "url": "https://api.example.com/lri/connect",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+          "LRI-LHS-Step": "bind",
+          "LRI-LHS": "eyJzdGVwIjoiYmluZCIsInRocmVhZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImF1dGgiOiJCZWFyZXIgZXlKaGJHY2lPaUpGWkVSVFFTSXNJblI1Y0NJNklrcFhWQ0o5Li4uIiwibWV0YWRhdGEiOnsibG9jYWxlIjoiZW4tVVMiLCJ0aW1lem9uZSI6IkFtZXJpY2EvTmV3X1lvcmsifX0="
+        },
+        "body": {
+          "thread": "550e8400-e29b-41d4-a716-446655440000",
+          "metadata": {
+            "locale": "en-US",
+            "timezone": "America/New_York"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "LRI-LHS-Step": "seal",
+          "LRI-LHS": "eyJzdGVwIjoic2VhbCIsInNlc3Npb25faWQiOiJhMWYxZjk0Yy00ZTlmLTRhNjQtOTRjNS1jY2Q4ZDRhODJiNTIiLCJzaWciOiJleUpoYkdjaU9pSkZaRVJUUVNKOi4uc2lnbmF0dXJlIiwiZXhwaXJlcyI6IjIwMjUtMDEtMzFUMTI6MDA6MDBaIn0="
+        },
+        "body": {
+          "session_id": "a1f1f94c-4e9f-4a64-94c5-ccd8d4a82b52",
+          "expires": "2025-01-31T12:00:00Z"
+        }
+      }
+    },
+    {
+      "step": "flow",
+      "request": {
+        "method": "POST",
+        "url": "https://api.example.com/chat",
+        "headers": {
+          "Content-Type": "application/json",
+          "LRI-LHS-Step": "flow",
+          "LRI-LHS": "eyJzdGVwIjoiZmxvdyIsInNlc3Npb25faWQiOiJhMWYxZjk0Yy00ZTlmLTRhNjQtOTRjNS1jY2Q4ZDRhODJiNTIiLCJ0aHJlYWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifQ==",
+          "LCE": "eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6ImFzayIsImdvYWwiOiJSZXF1ZXN0IGN1cnJlbnQgd2VhdGhlciJ9LCJwb2xpY3kiOnsiY29uc2VudCI6InByaXZhdGUifSwibWVtb3J5Ijp7InRocmVhZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCJ9fQ=="
+        },
+        "body": {
+          "message": "What's the weather in Brooklyn today?"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "LRI-LHS-Step": "flow",
+          "LRI-LHS": "eyJzdGVwIjoiZmxvdyIsInNlc3Npb25faWQiOiJhMWYxZjk0Yy00ZTlmLTRhNjQtOTRjNS1jY2Q4ZDRhODJiNTIiLCJ0aHJlYWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifQ==",
+          "LCE": "eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6InRlbGwiLCJnb2FsIjoiUHJvdmlkZSBjdXJyZW50IHdlYXRoZXIifSwicG9saWN5Ijp7ImNvbnNlbnQiOiJwcml2YXRlIn0sIm1lbW9yeSI6eyJ0aHJlYWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifX0="
+        },
+        "body": {
+          "message": "It is 72°F and clear above Brooklyn."
+        }
+      }
+    }
+  ]
+}

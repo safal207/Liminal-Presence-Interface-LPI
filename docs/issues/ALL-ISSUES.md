@@ -59,6 +59,8 @@ Copy each issue to GitHub individually.
 
 **Acceptance:** JSON-примеры первого фрейма WS и заголовков HTTP.
 
+**Status:** ✅ Draft spec published in `docs/specs/lhs.md` with HTTP and WebSocket transcripts in `examples/lhs/`.
+
 **Description:**
 
 Define the Liminal Handshake Sequence (LHS) protocol:

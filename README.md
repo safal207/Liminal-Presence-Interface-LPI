@@ -217,7 +217,8 @@ lri/
   - Express.js integration & production examples
 
 ### Reference
-- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md) (Coming soon)
+- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md)
+- [LHS Handshake Spec](docs/specs/lhs.md)
 - [LCE Schema Spec](schemas/lce-v0.1.json)
 - [Intent Vocabulary](vocab/intent.yaml)
 - [Affect Vocabulary](vocab/affect.yaml)
@@ -306,6 +307,10 @@ const signed = await ltp.sign(lce, keys.privateKey);
 const valid = await ltp.verify(signed, keys.publicKey);
 console.log('Valid:', valid); // true
 ```
+
+### LHS Negotiation Transcripts
+
+See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LRI-LHS-Step`, `LRI-LHS`, and `LCE` headers.
 
 ## Contributing
 
