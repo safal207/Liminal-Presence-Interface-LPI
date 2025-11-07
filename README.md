@@ -92,6 +92,18 @@ async def get_data(request: Request):
 
 ## LCE - Liminal Context Envelope
 
+## LSS - Liminal Session Store
+
+LSS keeps lightweight conversational state with coherence and drift metrics.
+
+- **Node.js** – `import { LSS } from 'node-lri/lss'`
+- **Python** – `from lri.lss import LSS`
+
+Use `store(threadId, lce)` to append messages, `getMetrics` / `get_metrics` to
+read coherence breakdowns, and subscribe to the `drift` event to react when
+conversations lose alignment. See [docs/specs/lss.md](docs/specs/lss.md) for the
+full specification and usage examples.
+
 The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 
 ```json

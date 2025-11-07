@@ -20,6 +20,7 @@ from .types import (
     ConsentLevel,
 )
 from . import ltp
+from . import lss
 from .lri import LRI
 from .validator import validate_lce
 
@@ -38,4 +39,5 @@ __all__ = [
     "LRI",
     "validate_lce",
     "ltp",
+    "lss",
 ]
