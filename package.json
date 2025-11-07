@@ -27,6 +27,7 @@
     "build": "npm run build --workspaces --if-present",
     "build:vocab": "node tools/build-vocab.mjs",
     "test": "npm test --workspaces --if-present",
+    "test:workspace": "node tools/run-workspace-test.cjs",
     "lint": "npm run lint --workspaces --if-present",
     "clean": "rm -rf packages/*/dist packages/*/build examples/*/dist",
     "validate": "npm run validate:schemas && npm run validate:vocab",

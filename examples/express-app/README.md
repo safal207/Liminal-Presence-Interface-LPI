@@ -22,13 +22,50 @@ cd examples/express-app
 npm install
 ```
 
+### Configure the middleware
+
+The project uses the latest `lriMiddleware` API that ships with the
+`node-lri` package. Register it once near the top of your Express app:
+
+```typescript
+import express from 'express';
+import { lriMiddleware } from 'node-lri';
+
+const app = express();
+
+app.use(
+  lriMiddleware({
+    required: false,   // Accept requests without LCE metadata
+    validate: true,    // Enforce schema validation (recommended)
+    headerName: 'LCE', // Override if your clients use a custom header name
+  })
+);
+```
+
 ### Run the server
 
 ```bash
 npm run dev
 ```
 
-Server will start on `http://localhost:3000`
+Server will start on `http://localhost:3000`.
+
+### Try it out
+
+The repo includes a helper script that sends a few sample requests with valid
+LCE headers:
+
+```bash
+npm run demo
+```
+
+Need a quick header for manual testing? Use the helper from `node-lri`:
+
+```bash
+node -e "const { createLCEHeader } = require('node-lri'); console.log(createLCEHeader({ v: 1, intent: { type: 'ask' }, policy: { consent: 'private' } }));"
+```
+
+Copy the printed value into the curl examples below.
 
 ## API Endpoints
 
@@ -302,17 +339,14 @@ Full LCE with all fields:
 
 ## Production Considerations
 
-### 1. Error Handling
+### 1. Middleware options
 
-```typescript
-app.use(lriMiddleware({
-  required: true,  // Require LCE for production
-  onError: (err, req, res, next) => {
-    console.error('LRI Error:', err);
-    res.status(400).json({ error: 'Invalid LCE' });
-  }
-}));
-```
+- `required` — Return HTTP 428 if an incoming request omits the header. Enable
+  this in production to guarantee that every request carries LCE metadata.
+- `validate` — Enforce schema validation (HTTP 422 on failure). Leave enabled
+  unless you explicitly want to accept partially formed payloads.
+- `headerName` — Override when integrating with legacy clients that use a
+  custom header.
 
 ### 2. Logging
 
