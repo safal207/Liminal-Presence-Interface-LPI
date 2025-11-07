@@ -26,6 +26,8 @@ classifiers = [
 dependencies = [
     "pydantic>=2.0.0",
     "fastapi>=0.100.0",
+    "cryptography>=42.0.0",
+    "jcs>=0.2.0",
 ]
 
 [project.optional-dependencies]

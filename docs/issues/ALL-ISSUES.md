@@ -141,6 +141,9 @@ server.on('message', (lce, payload) => {
 
 **Acceptance:** Кросс-тест Node↔Python на одинаковом LCE.
 
+**Status:** ✅ Implemented with shared fixtures (`tests/fixtures/ltp/vectors.json`),
+cross-SDK tests, and documentation in `docs/specs/ltp.md`.
+
 **Description:**
 
 Implement Liminal Trust Protocol (LTP):
@@ -151,8 +154,8 @@ Implement Liminal Trust Protocol (LTP):
 4. Cross-language compatibility tests
 
 Libraries:
-- Node: `@noble/ed25519`, `canonicalize`
-- Python: `PyNaCl`, `jcs`
+- Node: `tweetnacl`, `canonicalize`
+- Python: `cryptography`, `jcs`
 
 ---
 

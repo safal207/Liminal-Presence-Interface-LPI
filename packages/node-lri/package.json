@@ -34,6 +34,7 @@
     "canonicalize": "^2.0.0",
     "cbor": "^10.0.11",
     "jose": "^5.2.0",
+    "tweetnacl": "^1.0.3",
     "ws": "^8.16.0"
   },
   "devDependencies": {
