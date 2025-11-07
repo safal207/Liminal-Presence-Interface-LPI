@@ -25,19 +25,22 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:vocab": "node tools/build-vocab.mjs",
     "test": "npm test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "clean": "rm -rf packages/*/dist packages/*/build examples/*/dist",
     "validate": "npm run validate:schemas && npm run validate:vocab",
     "validate:schemas": "ajv validate -s schemas/lce-v0.1.json -d 'schemas/examples/*.json' --spec=draft2020 || echo 'Install ajv-cli: npm install -g ajv-cli ajv-formats'",
     "validate:vocab": "python -c \"import yaml; yaml.safe_load(open('vocab/intent.yaml')); yaml.safe_load(open('vocab/affect.yaml')); print('✓ Vocabularies valid')\" || echo 'Install PyYAML: pip install pyyaml'",
+    "vocab:build": "node tools/build-vocab.mjs",
     "docs:serve": "cd docs && python -m http.server 8000",
     "example:express": "cd examples/express-app && npm install && npm run dev",
     "example:fastapi": "cd examples/fastapi-app && pip install -r requirements.txt && python main.py"
   },
   "devDependencies": {
     "ajv-cli": "^5.0.0",
-    "ajv-formats": "^2.1.1"
+    "ajv-formats": "^2.1.1",
+    "yaml": "^2.3.4"
   },
   "engines": {
     "node": ">=18.0.0",
