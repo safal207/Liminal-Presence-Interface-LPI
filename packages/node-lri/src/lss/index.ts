@@ -14,6 +14,11 @@ import { EventEmitter } from 'node:events';
 
 import { LCE } from '../types';
 
+type EventEmitterListener = Parameters<EventEmitter['on']>[1];
+type EventEmitterEmitArgs = Parameters<EventEmitter['emit']> extends [unknown, ...infer R]
+  ? R
+  : never;
+
 /**
  * Stored message in session
  */
@@ -21,7 +26,7 @@ export interface LSSMessage {
   /** LCE envelope */
   lce: LCE;
   /** Message payload */
-  payload?: any;
+  payload?: unknown;
   /** Timestamp */
   timestamp: Date;
 }
@@ -147,13 +152,6 @@ const INTENT_VECTORS: Record<string, number[]> = {
  * console.log('Intent similarity:', coherence.intentSimilarity);
  * ```
  */
-export declare interface LSS {
-  on(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
-  once(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
-  off(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
-  emit(event: 'drift', payload: DriftEvent & { threadId: string }): boolean;
-}
-
 export class LSS extends EventEmitter {
   private sessions: Map<string, LSSSession> = new Map();
   private options: Required<LSSOptions>;
@@ -181,7 +179,7 @@ export class LSS extends EventEmitter {
    * @param lce - LCE envelope
    * @param payload - Optional payload
    */
-  async store(threadId: string, lce: LCE, payload?: any): Promise<void> {
+  async store(threadId: string, lce: LCE, payload?: unknown): Promise<void> {
     let session = this.sessions.get(threadId);
 
     if (!session) {
@@ -241,6 +239,30 @@ export class LSS extends EventEmitter {
         this.emit('drift', enrichedEvent);
       }
     }
+  }
+
+  override on(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
+  override on(event: string | symbol, listener: EventEmitterListener): this;
+  override on(event: string | symbol, listener: EventEmitterListener): this {
+    return super.on(event, listener);
+  }
+
+  override once(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
+  override once(event: string | symbol, listener: EventEmitterListener): this;
+  override once(event: string | symbol, listener: EventEmitterListener): this {
+    return super.once(event, listener);
+  }
+
+  override off(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
+  override off(event: string | symbol, listener: EventEmitterListener): this;
+  override off(event: string | symbol, listener: EventEmitterListener): this {
+    return super.off(event, listener);
+  }
+
+  override emit(event: 'drift', payload: DriftEvent & { threadId: string }): boolean;
+  override emit(event: string | symbol, ...args: EventEmitterEmitArgs): boolean;
+  override emit(event: string | symbol, ...args: EventEmitterEmitArgs): boolean {
+    return super.emit(event, ...args);
   }
 
   /**
