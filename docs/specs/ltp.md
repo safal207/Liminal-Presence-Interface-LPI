@@ -22,8 +22,8 @@ The SDK helpers guarantee that the canonical form is produced as a UTF-8 string.
 
 Reference implementations:
 
-- **Node** – `packages/node-lri/src/ltp/jcs.ts` (`canonicalizeLtpPayload`).
-- **Python** – `packages/python-lri/lri/ltp/jcs.py` (`canonicalize_ltp_payload`).
+- **Node** – `canonicalizeLtpPayload` in `packages/node-lri/src/ltp/jcs.ts`.
+- **Python** – `canonicalize_ltp_payload` in `packages/python-lri/lri/ltp/jcs.py`.
 
 Shared fixtures in `tests/fixtures/ltp/vectors.json` verify that both SDKs emit identical canonical strings across nested
 objects, arrays, booleans, and `null` values.
@@ -36,8 +36,11 @@ LTP uses detached Ed25519 signatures (EdDSA) over the canonical UTF-8 bytes.  Ea
 
 - Keys are represented as OKP/Ed25519 JWKs with Base64url-encoded public (`x`) and private (`d`) components (32 bytes each).
 - Helpers expose the underlying 32-byte seeds as well as the 64-byte expanded secret keys required by TweetNaCl:
-  - Node: `generateKeyPairBytes()` and `jwkToKeyPair()` (`packages/node-lri/src/ltp/ed25519.ts`).
+  - Node: `generateKeys()`, `importKeys()`, and `importPublicKey()` (`packages/node-lri/src/ltp/index.ts`).
   - Python: `generate_key_pair()` and `jwk_to_key_pair()` (`packages/python-lri/lri/ltp/ed25519.py`).
+- High-level helpers wrap canonicalisation and signing:
+  - Node: `ltp.sign()` / `ltp.verify()` (`packages/node-lri/src/ltp/index.ts`).
+  - Python: `sign_lce()` / `verify_lce()` (`packages/python-lri/lri/ltp/__init__.py`).
 - Persist only the private component (`d`) in secure storage; the public component (`x`) may be distributed to verifiers or
   embedded in transport metadata as a JWK.
 
@@ -64,8 +67,8 @@ and `packages/python-lri/tests/test_ltp_vectors.py`.
 
 ## Interoperability Test Vectors
 
-`tests/fixtures/ltp/vectors.json` contains canonical LCE payloads, signing keys, and expected signatures.  Both SDKs consume these fixtures during their unit tests, ensuring deterministic behaviour across languages before release.
+`tests/fixtures/ltp/vectors.json` contains canonical LCE payloads, signing keys, and expected signatures.  Both SDKs consume these fixtures during their unit tests (`packages/node-lri/tests/ltp.test.ts` and `packages/python-lri/tests/test_ltp_vectors.py`), ensuring deterministic behaviour across languages before release.
 
 ## Roadmap Status
 
-Issue **#8 — LTP: подписи JWS + JCS (Ed25519)** is now in sync with the implementation.  Canonicalisation helpers, Ed25519 signing utilities, and bidirectional tests are in place, and the roadmap entry has been updated accordingly.
+Issue **#8 — LTP: JCS + Ed25519 подписи** is now in sync with the implementation.  Canonicalisation helpers, Ed25519 signing utilities, and bidirectional tests are in place, and the roadmap entry has been updated accordingly.

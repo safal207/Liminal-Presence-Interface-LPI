@@ -276,7 +276,7 @@ LCE (Liminal Context Envelope) v0.1 consists of:
 - **trust**: Cryptographic proof and attestations
 - **qos**: Coherence and stability metrics
 - **trace**: Provenance chain
-- **sig**: JWS signature (Ed25519)
+- **sig**: Detached Ed25519 signature (Base64url)
 
 See full schema: `../../schemas/lce-v0.1.json`
 

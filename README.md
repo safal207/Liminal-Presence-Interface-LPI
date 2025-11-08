@@ -284,7 +284,7 @@ lri/
 - ✅ Base64 HTTP header encoding
 - ✅ Schema validation
 - ✅ LHS (Liminal Handshake Sequence) specification and transport transcripts
-- ✅ LTP (Liminal Trust Protocol) - Ed25519 + JWS signatures
+- ✅ LTP (Liminal Trust Protocol) - Ed25519 detached signatures
 - ✅ LSS (Liminal Session Store) - coherence calculation
 - ✅ CBOR encoding for IoT
 - ✅ gRPC metadata adapter
@@ -382,7 +382,7 @@ npm start
 
 Features:
 - **Ed25519 Keys**: Generate and manage cryptographic key pairs
-- **JWS Signatures**: Sign LCE messages with JSON Web Signature
+- **Ed25519 Signatures**: Sign LCE messages with detached Base64url signatures
 - **Verification**: Validate message authenticity and integrity
 - **Tamper Detection**: Detect any modifications to signed messages
 

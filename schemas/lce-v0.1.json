@@ -173,7 +173,7 @@
     },
     "sig": {
       "type": "string",
-      "description": "JWS signature over canonical JSON (JCS)"
+      "description": "Detached Ed25519 signature over canonical JSON (JCS)"
     }
   },
   "additionalProperties": false

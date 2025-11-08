@@ -131,11 +131,11 @@ server.on('message', (lce, payload) => {
 
 ---
 
-## Issue #8: LTP — подписи JWS + JCS (Ed25519)
+## Issue #8: LTP — JCS + Ed25519 подписи
 
 **Labels:** `crypto`, `security`
 
-**Goal:** Канонизация JSON (RFC 8785), подпись/проверка JWS.
+**Goal:** Канонизация JSON (RFC 8785), подпись/проверка Ed25519.
 
 **Acceptance:** Кросс-тест Node↔Python на одинаковом LCE.
 
@@ -147,7 +147,7 @@ cross-SDK tests, and documentation in `docs/specs/ltp.md`.
 Implement Liminal Trust Protocol (LTP):
 
 1. **JCS** (JSON Canonicalization Scheme, RFC 8785) for deterministic JSON
-2. **JWS** (JSON Web Signature) with Ed25519
+2. **Detached Ed25519 signatures** over canonical JSON
 3. Sign/verify LCE envelopes
 4. Cross-language compatibility tests
 
@@ -391,7 +391,7 @@ STRIDE threat analysis for LRI:
 
 | Threat | Risk | Mitigation |
 |--------|------|------------|
-| **Spoofing** | High | JWS signatures, PKI |
+| **Spoofing** | High | Detached Ed25519 signatures, PKI |
 | **Tampering** | High | JCS canonicalization, signatures |
 | **Repudiation** | Medium | Audit log, non-repudiation |
 | **Info disclosure** | High | Consent policy, encryption |

@@ -250,20 +250,20 @@ await client.close();
 
 ### LTP - Liminal Trust Protocol (`node-lri/ltp`)
 
-**`generateKeys(): Promise<KeyPair>`**
-- Generate Ed25519 key pair
+**`generateKeys(): Promise<LTPKeyPair>`**
+- Generate Ed25519 key pair (returns raw bytes + JWK helpers)
 
-**`sign(lce: LCE, privateKey: string): Promise<LCE>`**
-- Sign LCE with JWS
+**`importKeys(jwk: Ed25519Jwk): LTPKeyPair`**
+- Load an Ed25519 key pair from JWK (requires private component `d`)
 
-**`verify(signedLCE: LCE, publicKey: string): Promise<boolean>`**
-- Verify LCE signature
+**`importPublicKey(jwk: Ed25519Jwk): LTPPublicKey`**
+- Load a public-only key for verification
 
-**`exportJWK(keys: KeyPair): JWK`**
-- Export keys to JWK format
+**`sign(lce: LCE, privateKey: Uint8Array): Promise<LCE & { sig: string }>`**
+- Canonicalise the LCE with JCS and return a Base64url Ed25519 signature
 
-**`importJWK(jwk: JWK): KeyPair`**
-- Import keys from JWK
+**`verify(signedLCE: LCE & { sig?: string }, publicKey: Uint8Array): Promise<boolean>`**
+- Verify detached signatures produced by `sign`
 
 ### LSS - Liminal Session Store (`node-lri/lss`)
 

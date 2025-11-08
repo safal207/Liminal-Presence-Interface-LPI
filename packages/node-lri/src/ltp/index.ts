@@ -1,251 +1,130 @@
 /**
  * LTP (Liminal Trust Protocol)
  *
- * Cryptographic signing and verification of LCE messages using:
- * - JCS (JSON Canonicalization Scheme, RFC 8785)
- * - JWS (JSON Web Signature, RFC 7515)
- * - Ed25519 signatures (EdDSA)
+ * Provides helpers for canonicalising LCE payloads with RFC 8785 (JCS)
+ * and signing/verifying them with detached Ed25519 signatures.
  */
 
-import { SignJWT, jwtVerify, generateKeyPair, exportJWK, importJWK } from 'jose';
 import { canonicalizeLtpPayload } from './jcs';
+import {
+  Ed25519Jwk,
+  Ed25519PublicJwk,
+  Ed25519KeyPairBytes,
+  bytesToJwk,
+  generateKeyPairBytes,
+  jwkToKeyPair,
+  jwkToPublicKey,
+  publicKeyToJwk,
+  signCanonicalBase64,
+  verifyCanonicalBase64,
+} from './ed25519';
 import { LCE } from '../types';
 
-/**
- * LTP Key Pair (Ed25519)
- */
 export interface LTPKeyPair {
-  /** Private key for signing (keep secret) */
-  privateKey: any;
-  /** Public key for verification (can be shared) */
-  publicKey: any;
-  /** Public key in JWK format for export */
-  publicKeyJWK: any;
+  /** 64-byte secret key (private || public) used for signing */
+  privateKey: Uint8Array;
+  /** 32-byte Ed25519 public key */
+  publicKey: Uint8Array;
+  /** OKP/Ed25519 JWK containing both private (d) and public (x) components */
+  jwk: Ed25519Jwk;
+  /** Public-only JWK convenient for sharing with verifiers */
+  publicKeyJWK: Ed25519PublicJwk;
+}
+
+export interface LTPPublicKey {
+  /** 32-byte Ed25519 public key */
+  publicKey: Uint8Array;
+  /** Public-only JWK convenient for transport */
+  publicKeyJWK: Ed25519PublicJwk;
+}
+
+function buildKeyPair(bytes: Ed25519KeyPairBytes, sourceJwk?: Ed25519Jwk): LTPKeyPair {
+  const normalizedJwk = bytesToJwk(bytes);
+  const jwk = sourceJwk
+    ? {
+        ...sourceJwk,
+        ...normalizedJwk,
+      }
+    : normalizedJwk;
+  const { d: _d, ...publicJWK } = jwk;
+  return {
+    privateKey: bytes.privateKey,
+    publicKey: bytes.publicKey,
+    jwk,
+    publicKeyJWK: publicJWK as Ed25519PublicJwk,
+  };
 }
 
 /**
- * LTP Signature options
- */
-export interface LTPSignOptions {
-  /** Key ID for key rotation */
-  kid?: string;
-  /** Issuer identifier */
-  iss?: string;
-  /** Subject identifier */
-  sub?: string;
-  /** Additional claims */
-  claims?: Record<string, any>;
-}
-
-/**
- * LTP Verification options
- */
-export interface LTPVerifyOptions {
-  /** Expected issuer */
-  issuer?: string;
-  /** Expected subject */
-  subject?: string;
-  /** Maximum age in seconds */
-  maxAge?: number;
-}
-
-/**
- * Generate Ed25519 key pair for LTP
- *
- * @example
- * ```typescript
- * const keys = await LTP.generateKeys();
- * console.log('Public key:', keys.publicKeyJWK);
- * ```
+ * Generate a fresh Ed25519 key pair for LTP usage.
  */
 export async function generateKeys(): Promise<LTPKeyPair> {
-  const { publicKey, privateKey } = await generateKeyPair('EdDSA', {
-    crv: 'Ed25519',
-  });
-
-  const publicKeyJWK = await exportJWK(publicKey);
-
-  return {
-    privateKey,
-    publicKey,
-    publicKeyJWK,
-  };
+  const bytes = await generateKeyPairBytes();
+  return buildKeyPair(bytes);
 }
 
 /**
- * Import key pair from JWK
- *
- * @param privateKeyJWK - Private key in JWK format
- * @param publicKeyJWK - Public key in JWK format
+ * Import an Ed25519 key pair from a JWK that includes the private component (d).
  */
-export async function importKeys(
-  privateKeyJWK: any,
-  publicKeyJWK: any
-): Promise<LTPKeyPair> {
-  const privateKey = await importJWK(privateKeyJWK, 'EdDSA');
-  const publicKey = await importJWK(publicKeyJWK, 'EdDSA');
-
-  return {
-    privateKey,
-    publicKey,
-    publicKeyJWK,
-  };
+export function importKeys(jwk: Ed25519Jwk): LTPKeyPair {
+  const bytes = jwkToKeyPair(jwk);
+  return buildKeyPair(bytes, jwk);
 }
 
 /**
- * Sign LCE with LTP
- *
- * Process:
- * 1. Remove any existing signature from LCE
- * 2. Canonicalize JSON using JCS (RFC 8785)
- * 3. Create JWS signature with Ed25519
- * 4. Return LCE with signature in `sig` field
- *
- * @param lce - LCE to sign (without signature)
- * @param privateKey - Private key from generateKeys()
- * @param options - Signature options
- *
- * @example
- * ```typescript
- * const keys = await LTP.generateKeys();
- * const lce = { v: 1, intent: { type: 'tell' }, policy: { consent: 'private' } };
- * const signed = await LTP.sign(lce, keys.privateKey);
- * console.log('Signature:', signed.sig);
- * ```
+ * Import an Ed25519 public key from a JWK.
+ */
+export function importPublicKey(jwk: Ed25519Jwk): LTPPublicKey {
+  const publicKey = jwkToPublicKey(jwk);
+  const baseJwk = publicKeyToJwk(publicKey);
+  const { d: _ignored, ...rest } = jwk;
+  return {
+    publicKey,
+    publicKeyJWK: { ...baseJwk, ...rest } as Ed25519PublicJwk,
+  };
+}
+
+function stripSignature<T extends { sig?: unknown }>(lce: T): Omit<T, 'sig'> {
+  const { sig: _sig, ...rest } = lce;
+  return rest;
+}
+
+/**
+ * Sign an LCE envelope with a detached Ed25519 signature.
  */
 export async function sign(
-  lce: LCE,
-  privateKey: any,
-  options: LTPSignOptions = {}
+  lce: LCE & { sig?: string },
+  privateKey: Uint8Array
 ): Promise<LCE & { sig: string }> {
-  // Remove existing signature if present
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { sig, ...lceWithoutSig } = lce as any;
-
-  // Canonicalize JSON (RFC 8785)
-  const canonical = canonicalizeLtpPayload(lceWithoutSig);
-
-  // Create JWS with canonical JSON as payload
-  const jwt = new SignJWT({ lce: canonical })
-    .setProtectedHeader({
-      alg: 'EdDSA',
-      typ: 'LCE',
-    })
-    .setIssuedAt();
-
-  // Add optional claims
-  if (options.kid) {
-    jwt.setProtectedHeader({ alg: 'EdDSA', typ: 'LCE', kid: options.kid });
-  }
-  if (options.iss) {
-    jwt.setIssuer(options.iss);
-  }
-  if (options.sub) {
-    jwt.setSubject(options.sub);
-  }
-
-  // Sign
-  const signature = await jwt.sign(privateKey);
-
-  // Return LCE with signature
-  return {
-    ...lceWithoutSig,
-    sig: signature,
-  } as LCE & { sig: string };
+  const payload = stripSignature(lce) as Omit<LCE, 'sig'>;
+  const canonical = canonicalizeLtpPayload(payload);
+  const signature = await signCanonicalBase64(canonical, privateKey);
+  const signed: LCE & { sig: string } = { ...(payload as LCE), sig: signature };
+  return signed;
 }
 
 /**
- * Verify LCE signature
- *
- * Process:
- * 1. Extract signature from LCE
- * 2. Canonicalize LCE without signature
- * 3. Verify JWS signature with public key
- * 4. Return verification result
- *
- * @param lce - LCE with signature
- * @param publicKey - Public key from generateKeys()
- * @param options - Verification options
- * @returns true if signature is valid
- *
- * @example
- * ```typescript
- * const keys = await LTP.generateKeys();
- * const signed = await LTP.sign(lce, keys.privateKey);
- *
- * const valid = await LTP.verify(signed, keys.publicKey);
- * console.log('Valid:', valid); // true
- * ```
+ * Verify an LCE envelope signed with {@link sign}.
  */
 export async function verify(
   lce: LCE & { sig?: string },
-  publicKey: any,
-  options: LTPVerifyOptions = {}
+  publicKey: Uint8Array
 ): Promise<boolean> {
-  if (!lce.sig) {
+  if (typeof lce.sig !== 'string' || lce.sig.length === 0) {
     return false;
   }
 
-  try {
-    // Extract LCE without signature
-    const { sig, ...lceWithoutSig } = lce;
-
-    // Canonicalize
-    const canonical = canonicalizeLtpPayload(lceWithoutSig);
-
-    // Verify JWS
-    const { payload } = await jwtVerify(sig, publicKey, {
-      issuer: options.issuer,
-      subject: options.subject,
-      maxTokenAge: options.maxAge ? `${options.maxAge}s` : undefined,
-    });
-
-    // Check that canonical JSON matches
-    const payloadLCE = (payload as any).lce;
-    return payloadLCE === canonical;
-  } catch (error) {
-    // Signature verification failed
-    return false;
-  }
+  const payload = stripSignature(lce) as Omit<LCE, 'sig'>;
+  const canonical = canonicalizeLtpPayload(payload);
+  return verifyCanonicalBase64(canonical, lce.sig, publicKey);
 }
 
-/**
- * Extract signature info without verification
- *
- * @param signature - JWS signature string
- * @returns Decoded header and payload (unverified)
- */
-export function inspectSignature(signature: string): {
-  header: any;
-  payload: any;
-} | null {
-  try {
-    // Decode JWT without verification (for inspection only)
-    const parts = signature.split('.');
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const header = JSON.parse(
-      Buffer.from(parts[0], 'base64url').toString('utf-8')
-    );
-    const payload = JSON.parse(
-      Buffer.from(parts[1], 'base64url').toString('utf-8')
-    );
-
-    return { header, payload };
-  } catch {
-    return null;
-  }
-}
-
-// Export all functions under LTP namespace
 export const LTP = {
   generateKeys,
   importKeys,
+  importPublicKey,
   sign,
   verify,
-  inspectSignature,
 };
 
 export * from './jcs';

@@ -110,6 +110,8 @@ class LCE(BaseModel):
     policy: Policy
     qos: Optional[QoS] = None
     trace: Optional[Trace] = None
-    sig: Optional[str] = Field(None, description="JWS signature")
+    sig: Optional[str] = Field(
+        None, description="Detached Ed25519 signature (Base64url)"
+    )
 
     model_config = {"extra": "forbid"}

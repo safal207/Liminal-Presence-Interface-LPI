@@ -12,7 +12,9 @@ from lri.ltp import (
     canonicalize_ltp_payload,
     jwk_to_key_pair,
     sign_canonical_base64,
+    sign_lce,
     verify_canonical_base64,
+    verify_lce,
 )
 
 
@@ -43,6 +45,20 @@ def test_signature_verifies(vector):
     assert verify_canonical_base64(
         vector["canonical"], vector["signature"], keys.public_key
     )
+
+
+@pytest.mark.parametrize("vector", VECTORS, ids=lambda v: v["name"])
+def test_sign_lce_matches_fixture(vector):
+    keys = jwk_to_key_pair(vector["key"]["jwk"])
+    signed = sign_lce(vector["lce"], keys.private_key)
+    assert signed["sig"] == vector["signature"]
+
+
+@pytest.mark.parametrize("vector", VECTORS, ids=lambda v: v["name"])
+def test_verify_lce_accepts_fixture(vector):
+    keys = jwk_to_key_pair(vector["key"]["jwk"])
+    signed = {**vector["lce"], "sig": vector["signature"]}
+    assert verify_lce(signed, keys.public_key)
 
 
 def test_signature_invalid_base64_is_rejected():

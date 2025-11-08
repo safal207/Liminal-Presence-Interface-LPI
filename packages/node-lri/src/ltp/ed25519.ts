@@ -16,6 +16,8 @@ export interface Ed25519Jwk {
   d?: string;
 }
 
+export type Ed25519PublicJwk = Omit<Ed25519Jwk, 'd'>;
+
 function decodeBase64Url(value: string): Uint8Array {
   return Uint8Array.from(Buffer.from(value, 'base64url'));
 }
@@ -45,6 +47,17 @@ export function jwkToKeyPair(jwk: Ed25519Jwk): Ed25519KeyPairBytes {
   return { publicKey, privateKey: secretKey };
 }
 
+export function jwkToPublicKey(jwk: Ed25519Jwk): Uint8Array {
+  if (jwk.kty !== 'OKP' || jwk.crv !== 'Ed25519') {
+    throw new Error('Unsupported JWK');
+  }
+  const publicKey = decodeBase64Url(jwk.x);
+  if (publicKey.length !== 32) {
+    throw new Error('Invalid Ed25519 public key length');
+  }
+  return publicKey;
+}
+
 export function bytesToJwk(keys: Ed25519KeyPairBytes): Ed25519Jwk {
   if (keys.privateKey.length !== 64) {
     throw new Error('Ed25519 secret key must be 64 bytes');
@@ -55,6 +68,17 @@ export function bytesToJwk(keys: Ed25519KeyPairBytes): Ed25519Jwk {
     crv: 'Ed25519',
     x: encodeBase64Url(keys.publicKey),
     d: encodeBase64Url(privateComponent),
+  };
+}
+
+export function publicKeyToJwk(publicKey: Uint8Array): Ed25519PublicJwk {
+  if (publicKey.length !== 32) {
+    throw new Error('Ed25519 public key must be 32 bytes');
+  }
+  return {
+    kty: 'OKP',
+    crv: 'Ed25519',
+    x: encodeBase64Url(publicKey),
   };
 }
 
@@ -128,7 +152,9 @@ export function decodeSignature(signature: string): Uint8Array {
 
 export default {
   jwkToKeyPair,
+  jwkToPublicKey,
   bytesToJwk,
+  publicKeyToJwk,
   generateKeyPairBytes,
   signCanonical,
   signCanonicalBase64,

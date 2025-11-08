@@ -48,7 +48,7 @@ Instead:
 **Current status (v0.1):** Not implemented
 
 **Planned (v0.2):**
-- JWS signatures with Ed25519
+- Detached Ed25519 signatures over JCS payloads
 - JCS (JSON Canonicalization Scheme) for tamper-proof payloads
 - PKI for identity verification
 
@@ -172,7 +172,7 @@ See [Issue #17](docs/issues/ALL-ISSUES.md#issue-17) for detailed STRIDE analysis
 | Threat | Severity | Status |
 |--------|----------|--------|
 | Spoofing | High | Planned (LTP) |
-| Tampering | High | Planned (JCS+JWS) |
+| Tampering | High | ✅ Deployed (JCS + Ed25519) |
 | Repudiation | Medium | Planned (audit) |
 | Info Disclosure | High | Partial (consent) |
 | Denial of Service | Medium | Partial (rate limiting) |
@@ -218,7 +218,7 @@ See [Issue #17](docs/issues/ALL-ISSUES.md#issue-17) for detailed STRIDE analysis
 
 ### v0.2 (Q2 2025)
 
-- [ ] LTP signatures (JWS + Ed25519)
+- [x] LTP signatures (JCS + Ed25519)
 - [ ] Replay protection (nonce + timestamp)
 - [ ] Audit logging
 - [ ] Rate limiting

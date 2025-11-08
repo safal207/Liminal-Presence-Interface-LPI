@@ -49,7 +49,7 @@ This document provides a comprehensive threat model for LRI (Liminal Resonance I
 | Threat Category | Risk Level | Primary Mitigations |
 |----------------|------------|---------------------|
 | Spoofing | **HIGH** | LTP signatures, PKI, mutual TLS |
-| Tampering | **HIGH** | JCS canonicalization, JWS signatures |
+| Tampering | **HIGH** | JCS canonicalization, detached Ed25519 signatures |
 | Repudiation | **MEDIUM** | Audit logs, non-repudiation signatures |
 | Info Disclosure | **HIGH** | Consent policy, encryption, data minimization |
 | Denial of Service | **MEDIUM** | Rate limiting, size limits, TTL |
@@ -80,7 +80,7 @@ This document provides a comprehensive threat model for LRI (Liminal Resonance I
 
 **Primary:**
 - ✅ **LTP Signatures** - All messages MUST be signed with Ed25519
-- ✅ **JWS (JSON Web Signature)** - Cryptographic proof of origin
+- ✅ **Detached Ed25519 signatures** - Cryptographic proof of origin
 - ✅ **PKI Infrastructure** - Public key distribution
 
 **Secondary:**
@@ -136,7 +136,7 @@ if (lce.sig) {
 
 **Primary:**
 - ✅ **JCS Canonicalization** - Deterministic JSON serialization
-- ✅ **JWS Signatures** - Detect any modifications
+- ✅ **Ed25519 Signatures** - Detect any modifications
 - ✅ **Signature Verification** - Reject tampered messages
 
 **Secondary:**
@@ -757,7 +757,7 @@ async def endpoint(request: Request):
 - [STRIDE Threat Model (Microsoft)](https://docs.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [NIST SP 800-207 Zero Trust Architecture](https://csrc.nist.gov/publications/detail/sp/800-207/final)
-- [RFC 7515: JSON Web Signature (JWS)](https://datatracker.ietf.org/doc/html/rfc7515)
+- [RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA)](https://datatracker.ietf.org/doc/html/rfc8032)
 - [RFC 8785: JSON Canonicalization Scheme (JCS)](https://datatracker.ietf.org/doc/html/rfc8785)
 
 ---

@@ -1,19 +1,18 @@
 # LTP Signing Example
 
-Демонстрация **LTP (Liminal Trust Protocol)** - криптографических подписей для LCE сообщений.
+Демонстрация **LTP (Liminal Trust Protocol)** — канонизации JCS и подписей Ed25519 для LCE сообщений.
 
 ## Что такое LTP?
 
 LTP обеспечивает:
-- **Аутентификацию** - подтверждение отправителя
-- **Целостность** - обнаружение изменений
-- **Неотказуемость** - невозможность отрицать отправку
+- **Аутентификацию** — подтверждение отправителя
+- **Целостность** — обнаружение изменений
+- **Неотказуемость** — невозможность отрицать отправку
 
 ## Технологии
 
-- **Ed25519** - современная криптография с эллиптическими кривыми
-- **JWS** - JSON Web Signature (RFC 7515)
-- **JCS** - JSON Canonicalization Scheme (RFC 8785)
+- **Ed25519** — современная криптография с эллиптическими кривыми
+- **JCS** — JSON Canonicalization Scheme (RFC 8785)
 
 ## Запуск примера
 
@@ -42,21 +41,15 @@ npm start
 
 3. Signing LCE with Ed25519...
 ✓ LCE signed
-  Signature: eyJhbGciOiJFZERTQSIsInR5cCI6IkxDRSJ9.eyJsY2UiOiJ7XCJpbnRlbnRcIjp7XCJ0eXBlX...
+  Signature (base64url): nFpCWblIWi-WUYFkv5867jIaHjQ2dOL1f5EPRuOZjD4plUpGVeTcIh...
 
-4. Inspecting signature...
-✓ Signature structure:
-  Header:
-    alg: EdDSA
-    typ: LCE
-
-5. Verifying signature...
+4. Verifying signature...
 ✓ Signature valid: true
 
-6. Testing tampered message detection...
+5. Testing tampered message detection...
 ✓ Tampered message valid: false (should be false)
 
-7. Testing wrong key detection...
+6. Testing wrong key detection...
 ✓ Wrong key valid: false (should be false)
 ```
 
@@ -81,36 +74,21 @@ const lce = {
   policy: { consent: 'private' },
 };
 
-const signed = await ltp.sign(lce, keys.privateKey, {
-  iss: 'my-service',  // Опционально: issuer
-  sub: 'user-123',     // Опционально: subject
-});
+const signed = await ltp.sign(lce, keys.privateKey);
 
-console.log(signed.sig); // JWS подпись
+console.log(signed.sig); // Base64url-подпись Ed25519
 ```
 
 ### Верификация
 
 ```javascript
-const valid = await ltp.verify(signed, keys.publicKey, {
-  issuer: 'my-service',  // Опционально: проверка issuer
-});
+const valid = await ltp.verify(signed, keys.publicKey);
 
 if (valid) {
   console.log('Подпись валидна!');
 } else {
   console.log('Подпись невалидна или сообщение изменено!');
 }
-```
-
-### Инспекция подписи
-
-```javascript
-const info = ltp.inspectSignature(signed.sig);
-
-console.log('Алгоритм:', info.header.alg);  // EdDSA
-console.log('Issuer:', info.payload.iss);    // my-service
-console.log('Issued at:', new Date(info.payload.iat * 1000));
 ```
 
 ## Интеграция
@@ -162,19 +140,17 @@ fs.writeFileSync('public-key.json', JSON.stringify(keys.publicKeyJWK, null, 2));
 ### Загрузка ключей
 
 ```javascript
-const publicKeyJWK = JSON.parse(fs.readFileSync('public-key.json'));
-const privateKeyJWK = JSON.parse(process.env.LTP_PRIVATE_KEY);
-
-const keys = await ltp.importKeys(privateKeyJWK, publicKeyJWK);
+const jwk = JSON.parse(process.env.LTP_PRIVATE_KEY_JSON);
+const keys = ltp.importKeys(jwk);
 ```
 
 ## Безопасность
 
 ✅ **Рекомендуется:**
 - Используйте переменные окружения для приватных ключей
-- Ротация ключей каждые 90 дней (используйте `kid` в опциях)
+- Ротация ключей каждые 90 дней (используйте `kid` в метаданных транспорта)
 - Публикуйте публичные ключи через HTTPS
-- Проверяйте `iss` (issuer) при верификации
+- Проверяйте временные метки в сообщении (`iat`, `exp` и т.д.)
 
 ❌ **Не делайте:**
 - Не коммитьте приватные ключи в git
@@ -188,5 +164,3 @@ const keys = await ltp.importKeys(privateKeyJWK, publicKeyJWK);
 - Верификация: ~2-4 ms
 
 Ed25519 очень быстрый и подходит для real-time приложений.
-
-## След
