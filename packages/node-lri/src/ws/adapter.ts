@@ -95,8 +95,18 @@ export class LRIWebSocketAdapter extends EventEmitter {
       this.readyReject = reject;
     });
 
-    this.ws.on('close', () => {
-      this.emit('close');
+    this.ws.on('close', (code: number, reason: Buffer) => {
+      if (!this.connection) {
+        if (!this.resolved) {
+          this.rejectHandshake(new Error('Connection closed before handshake completed'));
+        }
+      } else {
+        this.connection.ready = false;
+      }
+
+      this.ws.off('message', this.handleFrame);
+      this.connection = null;
+      this.emit('close', code, reason);
     });
 
     this.ws.on('error', (error: Error) => {

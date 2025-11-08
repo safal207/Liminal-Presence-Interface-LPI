@@ -148,3 +148,37 @@ test('LRIWebSocketAdapter rejects invalid handshake sequences', async (t) => {
   const closeCode = await closePromise;
   assert.equal(closeCode, 1002);
 });
+
+test('LRIWebSocketAdapter rejects when the socket closes mid-handshake', async (t) => {
+  const { server, port } = await createServer();
+  t.after(() =>
+    new Promise<void>((resolve) => {
+      server.close(() => resolve());
+    })
+  );
+
+  server.on('connection', (socket) => {
+    socket.close(1011, 'no handshake');
+  });
+
+  const clientSocket = new WebSocket(`ws://127.0.0.1:${port}`);
+  const adapter = new LRIWebSocketAdapter({
+    role: 'client',
+    ws: clientSocket,
+  });
+
+  adapter.on('error', () => {
+    // swallow error to avoid unhandled error event during test
+  });
+
+  const closePromise = new Promise<void>((resolve) => {
+    clientSocket.once('close', () => resolve());
+  });
+
+  await assert.rejects(adapter.ready, (error) => {
+    assert.match((error as Error).message, /Connection closed before handshake/);
+    return true;
+  });
+
+  await closePromise;
+});
