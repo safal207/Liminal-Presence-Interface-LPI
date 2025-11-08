@@ -333,6 +333,9 @@ export class LRIWSServer {
     if (this.lss) {
       await this.lss.store(threadId, frame.lce, frame.payload);
 
+      // Reveal termas if conditions are met
+      await this.lss.revealTermas(threadId);
+
       // Check for intervention if enabled
       if (this.options.interventions && this.onIntervention) {
         await this.checkIntervention(threadId, sessionId, previousCoherence);
@@ -429,6 +432,13 @@ export class LRIWSServer {
     // Update last intervention time
     this.lastIntervention.set(threadId, now);
 
+    // Get recently revealed termas (only those revealed in last 5 seconds)
+    const allTermas = await this.lss.getTermas(threadId);
+    const recentlyRevealed = allTermas.filter(
+      (t: any) =>
+        t.revealed && t.revealedAt && now - new Date(t.revealedAt).getTime() < 5000
+    );
+
     // Call intervention handler
     await this.onIntervention(sessionId, {
       coherence: currentCoherence,
@@ -452,6 +462,7 @@ export class LRIWSServer {
         comprehensionBarrier: obstacles.comprehensionBarrier,
         overall: obstacles.overall,
       },
+      termas: recentlyRevealed,
       suggestedStrategy: strategy,
       reason,
     });
@@ -677,6 +688,88 @@ export class LRIWSServer {
     }
 
     return this.lss.calculateObstacles(session.messages);
+  }
+
+  /**
+   * Hide a terma (insight) for later revelation
+   *
+   * @param sessionId - Session ID or thread ID
+   * @param content - The insight content to hide
+   * @param type - Type of terma
+   * @param revealConditions - Conditions for revelation
+   * @param priority - Priority (higher = revealed first, default 5)
+   * @returns Terma ID or null if LSS not enabled
+   */
+  async hideTerma(
+    sessionId: string,
+    content: string,
+    type: 'insight' | 'pattern' | 'warning' | 'breakthrough',
+    revealConditions: any,
+    priority: number = 5
+  ): Promise<string | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    try {
+      return await this.lss.hideTerma(sessionId, content, type, revealConditions, priority);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get all termas for a session
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Array of termas or null if LSS not enabled
+   */
+  async getTermas(sessionId: string): Promise<any[] | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    try {
+      return await this.lss.getTermas(sessionId);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get unrevealed termas for a session
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Array of unrevealed termas or null if LSS not enabled
+   */
+  async getUnrevealedTermas(sessionId: string): Promise<any[] | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    try {
+      return await this.lss.getUnrevealedTermas(sessionId);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Reveal termas that meet their conditions
+   *
+   * @param sessionId - Session ID or thread ID
+   * @returns Array of revealed termas or null if LSS not enabled
+   */
+  async revealTermas(sessionId: string): Promise<any[] | null> {
+    if (!this.lss) {
+      return null;
+    }
+
+    try {
+      return await this.lss.revealTermas(sessionId);
+    } catch {
+      return null;
+    }
   }
 
   /**

@@ -171,6 +171,8 @@ export interface InterventionInfo {
     comprehensionBarrier: number;
     overall: number;
   };
+  /** Revealed termas (hidden insights) */
+  termas?: any[];
   /** Suggested intervention strategy */
   suggestedStrategy: InterventionStrategy;
   /** Reason for intervention */

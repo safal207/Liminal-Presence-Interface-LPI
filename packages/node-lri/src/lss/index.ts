@@ -12,7 +12,7 @@
  * - Drift detection
  */
 
-import { LCE } from '../types';
+import { LCE, IntentType } from '../types';
 
 /**
  * Stored message in session
@@ -63,6 +63,62 @@ export interface ObstacleMetrics {
 }
 
 /**
+ * Terma type (treasure/teaching category)
+ */
+export type TermaType = 'insight' | 'pattern' | 'warning' | 'breakthrough';
+
+/**
+ * Conditions for revealing a terma
+ */
+export interface RevealConditions {
+  /** Minimum similarity to original topic (0-1) */
+  topicMatch?: number;
+  /** Required intent types */
+  intentMatch?: IntentType[];
+  /** Minimum coherence threshold */
+  coherenceThreshold?: number;
+  /** Minimum awareness threshold */
+  awarenessThreshold?: number;
+  /** Maximum obstacles threshold */
+  obstaclesThreshold?: number;
+  /** Minimum time delay (ms) since hiding */
+  timeDelay?: number;
+}
+
+/**
+ * Terma - hidden insight for the right moment
+ *
+ * Inspired by Padmasambhava's terma tradition of hiding teachings
+ * to be revealed at the appropriate time
+ */
+export interface Terma {
+  /** Unique ID */
+  id: string;
+  /** Type of terma */
+  type: TermaType;
+  /** Content of the insight */
+  content: string;
+  /** When it was hidden */
+  hiddenAt: Date;
+  /** Context when hidden (topic, intent, coherence) */
+  hiddenContext: {
+    topic?: string;
+    intent?: IntentType;
+    coherence: number;
+    awareness: number;
+    obstacles: number;
+  };
+  /** Conditions for revealing */
+  revealConditions: RevealConditions;
+  /** Priority (0-1, higher = more important) */
+  priority: number;
+  /** Whether it has been revealed */
+  revealed: boolean;
+  /** When it was revealed (if revealed) */
+  revealedAt?: Date;
+}
+
+/**
  * Session data
  */
 export interface LSSSession {
@@ -76,6 +132,8 @@ export interface LSSSession {
   awareness: AwarenessMetrics;
   /** Current obstacle metrics */
   obstacles: ObstacleMetrics;
+  /** Hidden termas (treasures) waiting for right moment */
+  termas: Terma[];
   /** Session metadata */
   metadata: {
     createdAt: Date;
@@ -201,6 +259,7 @@ export class LSS {
           comprehensionBarrier: 0.0,
           overall: 0.0,
         },
+        termas: [],
         metadata: {
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -920,6 +979,194 @@ export class LSS {
       averageAwareness: avgAwareness,
       averageObstacles: avgObstacles,
     };
+  }
+
+  /**
+   * Hide a terma (insight) for later revelation
+   *
+   * @param threadId - Thread ID
+   * @param content - The insight content to hide
+   * @param type - Type of terma
+   * @param revealConditions - Conditions for revelation
+   * @param priority - Priority (higher = revealed first)
+   */
+  async hideTerma(
+    threadId: string,
+    content: string,
+    type: TermaType,
+    revealConditions: RevealConditions,
+    priority: number = 5
+  ): Promise<string> {
+    const session = this.sessions.get(threadId);
+    if (!session) {
+      throw new Error(`Session ${threadId} not found`);
+    }
+
+    // Get current context
+    const currentContext = {
+      topic: session.messages.length > 0 ? session.messages[session.messages.length - 1].lce.meaning?.topic : undefined,
+      intent: session.messages.length > 0 ? session.messages[session.messages.length - 1].lce.intent.type : undefined,
+      coherence: session.coherence,
+      awareness: session.awareness.overall,
+      obstacles: session.obstacles.overall,
+    };
+
+    const terma: Terma = {
+      id: `terma_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      content,
+      hiddenAt: new Date(),
+      hiddenContext: currentContext,
+      revealConditions,
+      priority,
+      revealed: false,
+    };
+
+    session.termas.push(terma);
+    session.metadata.updatedAt = new Date();
+
+    return terma.id;
+  }
+
+  /**
+   * Check and reveal termas that meet their conditions
+   *
+   * @param threadId - Thread ID
+   * @returns Array of revealed termas
+   */
+  async revealTermas(threadId: string): Promise<Terma[]> {
+    const session = this.sessions.get(threadId);
+    if (!session) {
+      throw new Error(`Session ${threadId} not found`);
+    }
+
+    const revealed: Terma[] = [];
+    const now = new Date();
+
+    // Get current context
+    const currentContext = {
+      topic: session.messages.length > 0 ? session.messages[session.messages.length - 1].lce.meaning?.topic : undefined,
+      intent: session.messages.length > 0 ? session.messages[session.messages.length - 1].lce.intent.type : undefined,
+      coherence: session.coherence,
+      awareness: session.awareness.overall,
+      obstacles: session.obstacles.overall,
+    };
+
+    // Check each unrevealed terma
+    for (const terma of session.termas) {
+      if (!terma.revealed && this.checkRevealConditions(terma, currentContext, now)) {
+        terma.revealed = true;
+        terma.revealedAt = now;
+        revealed.push(terma);
+      }
+    }
+
+    // Sort by priority (higher first)
+    revealed.sort((a, b) => b.priority - a.priority);
+
+    if (revealed.length > 0) {
+      session.metadata.updatedAt = new Date();
+    }
+
+    return revealed;
+  }
+
+  /**
+   * Check if a terma's reveal conditions are met
+   */
+  private checkRevealConditions(
+    terma: Terma,
+    currentContext: {
+      topic?: string;
+      intent?: IntentType;
+      coherence: number;
+      awareness: number;
+      obstacles: number;
+    },
+    now: Date
+  ): boolean {
+    const conditions = terma.revealConditions;
+
+    // Check time delay
+    if (conditions.timeDelay) {
+      const timeSinceHidden = now.getTime() - terma.hiddenAt.getTime();
+      if (timeSinceHidden < conditions.timeDelay) {
+        return false;
+      }
+    }
+
+    // Check topic match
+    if (conditions.topicMatch !== undefined && terma.hiddenContext.topic && currentContext.topic) {
+      const similarity = this.calculateTopicSimilarity(terma.hiddenContext.topic, currentContext.topic);
+      if (similarity < conditions.topicMatch) {
+        return false;
+      }
+    }
+
+    // Check intent match
+    if (conditions.intentMatch && conditions.intentMatch.length > 0) {
+      if (!currentContext.intent || !conditions.intentMatch.includes(currentContext.intent)) {
+        return false;
+      }
+    }
+
+    // Check coherence threshold
+    if (conditions.coherenceThreshold !== undefined) {
+      if (currentContext.coherence < conditions.coherenceThreshold) {
+        return false;
+      }
+    }
+
+    // Check awareness threshold
+    if (conditions.awarenessThreshold !== undefined) {
+      if (currentContext.awareness < conditions.awarenessThreshold) {
+        return false;
+      }
+    }
+
+    // Check obstacles threshold (should be below threshold)
+    if (conditions.obstaclesThreshold !== undefined) {
+      if (currentContext.obstacles > conditions.obstaclesThreshold) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Calculate topic similarity using simple word overlap
+   */
+  private calculateTopicSimilarity(topic1: string, topic2: string): number {
+    const words1 = new Set(topic1.toLowerCase().split(/\s+/));
+    const words2 = new Set(topic2.toLowerCase().split(/\s+/));
+
+    const intersection = new Set([...words1].filter((x) => words2.has(x)));
+    const union = new Set([...words1, ...words2]);
+
+    return union.size > 0 ? intersection.size / union.size : 0;
+  }
+
+  /**
+   * Get all termas for a session
+   */
+  async getTermas(threadId: string): Promise<Terma[]> {
+    const session = this.sessions.get(threadId);
+    if (!session) {
+      throw new Error(`Session ${threadId} not found`);
+    }
+    return session.termas;
+  }
+
+  /**
+   * Get unrevealed termas for a session
+   */
+  async getUnrevealedTermas(threadId: string): Promise<Terma[]> {
+    const session = this.sessions.get(threadId);
+    if (!session) {
+      throw new Error(`Session ${threadId} not found`);
+    }
+    return session.termas.filter((t) => !t.revealed);
   }
 }
 
