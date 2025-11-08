@@ -181,7 +181,14 @@ export function serializeSession(session: LSSSession): string {
 }
 
 export function deserializeSession(payload: string): LSSSession {
-  const data = JSON.parse(payload) as SerializableSession;
+  const data = JSON.parse(payload) as SerializableSession & {
+    metrics?: {
+      awareness?: any;
+      obstacles?: any;
+      termas?: any;
+    };
+  };
+
   return {
     threadId: data.threadId,
     coherence: data.coherence,
@@ -192,6 +199,21 @@ export function deserializeSession(payload: string): LSSSession {
     metrics: {
       coherence: data.metrics.coherence,
       previousCoherence: data.metrics.previousCoherence,
+      awareness: data.metrics.awareness || {
+        presence: 1.0,
+        clarity: 1.0,
+        distraction: 0.0,
+        engagement: 1.0,
+        overall: 1.0,
+      },
+      obstacles: data.metrics.obstacles || {
+        vagueness: 0.0,
+        contradiction: 0.0,
+        semanticGap: 0.0,
+        comprehensionBarrier: 0.0,
+        overall: 0.0,
+      },
+      termas: data.metrics.termas || [],
       driftEvents: data.metrics.driftEvents.map((event) => ({
         ...event,
         timestamp: new Date(event.timestamp),

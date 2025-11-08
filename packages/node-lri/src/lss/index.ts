@@ -15,11 +15,13 @@ import { EventEmitter } from 'node:events';
 import { LCE } from '../types';
 import { InMemorySessionStorage } from './storage';
 import type {
+  AwarenessMetrics,
   CoherenceResult,
   DriftEvent,
   LSSMessage,
   LSSOptions,
   LSSSession,
+  ObstacleMetrics,
   SessionMetrics,
   SessionStatistics,
   SessionStorageAdapter,
@@ -104,6 +106,10 @@ export class LSS extends EventEmitter {
       session.metrics.coherence = result;
       session.metrics.updatedAt = now;
       session.coherence = result.overall;
+
+      // Calculate Buddhist-inspired metrics
+      session.metrics.awareness = this.calculateAwareness(session.messages);
+      session.metrics.obstacles = this.calculateObstacles(session.messages);
 
       if (driftEvent) {
         const enrichedEvent: DriftEvent & { threadId: string } = { ...driftEvent, threadId };
@@ -424,10 +430,397 @@ export class LSS extends EventEmitter {
   }
 
   /**
+   * Calculate awareness metrics for message history
+   *
+   * Inspired by Dzogchen teachings on natural awareness (rigpa).
+   * Tracks quality of presence and engagement in conversation.
+   */
+  calculateAwareness(messages: LSSMessage[]): AwarenessMetrics {
+    if (messages.length === 0) {
+      return {
+        presence: 1.0,
+        clarity: 1.0,
+        distraction: 0.0,
+        engagement: 1.0,
+        overall: 1.0,
+      };
+    }
+
+    const presence = this.calculatePresence(messages);
+    const clarity = this.calculateClarity(messages);
+    const distraction = this.calculateDistraction(messages);
+    const engagement = this.calculateEngagement(messages);
+
+    // Overall awareness: average of positive metrics minus distraction
+    const overall = ((presence + clarity + engagement) / 3) * (1 - distraction);
+
+    return {
+      presence: Math.max(0, Math.min(1, presence)),
+      clarity: Math.max(0, Math.min(1, clarity)),
+      distraction: Math.max(0, Math.min(1, distraction)),
+      engagement: Math.max(0, Math.min(1, engagement)),
+      overall: Math.max(0, Math.min(1, overall)),
+    };
+  }
+
+  /**
+   * Calculate presence - "here and now" quality
+   */
+  private calculatePresence(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 1.0;
+
+    const timestamps = messages.map((m) => m.timestamp.getTime());
+    const now = Date.now();
+    const mostRecent = timestamps[timestamps.length - 1];
+
+    const ageMinutes = (now - mostRecent) / 60000;
+    const recencyScore = Math.exp(-ageMinutes / 10);
+
+    const intervals = [];
+    for (let i = 1; i < timestamps.length; i++) {
+      intervals.push(timestamps[i] - timestamps[i - 1]);
+    }
+
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    const variance = this.variance(intervals);
+    const consistencyScore = Math.exp(-variance / (avgInterval * avgInterval + 1));
+
+    return (recencyScore + consistencyScore) / 2;
+  }
+
+  /**
+   * Calculate clarity - communication clearness
+   */
+  private calculateClarity(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 1.0;
+
+    const coherence = this.calculateCoherence(messages);
+
+    return (
+      0.5 * coherence.semanticAlignment +
+      0.3 * coherence.intentSimilarity +
+      0.2 * coherence.affectStability
+    );
+  }
+
+  /**
+   * Calculate distraction - scattered attention
+   */
+  private calculateDistraction(messages: LSSMessage[]): number {
+    if (messages.length < 3) return 0.0;
+
+    const window = messages.slice(-5);
+    const topics = window
+      .map((m) => m.lce.meaning?.topic)
+      .filter((t): t is string => t !== undefined);
+
+    const topicJumps = new Set(topics).size;
+    const topicDistraction = Math.min(1.0, (topicJumps - 1) / 4);
+
+    const intentSimilarity = this.calculateIntentSimilarity(window);
+    const intentDistraction = 1 - intentSimilarity;
+
+    const pads = window
+      .map((m) => m.lce.affect?.pad)
+      .filter((pad): pad is [number, number, number] => pad !== undefined);
+
+    let affectDistraction = 0;
+    if (pads.length >= 2) {
+      const variances = [0, 1, 2].map((dim) => {
+        const values = pads.map((pad) => pad[dim]);
+        return this.variance(values);
+      });
+      const avgVariance = variances.reduce((a, b) => a + b, 0) / 3;
+      affectDistraction = Math.min(1.0, avgVariance * 5);
+    }
+
+    return (topicDistraction + intentDistraction + affectDistraction) / 3;
+  }
+
+  /**
+   * Calculate engagement - depth of involvement
+   */
+  private calculateEngagement(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 1.0;
+
+    const window = messages.slice(-10);
+    const timestamps = window.map((m) => m.timestamp.getTime());
+    const timespan = timestamps[timestamps.length - 1] - timestamps[0];
+    const messagesPerMinute = (window.length / (timespan / 60000)) || 0;
+    const activityScore = Math.min(1.0, messagesPerMinute / 2);
+
+    const intents = window.map((m) => m.lce.intent?.type || 'tell');
+    const uniqueIntents = new Set(intents).size;
+    const diversityScore = Math.min(1.0, uniqueIntents / 4);
+
+    let responsePatterns = 0;
+    for (let i = 1; i < intents.length; i++) {
+      const prev = intents[i - 1];
+      const curr = intents[i];
+      if (
+        (prev === 'ask' && curr === 'tell') ||
+        (prev === 'propose' && curr === 'confirm') ||
+        (prev === 'tell' && curr === 'ask')
+      ) {
+        responsePatterns++;
+      }
+    }
+    const patternScore = Math.min(1.0, responsePatterns / (intents.length / 2));
+
+    return (activityScore + diversityScore + patternScore) / 3;
+  }
+
+  /**
+   * Calculate obstacle metrics for message history
+   *
+   * Inspired by Buddhist concept of antarāya (impediments).
+   * Detects barriers that prevent clear understanding.
+   */
+  calculateObstacles(messages: LSSMessage[]): ObstacleMetrics {
+    if (messages.length === 0) {
+      return {
+        vagueness: 0.0,
+        contradiction: 0.0,
+        semanticGap: 0.0,
+        comprehensionBarrier: 0.0,
+        overall: 0.0,
+      };
+    }
+
+    const vagueness = this.calculateVagueness(messages);
+    const contradiction = this.calculateContradiction(messages);
+    const semanticGap = this.calculateSemanticGap(messages);
+    const comprehensionBarrier = this.calculateComprehensionBarrier(messages);
+
+    const overall = (vagueness + contradiction + semanticGap + comprehensionBarrier) / 4;
+
+    return {
+      vagueness: Math.max(0, Math.min(1, vagueness)),
+      contradiction: Math.max(0, Math.min(1, contradiction)),
+      semanticGap: Math.max(0, Math.min(1, semanticGap)),
+      comprehensionBarrier: Math.max(0, Math.min(1, comprehensionBarrier)),
+      overall: Math.max(0, Math.min(1, overall)),
+    };
+  }
+
+  /**
+   * Calculate vagueness - abstract/unclear expression
+   */
+  private calculateVagueness(messages: LSSMessage[]): number {
+    if (messages.length === 0) return 0.0;
+
+    const window = messages.slice(-5);
+    let vagueCount = 0;
+    let totalMessages = 0;
+
+    const vagueWords = [
+      'thing',
+      'stuff',
+      'maybe',
+      'perhaps',
+      'kind of',
+      'sort of',
+      'like',
+      'whatever',
+      'something',
+      'anything',
+    ];
+
+    for (const msg of window) {
+      totalMessages++;
+
+      if (typeof msg.payload === 'string') {
+        const lowerPayload = msg.payload.toLowerCase();
+        const vagueMatches = vagueWords.filter((word) => lowerPayload.includes(word)).length;
+        if (vagueMatches > 0) {
+          vagueCount += Math.min(1.0, vagueMatches / 3);
+        }
+      }
+
+      const topic = msg.lce.meaning?.topic;
+      if (!topic || topic === 'general' || topic === 'misc' || topic.length < 3) {
+        vagueCount += 0.5;
+      }
+    }
+
+    return Math.min(1.0, vagueCount / totalMessages);
+  }
+
+  /**
+   * Calculate contradiction - conflicts with previous statements
+   */
+  private calculateContradiction(messages: LSSMessage[]): number {
+    if (messages.length < 2) return 0.0;
+
+    const window = messages.slice(-10);
+    let contradictions = 0;
+
+    for (let i = 1; i < window.length; i++) {
+      const prev = window[i - 1];
+      const curr = window[i];
+
+      const prevTopic = prev.lce.meaning?.topic;
+      const currTopic = curr.lce.meaning?.topic;
+      const prevIntent = prev.lce.intent?.type;
+      const currIntent = curr.lce.intent?.type;
+
+      if (prevTopic && currTopic && prevTopic === currTopic) {
+        if (
+          (prevIntent === 'propose' && currIntent === 'disagree') ||
+          (prevIntent === 'agree' && currIntent === 'disagree') ||
+          (prevIntent === 'confirm' && currIntent === 'disagree')
+        ) {
+          contradictions++;
+        }
+      }
+
+      const prevPad = prev.lce.affect?.pad;
+      const currPad = curr.lce.affect?.pad;
+      if (prevPad && currPad) {
+        const prevPleasure = prevPad[0];
+        const currPleasure = currPad[0];
+        if (Math.abs(prevPleasure - currPleasure) > 1.0) {
+          contradictions += 0.5;
+        }
+      }
+    }
+
+    return Math.min(1.0, contradictions / (window.length / 2));
+  }
+
+  /**
+   * Calculate semantic gap - logical jumps without connection
+   */
+  private calculateSemanticGap(messages: LSSMessage[]): number {
+    if (messages.length < 3) return 0.0;
+
+    const window = messages.slice(-8);
+    let gaps = 0;
+
+    for (let i = 1; i < window.length; i++) {
+      const prev = window[i - 1];
+      const curr = window[i];
+
+      const prevTopic = prev.lce.meaning?.topic;
+      const currTopic = curr.lce.meaning?.topic;
+
+      if (prevTopic && currTopic && prevTopic !== currTopic) {
+        const prevWords = new Set(prevTopic.toLowerCase().split(/\s+/));
+        const currWords = new Set(currTopic.toLowerCase().split(/\s+/));
+        const commonWords = [...prevWords].filter((w) => currWords.has(w));
+
+        if (commonWords.length === 0 && prevTopic.length > 3 && currTopic.length > 3) {
+          gaps++;
+        }
+      }
+
+      const prevIntent = prev.lce.intent?.type;
+      const currIntent = curr.lce.intent?.type;
+
+      if (prevIntent === 'ask' && currIntent !== 'tell' && currIntent !== 'propose') {
+        gaps += 0.5;
+      }
+    }
+
+    return Math.min(1.0, gaps / (window.length / 2));
+  }
+
+  /**
+   * Calculate comprehension barrier - language complexity
+   */
+  private calculateComprehensionBarrier(messages: LSSMessage[]): number {
+    if (messages.length === 0) return 0.0;
+
+    const window = messages.slice(-5);
+    let barrierScore = 0;
+
+    for (const msg of window) {
+      if (typeof msg.payload === 'string') {
+        const wordCount = msg.payload.split(/\s+/).length;
+        if (wordCount > 100) {
+          barrierScore += Math.min(1.0, (wordCount - 100) / 100);
+        }
+      }
+
+      if (typeof msg.payload === 'object' && msg.payload !== null) {
+        const depth = this.getObjectDepth(msg.payload);
+        if (depth > 4) {
+          barrierScore += Math.min(0.5, (depth - 4) / 10);
+        }
+      }
+    }
+
+    return Math.min(1.0, barrierScore / window.length);
+  }
+
+  /**
+   * Get maximum depth of nested object
+   */
+  private getObjectDepth(obj: any, currentDepth = 0): number {
+    if (typeof obj !== 'object' || obj === null) {
+      return currentDepth;
+    }
+
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return currentDepth + 1;
+      return Math.max(...obj.map((item) => this.getObjectDepth(item, currentDepth + 1)));
+    }
+
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return currentDepth + 1;
+
+    return Math.max(...keys.map((key) => this.getObjectDepth(obj[key], currentDepth + 1)));
+  }
+
+  /**
    * Get session statistics
    */
   async getStats(): Promise<SessionStatistics> {
     const sessions = await this.storage.loadAll();
+
+    const avgAwareness = {
+      presence: 0,
+      clarity: 0,
+      distraction: 0,
+      engagement: 0,
+      overall: 0,
+    };
+
+    const avgObstacles = {
+      vagueness: 0,
+      contradiction: 0,
+      semanticGap: 0,
+      comprehensionBarrier: 0,
+      overall: 0,
+    };
+
+    if (sessions.length > 0) {
+      for (const session of sessions) {
+        avgAwareness.presence += session.metrics.awareness.presence;
+        avgAwareness.clarity += session.metrics.awareness.clarity;
+        avgAwareness.distraction += session.metrics.awareness.distraction;
+        avgAwareness.engagement += session.metrics.awareness.engagement;
+        avgAwareness.overall += session.metrics.awareness.overall;
+
+        avgObstacles.vagueness += session.metrics.obstacles.vagueness;
+        avgObstacles.contradiction += session.metrics.obstacles.contradiction;
+        avgObstacles.semanticGap += session.metrics.obstacles.semanticGap;
+        avgObstacles.comprehensionBarrier += session.metrics.obstacles.comprehensionBarrier;
+        avgObstacles.overall += session.metrics.obstacles.overall;
+      }
+
+      avgAwareness.presence /= sessions.length;
+      avgAwareness.clarity /= sessions.length;
+      avgAwareness.distraction /= sessions.length;
+      avgAwareness.engagement /= sessions.length;
+      avgAwareness.overall /= sessions.length;
+
+      avgObstacles.vagueness /= sessions.length;
+      avgObstacles.contradiction /= sessions.length;
+      avgObstacles.semanticGap /= sessions.length;
+      avgObstacles.comprehensionBarrier /= sessions.length;
+      avgObstacles.overall /= sessions.length;
+    }
 
     return {
       sessionCount: sessions.length,
@@ -436,6 +829,8 @@ export class LSS extends EventEmitter {
         sessions.length > 0
           ? sessions.reduce((sum, s) => sum + s.coherence, 0) / sessions.length
           : 0,
+      averageAwareness: avgAwareness,
+      averageObstacles: avgObstacles,
     };
   }
 }
