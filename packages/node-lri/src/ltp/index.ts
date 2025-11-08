@@ -46,7 +46,8 @@ function buildKeyPair(bytes: Ed25519KeyPairBytes, sourceJwk?: Ed25519Jwk): LTPKe
         ...normalizedJwk,
       }
     : normalizedJwk;
-  const { d: _d, ...publicJWK } = jwk;
+  const { d, ...publicJWK } = jwk;
+  void d;
   return {
     privateKey: bytes.privateKey,
     publicKey: bytes.publicKey,
@@ -77,7 +78,8 @@ export function importKeys(jwk: Ed25519Jwk): LTPKeyPair {
 export function importPublicKey(jwk: Ed25519Jwk): LTPPublicKey {
   const publicKey = jwkToPublicKey(jwk);
   const baseJwk = publicKeyToJwk(publicKey);
-  const { d: _ignored, ...rest } = jwk;
+  const { d, ...rest } = jwk;
+  void d;
   return {
     publicKey,
     publicKeyJWK: { ...baseJwk, ...rest } as Ed25519PublicJwk,
@@ -85,7 +87,8 @@ export function importPublicKey(jwk: Ed25519Jwk): LTPPublicKey {
 }
 
 function stripSignature<T extends { sig?: unknown }>(lce: T): Omit<T, 'sig'> {
-  const { sig: _sig, ...rest } = lce;
+  const { sig, ...rest } = lce;
+  void sig;
   return rest;
 }
 
