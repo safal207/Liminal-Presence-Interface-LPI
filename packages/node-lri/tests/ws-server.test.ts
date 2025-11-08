@@ -7,6 +7,9 @@ import { LRIWSServer } from '../src/ws/server';
 import { LCE } from '../src/types';
 import { encodeLRIFrame } from '../src/ws/types';
 
+// Increase timeout for slow CI environments
+jest.setTimeout(10000);
+
 describe('LRIWSServer', () => {
   let server: LRIWSServer;
   // Use PID-based port range to avoid conflicts between parallel Jest workers
@@ -17,6 +20,11 @@ describe('LRIWSServer', () => {
 
   // Helper function to get a unique port for each test
   const getTestPort = () => portCounter++;
+
+  beforeEach(async () => {
+    // Give time for any previous test's port to fully release
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
 
   afterEach(async () => {
     if (server) {
