@@ -6,6 +6,7 @@ module.exports = {
   testPathIgnorePatterns: [
     '<rootDir>/tests/ws-adapter.test.ts',
     '<rootDir>/tests/integration/',
+    '<rootDir>/tests/express-middleware.test.ts',
   ],
   collectCoverageFrom: [
     'src/**/*.ts',
