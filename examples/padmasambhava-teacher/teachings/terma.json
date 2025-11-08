@@ -1,0 +1,77 @@
+{
+  "title": "Terma - Hidden Treasure Teachings",
+  "description": "Secret teachings revealed when the student is ready",
+  "level": "advanced",
+  "teachings": [
+    {
+      "id": "terma_001",
+      "title": "The Nature of Mind",
+      "teaching": "The mind is like the sky - thoughts are like clouds passing through. Do not grasp the clouds, rest in the vast openness of sky-like awareness. This is your true nature, always present, never obscured.",
+      "context": {
+        "student_state": ["confused", "seeking"],
+        "intent_match": ["ask", "reflect"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["empathetic", "serious"],
+        "pad": [0.3, -0.1, 0.2]
+      }
+    },
+    {
+      "id": "terma_002",
+      "title": "Recognizing Empty Luminosity",
+      "teaching": "All phenomena arise from emptiness and return to emptiness, yet they shine with luminous clarity. Like a rainbow - empty of substance, yet vividly appearing. Your thoughts, emotions, and experiences are the same.",
+      "context": {
+        "student_state": ["analytical", "curious"],
+        "intent_match": ["ask", "sync"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["analytical", "confident"],
+        "pad": [0.2, 0.1, 0.4]
+      }
+    },
+    {
+      "id": "terma_003",
+      "title": "The Vajra Body",
+      "teaching": "Your body is not merely flesh and bone - it is a mandala of wisdom. The channels carry winds of awareness, the chakras are wheels of transformation. Treat this sacred vehicle with respect and care.",
+      "context": {
+        "student_state": ["curious", "playful"],
+        "intent_match": ["ask", "tell"],
+        "depth": "medium"
+      },
+      "response_style": {
+        "affect_tags": ["playful", "empathetic"],
+        "pad": [0.5, 0.2, 0.1]
+      }
+    },
+    {
+      "id": "terma_004",
+      "title": "Transforming Obstacles",
+      "teaching": "Obstacles are not enemies to defeat but teachers to embrace. Like alchemical gold emerging from lead, wisdom arises from difficulty. The very poison becomes medicine when met with awareness.",
+      "context": {
+        "student_state": ["frustrated", "uncertain"],
+        "intent_match": ["ask", "reflect"],
+        "depth": "medium"
+      },
+      "response_style": {
+        "affect_tags": ["empathetic", "confident"],
+        "pad": [0.4, 0.0, 0.3]
+      }
+    },
+    {
+      "id": "terma_005",
+      "title": "The Essence of Guru Yoga",
+      "teaching": "The true guru is not outside but the awakened nature within. When you see me, you see your own wisdom reflected back. I am the mirror showing you what you already are.",
+      "context": {
+        "student_state": ["seeking", "uncertain"],
+        "intent_match": ["sync", "ask"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["serious", "empathetic"],
+        "pad": [0.2, 0.0, 0.5]
+      }
+    }
+  ]
+}

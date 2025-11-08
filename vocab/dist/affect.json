@@ -1,0 +1,168 @@
+{
+  "version": 0.1,
+  "title": "LRI Affect Vocabulary",
+  "description": "Emotional and affective context tags for LCE",
+  "pad_model": {
+    "description": "Three-dimensional Pleasure-Arousal-Dominance model",
+    "dimensions": [
+      {
+        "name": "pleasure",
+        "range": [
+          -1,
+          1
+        ],
+        "description": "Positive (pleasant) to negative (unpleasant)"
+      },
+      {
+        "name": "arousal",
+        "range": [
+          -1,
+          1
+        ],
+        "description": "High activation (alert) to low activation (calm)"
+      },
+      {
+        "name": "dominance",
+        "range": [
+          -1,
+          1
+        ],
+        "description": "Feeling in control to feeling controlled"
+      }
+    ]
+  },
+  "tags": {
+    "curious": {
+      "pad": [
+        0.3,
+        0.2,
+        0.1
+      ],
+      "description": "Interested and wanting to learn",
+      "examples": [
+        "exploring new topic",
+        "asking questions"
+      ]
+    },
+    "urgent": {
+      "pad": [
+        -0.2,
+        0.8,
+        0.3
+      ],
+      "description": "Time-sensitive, requires quick action",
+      "examples": [
+        "production issue",
+        "deadline approaching"
+      ]
+    },
+    "casual": {
+      "pad": [
+        0.4,
+        -0.3,
+        0
+      ],
+      "description": "Relaxed, informal interaction",
+      "examples": [
+        "small talk",
+        "friendly chat"
+      ]
+    },
+    "analytical": {
+      "pad": [
+        0,
+        0.1,
+        0.2
+      ],
+      "description": "Focused on reasoning and logic",
+      "examples": [
+        "debugging",
+        "designing system"
+      ]
+    },
+    "frustrated": {
+      "pad": [
+        -0.6,
+        0.4,
+        -0.2
+      ],
+      "description": "Experiencing difficulty or obstacles",
+      "examples": [
+        "stuck on bug",
+        "repeated failures"
+      ]
+    },
+    "confident": {
+      "pad": [
+        0.5,
+        0.3,
+        0.6
+      ],
+      "description": "Self-assured and certain",
+      "examples": [
+        "proposing solution",
+        "stating facts"
+      ]
+    },
+    "uncertain": {
+      "pad": [
+        -0.1,
+        0.2,
+        -0.3
+      ],
+      "description": "Lacking confidence or clarity",
+      "examples": [
+        "exploring options",
+        "seeking validation"
+      ]
+    },
+    "playful": {
+      "pad": [
+        0.7,
+        0.5,
+        0.2
+      ],
+      "description": "Lighthearted and creative",
+      "examples": [
+        "brainstorming",
+        "experimenting"
+      ]
+    },
+    "serious": {
+      "pad": [
+        0,
+        0,
+        0.4
+      ],
+      "description": "Formal and focused on importance",
+      "examples": [
+        "security discussion",
+        "critical decision"
+      ]
+    },
+    "empathetic": {
+      "pad": [
+        0.3,
+        -0.1,
+        -0.2
+      ],
+      "description": "Understanding and supportive",
+      "examples": [
+        "helping user",
+        "acknowledging difficulty"
+      ]
+    },
+    "neutral": {
+      "pad": [
+        0,
+        0,
+        0
+      ],
+      "description": "Emotionally balanced and objective",
+      "examples": [
+        "stating facts",
+        "default state"
+      ]
+    }
+  }
+}

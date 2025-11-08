@@ -1,0 +1,13 @@
+{
+  "name": "lri-ws-echo-example",
+  "version": "0.1.0",
+  "description": "WebSocket echo server example using node-lri",
+  "private": true,
+  "scripts": {
+    "server": "node server.js",
+    "client": "node client.js"
+  },
+  "dependencies": {
+    "node-lri": "file:../../packages/node-lri"
+  }
+}

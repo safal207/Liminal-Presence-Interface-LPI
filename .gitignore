@@ -10,6 +10,8 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+!vocab/dist/
+!vocab/dist/**
 *.whl
 
 # IDEs
@@ -23,10 +25,14 @@ build/
 # Build outputs
 dist/
 build/
+!vocab/dist/
+!vocab/dist/**
 *.js
 *.d.ts
+!packages/node-lri/src/types/**/*.d.ts
 *.map
 !*.config.js
+!.eslintrc.js
 packages/*/dist/
 packages/*/build/
 

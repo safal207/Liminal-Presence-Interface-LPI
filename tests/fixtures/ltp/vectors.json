@@ -1,0 +1,86 @@
+{
+  "description": "Shared LTP canonicalization and signature vectors",
+  "vectors": [
+    {
+      "name": "basic-lce",
+      "lce": {
+        "v": 1,
+        "intent": {
+          "type": "tell",
+          "audience": [
+            "alpha",
+            "beta"
+          ]
+        },
+        "payload": {
+          "msg": "Hello, liminal world!",
+          "count": 2
+        },
+        "policy": {
+          "consent": "public",
+          "expires": "2025-01-01T00:00:00Z"
+        }
+      },
+      "canonical": "{\"intent\":{\"audience\":[\"alpha\",\"beta\"],\"type\":\"tell\"},\"payload\":{\"count\":2,\"msg\":\"Hello, liminal world!\"},\"policy\":{\"consent\":\"public\",\"expires\":\"2025-01-01T00:00:00Z\"},\"v\":1}",
+      "key": {
+        "jwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "d": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "x": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+        }
+      },
+      "signature": "nFpCWblIWi-WUYFkv5867jIaHjQ2dOL1f5EPRuOZjD4plUpGVeTcIhf7q4L3Xk4JzOSWshFAvdHkgDOppuMFCg"
+    },
+    {
+      "name": "nested-claims",
+      "lce": {
+        "v": 1,
+        "intent": {
+          "type": "ask",
+          "context": {
+            "topic": "safety",
+            "tags": [
+              "ops",
+              "oncall"
+            ]
+          }
+        },
+        "memory": {
+          "thread": "ops-123",
+          "t": "2024-06-01T12:00:00Z"
+        },
+        "payload": {
+          "ok": true,
+          "delta": [
+            1,
+            2,
+            3
+          ],
+          "meta": {
+            "nullish": null,
+            "flag": false
+          }
+        },
+        "policy": {
+          "consent": "team",
+          "share": [
+            "alpha",
+            "beta"
+          ],
+          "nbf": "2024-06-01T00:00:00Z"
+        }
+      },
+      "canonical": "{\"intent\":{\"context\":{\"tags\":[\"ops\",\"oncall\"],\"topic\":\"safety\"},\"type\":\"ask\"},\"memory\":{\"t\":\"2024-06-01T12:00:00Z\",\"thread\":\"ops-123\"},\"payload\":{\"delta\":[1,2,3],\"meta\":{\"flag\":false,\"nullish\":null},\"ok\":true},\"policy\":{\"consent\":\"team\",\"nbf\":\"2024-06-01T00:00:00Z\",\"share\":[\"alpha\",\"beta\"]},\"v\":1}",
+      "key": {
+        "jwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "d": "9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fU",
+          "x": "N5vVt9FJSTmv6fh7NYelCpa95gj2ledZ2vOj8QYXPnY"
+        }
+      },
+      "signature": "OqsHnFJX2EqMc1sMNx9e0eB56l52bFVS2VNjm5DsRIzMe--9lIIzHvVqMvREbrUVDGH9dgKDZXo6VoUQK8ppDg"
+    }
+  ]
+}

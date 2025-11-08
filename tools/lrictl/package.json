@@ -1,0 +1,31 @@
+{
+  "name": "lrictl",
+  "version": "0.2.0",
+  "description": "CLI tool for LRI (Liminal Resonance Interface) operations",
+  "main": "dist/index.js",
+  "bin": {
+    "lrictl": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "lri",
+    "cli",
+    "lce",
+    "cbor",
+    "ltp"
+  ],
+  "author": "LRI Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

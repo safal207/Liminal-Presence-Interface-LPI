@@ -1,0 +1,105 @@
+{
+  "title": "Gradual Path Teachings",
+  "description": "Step-by-step instructions for beginners and intermediate practitioners",
+  "level": "beginner-intermediate",
+  "teachings": [
+    {
+      "id": "gradual_001",
+      "title": "Beginning with the Breath",
+      "teaching": "Start simple: follow your breath. Breathe in, know you breathe in. Breathe out, know you breathe out. This is the foundation of all meditation. No need to force or control - just observe naturally.",
+      "context": {
+        "student_state": ["curious", "uncertain"],
+        "intent_match": ["ask", "plan"],
+        "depth": "shallow"
+      },
+      "response_style": {
+        "affect_tags": ["empathetic", "casual"],
+        "pad": [0.4, -0.2, 0.1]
+      }
+    },
+    {
+      "id": "gradual_002",
+      "title": "Establishing Daily Practice",
+      "teaching": "Consistency matters more than duration. Better to practice 5 minutes every day than 2 hours once a week. Find a quiet place, sit comfortably, and make this time sacred. Your future self will thank you.",
+      "context": {
+        "student_state": ["uncertain", "planning"],
+        "intent_match": ["ask", "propose"],
+        "depth": "shallow"
+      },
+      "response_style": {
+        "affect_tags": ["confident", "empathetic"],
+        "pad": [0.5, 0.1, 0.4]
+      }
+    },
+    {
+      "id": "gradual_003",
+      "title": "Working with Thoughts",
+      "teaching": "When thoughts arise during meditation, don't fight them. Label them gently: 'thinking'. Then return to your breath. Each time you notice and return, you strengthen awareness. The wandering is not failure - noticing is success.",
+      "context": {
+        "student_state": ["frustrated", "trying"],
+        "intent_match": ["ask", "reflect"],
+        "depth": "medium"
+      },
+      "response_style": {
+        "affect_tags": ["empathetic", "encouraging"],
+        "pad": [0.6, 0.0, 0.2]
+      }
+    },
+    {
+      "id": "gradual_004",
+      "title": "Cultivating Loving-Kindness",
+      "teaching": "Begin with yourself: 'May I be happy. May I be healthy. May I be at peace.' Then extend to others: loved ones, neutral people, even difficult people. This softens the heart and dissolves barriers.",
+      "context": {
+        "student_state": ["open", "curious"],
+        "intent_match": ["ask", "tell"],
+        "depth": "shallow"
+      },
+      "response_style": {
+        "affect_tags": ["empathetic", "playful"],
+        "pad": [0.7, 0.2, 0.1]
+      }
+    },
+    {
+      "id": "gradual_005",
+      "title": "Observing Impermanence",
+      "teaching": "Watch how everything changes moment by moment. Sensations arise and pass. Emotions come and go. Even 'you' are constantly shifting. This isn't nihilistic - it's liberating. What you don't cling to can't trap you.",
+      "context": {
+        "student_state": ["analytical", "curious"],
+        "intent_match": ["reflect", "ask"],
+        "depth": "medium"
+      },
+      "response_style": {
+        "affect_tags": ["analytical", "confident"],
+        "pad": [0.3, 0.2, 0.3]
+      }
+    },
+    {
+      "id": "gradual_006",
+      "title": "Integrating Practice into Life",
+      "teaching": "Meditation isn't just what happens on the cushion. Washing dishes with full attention is meditation. Listening deeply to a friend is meditation. Bring that quality of presence to everything you do.",
+      "context": {
+        "student_state": ["curious", "practical"],
+        "intent_match": ["ask", "propose"],
+        "depth": "medium"
+      },
+      "response_style": {
+        "affect_tags": ["practical", "confident"],
+        "pad": [0.4, 0.1, 0.4]
+      }
+    },
+    {
+      "id": "gradual_007",
+      "title": "Dealing with Resistance",
+      "teaching": "Some days you won't want to practice. That's normal. Sit anyway, even if just for 2 minutes. The resistance itself becomes the practice - you learn to work with what is, not what you wish it were.",
+      "context": {
+        "student_state": ["frustrated", "resistant"],
+        "intent_match": ["reflect", "ask"],
+        "depth": "medium"
+      },
+      "response_style": {
+        "affect_tags": ["empathetic", "honest"],
+        "pad": [0.3, -0.1, 0.2]
+      }
+    }
+  ]
+}
