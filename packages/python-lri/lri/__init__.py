@@ -21,6 +21,19 @@ from .types import (
 )
 from . import ltp
 from . import lss
+from .cbor_cose import (
+    CoseError,
+    base64url_decode,
+    base64url_encode,
+    cose_from_signed_lce,
+    create_cose_sign1,
+    decode_cose_sign1,
+    deserialize_signed_lce,
+    encode_lce_cbor,
+    sign_lce,
+    verify_cose_sign1,
+    verify_signed_lce,
+)
 from .lri import LRI
 from .validator import validate_lce
 
@@ -40,4 +53,15 @@ __all__ = [
     "validate_lce",
     "ltp",
     "lss",
+    "encode_lce_cbor",
+    "create_cose_sign1",
+    "sign_lce",
+    "verify_cose_sign1",
+    "verify_signed_lce",
+    "decode_cose_sign1",
+    "deserialize_signed_lce",
+    "cose_from_signed_lce",
+    "base64url_encode",
+    "base64url_decode",
+    "CoseError",
 ]
