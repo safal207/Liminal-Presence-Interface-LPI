@@ -115,6 +115,74 @@ import { LSS, RedisSessionStorage } from 'node-lri/lss';
 const lss = new LSS({ storage: new RedisSessionStorage(new Redis()) });
 ```
 
+#### Message flow (Node.js)
+
+```ts
+app.post('/messages', async (req, res) => {
+  const { lce } = req.body;
+  const threadId = lce?.memory?.thread ?? req.headers['x-thread-id'];
+
+  if (threadId && lce) {
+    await lss.store(threadId, lce);
+    const metrics = await lss.getMetrics(threadId);
+
+    if (metrics && metrics.coherence.overall < 0.5) {
+      res.status(202).json({ action: 'clarify', coherence: metrics.coherence });
+      return;
+    }
+  }
+
+  res.json({ action: 'continue' });
+});
+
+lss.on('drift', (event) => {
+  console.warn('Thread drift detected', event.threadId, event.details);
+});
+```
+
+#### Message flow (Python)
+
+```python
+from fastapi import Depends, FastAPI, Request
+
+from lri.lss import LSS
+from lri.types import LCE
+
+lss = LSS()
+app = FastAPI()
+
+
+def session_state_payload(payload: dict | None) -> tuple[str | None, dict | None]:
+    if not payload:
+        return None, None
+    lce = payload.get("lce")
+    if not isinstance(lce, dict):
+        return None, None
+    thread = lce.get("memory", {}).get("thread") if isinstance(lce.get("memory"), dict) else None
+    return thread, lce
+
+
+async def session_state(request: Request) -> dict[str, float]:
+    payload = await request.json()
+    thread, lce_payload = session_state_payload(payload)
+    if thread and lce_payload:
+        lss.store(thread, LCE.model_validate(lce_payload))
+        metrics = lss.get_metrics(thread)
+        if metrics and metrics.coherence.overall < 0.5:
+            return {"coherence": metrics.coherence.overall}
+    return {"coherence": 1.0}
+
+
+@app.post("/messages")
+async def handle_message(state = Depends(session_state)):
+    if state["coherence"] < 0.5:
+        return {"action": "clarify"}
+    return {"action": "continue"}
+
+
+lss.on("drift", lambda event: print("drift", event.thread_id, event.details))
+```
+
 The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 
 ```json

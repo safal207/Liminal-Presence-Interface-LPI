@@ -42,6 +42,33 @@ Both SDKs emit a structured event (`type`, `severity`, `timestamp`, `details`)
 through an event emitter/observer interface. Events are also recorded on the
 session metrics for later inspection.
 
+## Metrics API
+
+Both SDKs expose the same operations for reading and adjusting telemetry:
+
+| Operation        | Node.js                         | Python                           | Notes |
+|------------------|---------------------------------|----------------------------------|-------|
+| Store message    | `lss.store(threadId, lce, payload?)` | `lss.store(thread_id, lce, payload=None)` | Appends to history and recalculates metrics. |
+| Read metrics     | `lss.getMetrics(threadId)`      | `lss.get_metrics(thread_id)`     | Returns `CoherenceResult` plus drift history. |
+| Update metrics   | `lss.updateMetrics(threadId, { coherence, driftEvents })` | `lss.update_metrics(thread_id, coherence=..., drift_events=...)` | Override values when an external service provides better estimates. |
+| Enumerate stats  | `lss.getStats()`                | `lss.get_stats()`                | Aggregated counts and average coherence. |
+| Listen for drift | `lss.on('drift', listener)`     | `lss.on('drift', callback)`      | Receives `DriftEvent` objects for real-time mitigation. |
+
+Metrics are persisted alongside the session and include `previousCoherence`
+(`previous_coherence`) so downstream components can inspect the trend even if
+no event fired.
+
+## Session expiry and cleanup
+
+- **In-memory** storage prunes expired sessions every time a new message is
+  stored. The TTL is derived from `sessionTTL` / `session_ttl` and compared with
+  the session's `updatedAt`.
+- **Redis** storage delegates expiration to native TTL support via the `PX`
+  option. Cleanup is therefore a no-op on the client side.
+
+When running clustered deployments it is safe to instantiate multiple LSS
+instances against the same Redis namespace because updates are idempotent.
+
 ## Storage adapters
 
 - **In-memory** – default `Map`/`dict` backend, fast and lightweight.

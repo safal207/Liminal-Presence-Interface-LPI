@@ -44,6 +44,22 @@ describe('LSS', () => {
     store.destroy();
   });
 
+  it('detects topic shift drift events within the configured window', async () => {
+    const store = new LSS({ topicShiftWindow: 4, driftMinCoherence: 0.1 });
+    const events: Array<{ type: string }> = [];
+    store.on('drift', (event) => events.push(event));
+
+    const topics = ['alpha', 'beta', 'gamma', 'delta'];
+    for (const [index, topic] of topics.entries()) {
+      const intent = index === 0 ? 'ask' : 'tell';
+      await store.store('topic-thread', baseLce(intent, [0.2, 0.2, 0.2], topic));
+    }
+
+    expect(events.some((event) => event.type === 'topic_shift')).toBe(true);
+
+    await store.destroy();
+  });
+
   it('allows manual metric updates', async () => {
     const store = createStore();
     await store.store('thread-3', baseLce('ask', [0.1, 0.1, 0.1], 'sync'));
