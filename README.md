@@ -187,6 +187,7 @@ lri/
 ├── examples/
 │   ├── express-app/     # Express example
 │   ├── fastapi-app/     # FastAPI example
+│   ├── lhs/             # Handshake traces (HTTP + WS)
 │   └── ws-echo/         # WebSocket example
 ├── sidecar/             # Transparent proxy
 ├── tools/               # CLI tools

@@ -57,7 +57,7 @@ Copy each issue to GitHub individually.
 
 **Goal:** Определить шаги Hello/Mirror/Bind/Seal/Flow.
 
-**Acceptance:** JSON-примеры первого фрейма WS и заголовков HTTP.
+**Status:** ✅ Ratified in `docs/specs/lhs.md`.
 
 **Status:** ✅ Final specification in `docs/specs/lhs.md` with synchronized HTTP and WebSocket transcripts in `examples/lhs/`.
 
@@ -71,9 +71,7 @@ Define the Liminal Handshake Sequence (LHS) protocol:
 4. **Seal** - Cryptographic commitment
 5. **Flow** - Regular LCE exchange
 
-Create examples for:
-- WebSocket first frame
-- HTTP headers for LHS negotiation
+**Acceptance:** JSON-примеры первого фрейма WS и заголовков HTTP. ✅ Выполнено, см. `examples/lhs/`.
 
 ---
 
