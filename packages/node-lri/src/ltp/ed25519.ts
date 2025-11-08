@@ -91,7 +91,15 @@ export async function verifyCanonical(
   publicKey: Uint8Array
 ): Promise<boolean> {
   const message = new TextEncoder().encode(canonicalJson);
-  return nacl.sign.detached.verify(message, signature, publicKey);
+  if (signature.length !== nacl.sign.signatureLength) {
+    return false;
+  }
+
+  try {
+    return nacl.sign.detached.verify(message, signature, publicKey);
+  } catch {
+    return false;
+  }
 }
 
 export async function verifyCanonicalBase64(
@@ -99,7 +107,15 @@ export async function verifyCanonicalBase64(
   signature: string,
   publicKey: Uint8Array
 ): Promise<boolean> {
-  return verifyCanonical(canonicalJson, decodeBase64Url(signature), publicKey);
+  try {
+    return verifyCanonical(
+      canonicalJson,
+      decodeBase64Url(signature),
+      publicKey
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function encodeSignature(signature: Uint8Array): string {

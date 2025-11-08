@@ -44,4 +44,24 @@ describe('LTP interoperability vectors', () => {
       verifyCanonicalBase64(vector.canonical, vector.signature, keys.publicKey)
     ).resolves.toBe(true);
   });
+
+  it('rejects signatures that fail Base64url decoding', async () => {
+    const vector = vectors[0];
+    const keys = jwkToKeyPair(vector.key.jwk);
+    await expect(
+      verifyCanonicalBase64(vector.canonical, '***not-base64***', keys.publicKey)
+    ).resolves.toBe(false);
+  });
+
+  it('rejects signatures that do not match the payload', async () => {
+    const vector = vectors[0];
+    const keys = jwkToKeyPair(vector.key.jwk);
+    const mutated = Buffer.from(vector.signature, 'base64url');
+    mutated[0] ^= 0xff;
+    const forged = Buffer.from(mutated).toString('base64url');
+
+    await expect(
+      verifyCanonicalBase64(vector.canonical, forged, keys.publicKey)
+    ).resolves.toBe(false);
+  });
 });
