@@ -3,3 +3,4 @@ uvicorn[standard]>=0.23.0
 pydantic>=2.0.0
 jcs>=0.2.0
 cryptography>=42.0.0
+cbor2>=5.6.0

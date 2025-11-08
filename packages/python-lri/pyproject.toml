@@ -28,6 +28,7 @@ dependencies = [
     "fastapi>=0.100.0",
     "cryptography>=42.0.0",
     "jcs>=0.2.0",
+    "cbor2>=5.6.0",
 ]
 
 [project.optional-dependencies]

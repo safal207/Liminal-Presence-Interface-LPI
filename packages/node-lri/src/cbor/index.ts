@@ -205,3 +205,5 @@ export function isValidLCE(buffer: Buffer): boolean {
     return false;
   }
 }
+
+export * from "./lce-cose";
