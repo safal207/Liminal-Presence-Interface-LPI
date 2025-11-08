@@ -185,7 +185,7 @@ def test_dependency_returns_400_for_malformed_header(fastapi_dependency_app):
     assert response.status_code == 400
     detail = response.json()["detail"]
     assert detail["error"] == "Malformed LCE header"
-    assert "Incorrect padding" in detail["message"]
+    assert detail["message"].startswith("Expecting value"), detail["message"]
 
 def test_dependency_round_trips_response_headers(fastapi_dependency_app):
     lri, client = fastapi_dependency_app

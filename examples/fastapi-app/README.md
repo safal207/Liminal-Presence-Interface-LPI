@@ -164,12 +164,12 @@ curl -X POST http://localhost:8000/ingest \
 }
 ```
 
-**Malformed header (Base64 error -> 400):**
+**Malformed header (decode failure -> 400):**
 ```json
 {
   "detail": {
     "error": "Malformed LCE header",
-    "message": "Incorrect padding"
+    "message": "Expecting value: line 1 column 1 (char 0)"
   }
 }
 ```
