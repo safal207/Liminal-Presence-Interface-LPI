@@ -92,6 +92,18 @@ async def get_data(request: Request):
 
 ## LCE - Liminal Context Envelope
 
+## LSS - Liminal Session Store
+
+LSS keeps lightweight conversational state with coherence and drift metrics.
+
+- **Node.js** – `import { LSS } from 'node-lri/lss'`
+- **Python** – `from lri.lss import LSS`
+
+Use `store(threadId, lce)` to append messages, `getMetrics` / `get_metrics` to
+read coherence breakdowns, and subscribe to the `drift` event to react when
+conversations lose alignment. See [docs/specs/lss.md](docs/specs/lss.md) for the
+full specification and usage examples.
+
 The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 
 ```json
@@ -192,7 +204,7 @@ lri/
 - ✅ Python SDK (FastAPI integration)
 - ✅ Base64 HTTP header encoding
 - ✅ Schema validation
-- ✅ LHS (Liminal Handshake Sequence) for WebSocket
+- ✅ LHS (Liminal Handshake Sequence) specification and transport transcripts
 - ✅ LTP (Liminal Trust Protocol) - Ed25519 + JWS signatures
 - ✅ LSS (Liminal Session Store) - coherence calculation
 - ✅ CBOR encoding for IoT
@@ -218,8 +230,8 @@ lri/
   - Express.js integration & production examples
 
 ### Reference
-- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md) (Draft)
-- [LHS Handshake Specification](docs/specs/lhs.md) ✅
+- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md)
+- [LHS Handshake Spec](docs/specs/lhs.md)
 - [LCE Schema Spec](schemas/lce-v0.1.json)
 - [Intent Vocabulary](vocab/intent.yaml)
 - [Affect Vocabulary](vocab/affect.yaml)
@@ -235,8 +247,6 @@ npm run vocab:build
 ```
 
 Artifacts are written to `vocab/dist/*.json` for publishing or SDK bundling.
-
-Run `npm test` to confirm the published JSON stays in lockstep with the YAML source files.
 
 ## Examples
 
@@ -310,6 +320,10 @@ const signed = await ltp.sign(lce, keys.privateKey);
 const valid = await ltp.verify(signed, keys.publicKey);
 console.log('Valid:', valid); // true
 ```
+
+### LHS Negotiation Transcripts
+
+See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LRI-LHS-Step`, `LRI-LHS`, and `LCE` headers.
 
 ## Contributing
 

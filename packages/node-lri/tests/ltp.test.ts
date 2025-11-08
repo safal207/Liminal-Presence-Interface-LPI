@@ -2,10 +2,60 @@
  * LTP (Liminal Trust Protocol) tests
  */
 
+import fs from 'fs';
+import path from 'path';
 import { ltp } from '../src';
 import { LCE } from '../src/types';
+import {
+  canonicalizeLtpPayload,
+  jwkToKeyPair,
+  signCanonicalBase64,
+  verifyCanonicalBase64,
+} from '../src/ltp';
 
 describe('LTP (Liminal Trust Protocol)', () => {
+  const fixturePath = path.resolve(
+    __dirname,
+    '../../../tests/fixtures/ltp/vectors.json'
+  );
+  const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf-8')) as {
+    vectors: Array<{
+      name: string;
+      lce: Record<string, unknown>;
+      canonical: string;
+      key: { jwk: { x: string; d: string; kty: string; crv: string } };
+      signature: string;
+    }>;
+  };
+
+  describe('shared fixture interoperability', () => {
+    const table = fixture.vectors.map(vector => [vector.name, vector] as const);
+
+    it.each(table)('produces canonical JSON for %s', (_, vector) => {
+      const canonical = canonicalizeLtpPayload(vector.lce);
+      expect(canonical).toBe(vector.canonical);
+    });
+
+    it.each(table)('creates deterministic signature for %s', async (_, vector) => {
+      const keys = jwkToKeyPair(vector.key.jwk as any);
+      const signature = await signCanonicalBase64(
+        vector.canonical,
+        keys.privateKey
+      );
+      expect(signature).toBe(vector.signature);
+    });
+
+    it.each(table)('verifies signature for %s', async (_, vector) => {
+      const keys = jwkToKeyPair(vector.key.jwk as any);
+      const valid = await verifyCanonicalBase64(
+        vector.canonical,
+        vector.signature,
+        keys.publicKey
+      );
+      expect(valid).toBe(true);
+    });
+  });
+
   describe('generateKeys', () => {
     it('should generate Ed25519 key pair', async () => {
       const keys = await ltp.generateKeys();

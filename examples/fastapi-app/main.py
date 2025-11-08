@@ -6,7 +6,7 @@ Demonstrates LRI usage with FastAPI
 
 from datetime import datetime
 from typing import Optional
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 import sys
 from pathlib import Path
@@ -20,11 +20,15 @@ app = FastAPI(title="LRI FastAPI Example")
 lri = LRI()
 
 
-@app.get("/ping")
-async def ping(request: Request):
-    """Simple ping endpoint with optional LCE"""
-    lce = await lri.parse_request(request, required=False)
+@app.exception_handler(HTTPException)
+async def passthrough_http_exception(_, exc: HTTPException):
+    """Return structured errors so clients and tests can rely on the format."""
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
+
+@app.get("/ping")
+async def ping(lce: Optional[LCE] = Depends(lri.dependency())):
+    """Simple ping endpoint with optional LCE"""
     if lce:
         print(f"Intent: {lce.intent.type}")
         if lce.affect and lce.affect.tags:
@@ -38,15 +42,13 @@ async def ping(request: Request):
 
 
 @app.post("/echo")
-async def echo(request: Request, body: dict):
+async def echo(body: dict, lce: Optional[LCE] = Depends(lri.dependency())):
     """Echo endpoint - mirrors LCE with response"""
-    request_lce = await lri.parse_request(request, required=False)
-
     # Create response LCE
     response_lce = LCE(
         v=1,
         intent=Intent(type="tell", goal="Echo response"),
-        policy=Policy(consent=request_lce.policy.consent if request_lce else "private"),
+        policy=Policy(consent=lce.policy.consent if lce else "private"),
     )
 
     # Create response with LCE header
@@ -62,10 +64,18 @@ async def echo(request: Request, body: dict):
     return response
 
 
+@app.post("/ingest")
+async def ingest(
+    payload: dict,
+    lce: LCE = Depends(lri.dependency(required=True)),
+):
+    """Require an LCE header before accepting data writes."""
+    return {"intent": lce.intent.type, "echo": payload.get("message", "")}
+
+
 @app.get("/api/data")
-async def get_data(request: Request):
+async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
     """Intent-aware endpoint"""
-    lce = await lri.parse_request(request, required=False)
     intent_type = lce.intent.type if lce else "unknown"
 
     # Respond differently based on intent
@@ -95,6 +105,7 @@ async def root():
         "endpoints": [
             "/ping",
             "/echo",
+            "/ingest",
             "/api/data",
         ],
         "lri": {

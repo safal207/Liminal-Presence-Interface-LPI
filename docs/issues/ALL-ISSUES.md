@@ -59,10 +59,17 @@ Copy each issue to GitHub individually.
 
 **Status:** ✅ Ratified in `docs/specs/lhs.md`.
 
-**Tasks:**
-- `docs/specs/lhs.md` ✅ Narrative + state machine
-- `examples/lhs/http.json` ✅ HTTP Upgrade trace
-- `examples/lhs/ws.json` ✅ WebSocket control frames
+**Status:** ✅ Final specification in `docs/specs/lhs.md` with synchronized HTTP and WebSocket transcripts in `examples/lhs/`.
+
+**Description:**
+
+Define the Liminal Handshake Sequence (LHS) protocol:
+
+1. **Hello** - Client announces capabilities
+2. **Mirror** - Server reflects and negotiates
+3. **Bind** - Establish session context
+4. **Seal** - Cryptographic commitment
+5. **Flow** - Regular LCE exchange
 
 **Acceptance:** JSON-примеры первого фрейма WS и заголовков HTTP. ✅ Выполнено, см. `examples/lhs/`.
 
@@ -132,6 +139,9 @@ server.on('message', (lce, payload) => {
 
 **Acceptance:** Кросс-тест Node↔Python на одинаковом LCE.
 
+**Status:** ✅ Implemented with shared fixtures (`tests/fixtures/ltp/vectors.json`),
+cross-SDK tests, and documentation in `docs/specs/ltp.md`.
+
 **Description:**
 
 Implement Liminal Trust Protocol (LTP):
@@ -142,8 +152,8 @@ Implement Liminal Trust Protocol (LTP):
 4. Cross-language compatibility tests
 
 Libraries:
-- Node: `@noble/ed25519`, `canonicalize`
-- Python: `PyNaCl`, `jcs`
+- Node: `tweetnacl`, `canonicalize`
+- Python: `cryptography`, `jcs`
 
 ---
 

@@ -1,109 +1,102 @@
 /**
- * LRI WebSocket Echo Client Example
- *
- * Demonstrates:
- * - Connecting to LRI WebSocket server
- * - LHS handshake from client side
- * - Sending messages with LCE context
- * - Receiving and handling responses
+ * LRI WebSocket Echo Client Example using the generic adapter.
  */
 
+const WebSocket = require('ws');
 const { ws } = require('node-lri');
 
+const { LRIWebSocketAdapter } = ws;
+
 const SERVER_URL = 'ws://localhost:8080';
+const socket = new WebSocket(SERVER_URL);
+const adapter = new LRIWebSocketAdapter({
+  role: 'client',
+  ws: socket,
+  features: ['lss'],
+});
 
-// Create LRI WebSocket client
-const client = new ws.LRIWSClient(SERVER_URL);
-
-// Track message thread
 const threadId = `thread-${Date.now()}`;
-let messageCount = 0;
+let pendingMessages = 0;
 
-// Message handler
-client.onMessage = (lce, payload) => {
+adapter.on('frame', (lce, payload) => {
   console.log('[Client] Received response:');
   console.log(`  Intent: ${lce.intent.type}`);
   if (lce.intent.goal) {
     console.log(`  Goal: ${lce.intent.goal}`);
   }
-  if (lce.affect) {
+  if (lce.affect?.tags) {
     console.log(`  Affect tags: ${lce.affect.tags.join(', ')}`);
   }
   console.log(`  Payload: ${payload.toString()}\n`);
-};
 
-// Error handler
-client.onError = (error) => {
+  pendingMessages--;
+  if (pendingMessages <= 0) {
+    console.log('[Client] All messages handled, closing connection...');
+    adapter.close(1000, 'Client finished');
+  }
+});
+
+adapter.on('error', (error) => {
   console.error('[Client] Error:', error.message);
-};
+});
 
-// Close handler
-client.onClose = () => {
+adapter.on('close', () => {
   console.log('[Client] Connection closed');
   process.exit(0);
-};
-
-// Connect to server
-console.log(`Connecting to ${SERVER_URL}...`);
-
-client.connect().then(() => {
-  console.log('[Client] Connected and handshake completed!\n');
-
-  // Send a series of test messages
-  const messages = [
-    {
-      lce: {
-        v: 1,
-        intent: { type: 'ask', goal: 'Test basic echo' },
-        policy: { consent: 'private' },
-        memory: { thread: threadId, t: new Date().toISOString() }
-      },
-      payload: 'Hello, LRI!'
-    },
-    {
-      lce: {
-        v: 1,
-        intent: { type: 'tell', goal: 'Send data' },
-        affect: {
-          pad: [0.7, 0.5, 0.3],
-          tags: ['curious', 'casual']
-        },
-        policy: { consent: 'private' },
-        memory: { thread: threadId, t: new Date().toISOString() }
-      },
-      payload: 'This message has affect metadata'
-    },
-    {
-      lce: {
-        v: 1,
-        intent: { type: 'propose', goal: 'Suggest action' },
-        policy: { consent: 'team', share: ['echo-service'] },
-        memory: { thread: threadId, t: new Date().toISOString() }
-      },
-      payload: 'Let\'s test consent levels'
-    }
-  ];
-
-  // Send messages with delay
-  messages.forEach((msg, index) => {
-    setTimeout(() => {
-      console.log(`[Client] Sending message ${index + 1}/${messages.length}:`);
-      console.log(`  Intent: ${msg.lce.intent.type}`);
-      console.log(`  Payload: ${msg.payload}\n`);
-
-      client.send(msg.lce, msg.payload);
-      messageCount++;
-
-      // Disconnect after last message response
-      if (messageCount === messages.length) {
-        setTimeout(() => {
-          console.log('[Client] All messages sent, disconnecting...');
-          client.disconnect();
-        }, 2000);
-      }
-    }, index * 1000); // 1 second between messages
-  });
-}).catch((error) => {
-  console.error('[Client] Connection failed:', error.message);
-  process.exit(1);
 });
+
+console.log(`Connecting to ${SERVER_URL} using adapter...`);
+
+adapter.ready
+  .then(() => {
+    console.log('[Client] Connected and handshake completed!\n');
+
+    const messages = [
+      {
+        lce: {
+          v: 1,
+          intent: { type: 'ask', goal: 'Test basic echo' },
+          policy: { consent: 'private' },
+          memory: { thread: threadId, t: new Date().toISOString() },
+        },
+        payload: 'Hello, LRI!',
+      },
+      {
+        lce: {
+          v: 1,
+          intent: { type: 'tell', goal: 'Send data' },
+          affect: {
+            pad: [0.7, 0.5, 0.3],
+            tags: ['curious', 'casual'],
+          },
+          policy: { consent: 'private' },
+          memory: { thread: threadId, t: new Date().toISOString() },
+        },
+        payload: 'This message has affect metadata',
+      },
+      {
+        lce: {
+          v: 1,
+          intent: { type: 'propose', goal: 'Suggest action' },
+          policy: { consent: 'team', share: ['echo-service'] },
+          memory: { thread: threadId, t: new Date().toISOString() },
+        },
+        payload: "Let's test consent levels",
+      },
+    ];
+
+    pendingMessages = messages.length;
+
+    messages.forEach((message, index) => {
+      setTimeout(() => {
+        console.log(`[Client] Sending message ${index + 1}/${messages.length}:`);
+        console.log(`  Intent: ${message.lce.intent.type}`);
+        console.log(`  Payload: ${message.payload}\n`);
+        adapter.send(message.lce, message.payload);
+      }, index * 1000);
+    });
+  })
+  .catch((error) => {
+    console.error('[Client] Connection failed:', error.message);
+    process.exit(1);
+  });

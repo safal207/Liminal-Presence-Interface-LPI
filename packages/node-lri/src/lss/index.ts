@@ -10,7 +10,14 @@
  * - Drift detection
  */
 
+import { EventEmitter } from 'node:events';
+
 import { LCE } from '../types';
+
+type EventEmitterListener = Parameters<EventEmitter['on']>[1];
+type EventEmitterEmitArgs = Parameters<EventEmitter['emit']> extends [unknown, ...infer R]
+  ? R
+  : never;
 
 /**
  * Stored message in session
@@ -19,7 +26,7 @@ export interface LSSMessage {
   /** LCE envelope */
   lce: LCE;
   /** Message payload */
-  payload?: any;
+  payload?: unknown;
   /** Timestamp */
   timestamp: Date;
 }
@@ -27,6 +34,30 @@ export interface LSSMessage {
 /**
  * Session data
  */
+export interface DriftEvent {
+  /** Event identifier */
+  type: 'coherence_drop' | 'topic_shift';
+  /** Severity bucket */
+  severity: 'low' | 'medium' | 'high';
+  /** When the drift was detected */
+  timestamp: Date;
+  /** Additional diagnostic data */
+  details?: Record<string, unknown>;
+  /** Thread identifier (populated when persisted/emitted) */
+  threadId?: string;
+}
+
+export interface SessionMetrics {
+  /** Latest coherence result */
+  coherence: CoherenceResult;
+  /** Previous coherence snapshot */
+  previousCoherence?: CoherenceResult;
+  /** Recorded drift events */
+  driftEvents: DriftEvent[];
+  /** Metrics metadata */
+  updatedAt: Date;
+}
+
 export interface LSSSession {
   /** Thread/session ID */
   threadId: string;
@@ -34,6 +65,8 @@ export interface LSSSession {
   messages: LSSMessage[];
   /** Current coherence score */
   coherence: number;
+  /** Session metrics */
+  metrics: SessionMetrics;
   /** Session metadata */
   metadata: {
     createdAt: Date;
@@ -66,6 +99,12 @@ export interface LSSOptions {
   sessionTTL?: number;
   /** Coherence calculation window */
   coherenceWindow?: number;
+  /** Minimum acceptable coherence before flagging drift */
+  driftMinCoherence?: number;
+  /** Required drop from the previous coherence before drift */
+  driftDropThreshold?: number;
+  /** Topic diversity that indicates drift */
+  topicShiftWindow?: number;
 }
 
 /**
@@ -113,16 +152,20 @@ const INTENT_VECTORS: Record<string, number[]> = {
  * console.log('Intent similarity:', coherence.intentSimilarity);
  * ```
  */
-export class LSS {
+export class LSS extends EventEmitter {
   private sessions: Map<string, LSSSession> = new Map();
   private options: Required<LSSOptions>;
   private cleanupTimer?: NodeJS.Timeout;
 
   constructor(options: LSSOptions = {}) {
+    super();
     this.options = {
       maxMessages: options.maxMessages ?? 1000,
       sessionTTL: options.sessionTTL ?? 3600000, // 1 hour
       coherenceWindow: options.coherenceWindow ?? 10, // Last 10 messages
+      driftMinCoherence: options.driftMinCoherence ?? 0.6,
+      driftDropThreshold: options.driftDropThreshold ?? 0.2,
+      topicShiftWindow: options.topicShiftWindow ?? 5,
     };
 
     // Start cleanup timer
@@ -136,7 +179,7 @@ export class LSS {
    * @param lce - LCE envelope
    * @param payload - Optional payload
    */
-  async store(threadId: string, lce: LCE, payload?: any): Promise<void> {
+  async store(threadId: string, lce: LCE, payload?: unknown): Promise<void> {
     let session = this.sessions.get(threadId);
 
     if (!session) {
@@ -145,6 +188,16 @@ export class LSS {
         threadId,
         messages: [],
         coherence: 1.0, // Start with perfect coherence
+        metrics: {
+          coherence: {
+            overall: 1.0,
+            intentSimilarity: 1.0,
+            affectStability: 1.0,
+            semanticAlignment: 1.0,
+          },
+          driftEvents: [],
+          updatedAt: new Date(),
+        },
         metadata: {
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -173,8 +226,43 @@ export class LSS {
     // Recalculate coherence
     if (session.messages.length >= 2) {
       const result = this.calculateCoherence(session.messages);
+      const driftEvent = this.detectDrift(session, result);
+
+      session.metrics.previousCoherence = session.metrics.coherence;
+      session.metrics.coherence = result;
+      session.metrics.updatedAt = new Date();
       session.coherence = result.overall;
+
+      if (driftEvent) {
+        const enrichedEvent: DriftEvent & { threadId: string } = { ...driftEvent, threadId };
+        session.metrics.driftEvents.push(enrichedEvent);
+        this.emit('drift', enrichedEvent);
+      }
     }
+  }
+
+  override on(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
+  override on(event: string | symbol, listener: EventEmitterListener): this;
+  override on(event: string | symbol, listener: EventEmitterListener): this {
+    return super.on(event, listener);
+  }
+
+  override once(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
+  override once(event: string | symbol, listener: EventEmitterListener): this;
+  override once(event: string | symbol, listener: EventEmitterListener): this {
+    return super.once(event, listener);
+  }
+
+  override off(event: 'drift', listener: (payload: DriftEvent & { threadId: string }) => void): this;
+  override off(event: string | symbol, listener: EventEmitterListener): this;
+  override off(event: string | symbol, listener: EventEmitterListener): this {
+    return super.off(event, listener);
+  }
+
+  override emit(event: 'drift', payload: DriftEvent & { threadId: string }): boolean;
+  override emit(event: string | symbol, ...args: EventEmitterEmitArgs): boolean;
+  override emit(event: string | symbol, ...args: EventEmitterEmitArgs): boolean {
+    return super.emit(event, ...args);
   }
 
   /**
@@ -185,6 +273,43 @@ export class LSS {
    */
   async getSession(threadId: string): Promise<LSSSession | null> {
     return this.sessions.get(threadId) || null;
+  }
+
+  /**
+   * Get metrics for a session
+   */
+  async getMetrics(threadId: string): Promise<SessionMetrics | null> {
+    const session = this.sessions.get(threadId);
+    return session ? session.metrics : null;
+  }
+
+  /**
+   * Update session metrics manually
+   */
+  async updateMetrics(
+    threadId: string,
+    metrics: Partial<Pick<SessionMetrics, 'coherence' | 'driftEvents'>>,
+  ): Promise<SessionMetrics | null> {
+    const session = this.sessions.get(threadId);
+    if (!session) {
+      return null;
+    }
+
+    if (metrics.coherence) {
+      session.metrics.previousCoherence = session.metrics.coherence;
+      session.metrics.coherence = metrics.coherence;
+      session.coherence = metrics.coherence.overall;
+    }
+
+    if (metrics.driftEvents) {
+      session.metrics.driftEvents = metrics.driftEvents.map((event) => ({
+        ...event,
+        threadId,
+      }));
+    }
+
+    session.metrics.updatedAt = new Date();
+    return session.metrics;
   }
 
   /**
@@ -274,6 +399,51 @@ export class LSS {
   }
 
   /**
+   * Detect drift based on coherence and topic changes
+   */
+  private detectDrift(session: LSSSession, coherence: CoherenceResult): DriftEvent | null {
+    const prev = session.metrics.coherence;
+
+    const drop = prev.overall - coherence.overall;
+    if (
+      coherence.overall < this.options.driftMinCoherence &&
+      drop >= this.options.driftDropThreshold
+    ) {
+      return {
+        type: 'coherence_drop',
+        severity: drop > 0.4 ? 'high' : drop > 0.25 ? 'medium' : 'low',
+        timestamp: new Date(),
+        details: {
+          previous: prev.overall,
+          current: coherence.overall,
+        },
+      };
+    }
+
+    const topics = session.messages
+      .slice(-this.options.topicShiftWindow)
+      .map((m) => m.lce.meaning?.topic)
+      .filter((t): t is string => !!t);
+
+    if (topics.length >= 3) {
+      const uniqueTopics = new Set(topics);
+      if (uniqueTopics.size >= Math.min(topics.length, 3)) {
+        return {
+          type: 'topic_shift',
+          severity: uniqueTopics.size > 3 ? 'high' : 'medium',
+          timestamp: new Date(),
+          details: {
+            window: topics,
+            uniqueTopics: uniqueTopics.size,
+          },
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Calculate affect stability
    *
    * Measures variance in PAD vectors.
@@ -359,6 +529,10 @@ export class LSS {
         }
       }
     }, 60000); // Check every minute
+
+    if (typeof this.cleanupTimer.unref === 'function') {
+      this.cleanupTimer.unref();
+    }
   }
 
   /**

@@ -1,226 +1,114 @@
-# WebSocket Echo Server Example
+# WebSocket Echo Server Example (Adapter Edition)
 
-This example demonstrates the LRI WebSocket implementation with the LHS (Liminal Handshake Sequence) protocol.
+This example demonstrates the `LRIWebSocketAdapter`, a lightweight helper that performs the LHS (Liminal Handshake Sequence) and LCE framing on top of plain `ws` sockets.
 
-## Features
+## Highlights
 
-- **LHS Handshake**: Full 4-step handshake (Hello → Mirror → Bind → Seal)
-- **LCE Framing**: Length-prefixed LCE + payload encoding
-- **Session Management**: Track multiple concurrent connections
-- **Semantic Echo**: Echo messages back with modified LCE context
+- **Adapter Driven** – reuse the same adapter on the server and the client.
+- **Full LHS Handshake** – hello → mirror → bind → seal handled automatically.
+- **Binary LCE Frames** – payloads are delivered as `[length][LCE JSON][payload]` buffers.
+- **Semantic Echo** – the server reflects intent, affect, and memory metadata back to the client.
 
-## What This Example Shows
-
-### Server (`server.js`)
-- Creates an LRI WebSocket server on port 8080
-- Handles the LHS handshake automatically
-- Receives messages with LCE context
-- Echoes back with modified intent and affect
-- Tracks active sessions
-- Graceful shutdown on SIGINT
-
-### Client (`client.js`)
-- Connects to the LRI WebSocket server
-- Performs LHS handshake
-- Sends test messages with different LCE contexts:
-  - `ask` intent with basic context
-  - `tell` intent with affect metadata
-  - `propose` intent with consent policy
-- Maintains thread continuity across messages
-- Receives and logs responses
-
-## LHS Handshake Flow
+## Project Layout
 
 ```
-Client                          Server
-  |                               |
-  |--- Hello (versions/features)→ |
-  |                               |
-  | ←-- Mirror (selected options) |
-  |                               |
-  |--- Bind (thread/auth) ------→ |
-  |                               |
-  | ←-- Seal (session_id) ------- |
-  |                               |
-  |=== Flow (LCE frames) ========>|
-```
-
-## LCE Frame Format
-
-Each message is encoded as:
-```
-[4 bytes: length][N bytes: LCE JSON][remaining: payload]
-```
-
-Example:
-```javascript
-{
-  v: 1,
-  intent: { type: 'ask', goal: 'Test echo' },
-  policy: { consent: 'private' }
-}
-```
-+
-```
-"Hello, LRI!"
+examples/ws-echo/
+├── client.js  # Client that uses the adapter to connect and send LCE frames
+├── server.js  # WebSocket server that wraps each socket with the adapter
+└── README.md
 ```
 
 ## Running the Example
 
-### Prerequisites
+Install dependencies (the example links against the local workspace package):
 
 ```bash
 cd examples/ws-echo
 npm install
 ```
 
-### Start the Server
+Start the server:
 
 ```bash
 npm run server
 ```
 
-Output:
-```
-LRI WebSocket Echo Server listening on port 8080
-Waiting for connections...
-```
-
-### Run the Client (in another terminal)
+In another terminal run the client:
 
 ```bash
 npm run client
 ```
 
-Expected output:
-```
-Connecting to ws://localhost:8080...
-[Client] Connected and handshake completed!
+### Expected Output
 
+Server logs:
+
+```
+LRI WebSocket Echo Server (adapter) listening on port 8080
+[Server] Client connected: 7f0d...
+[Server] Received from 7f0d...:
+  Intent: ask
+  Goal: Test basic echo
+  Payload: Hello, LRI!
+```
+
+Client logs:
+
+```
+Connecting to ws://localhost:8080 using adapter...
+[Client] Connected and handshake completed!
 [Client] Sending message 1/3:
   Intent: ask
   Payload: Hello, LRI!
-
 [Client] Received response:
   Intent: tell
   Goal: Echo of: Test basic echo
   Payload: Echo: Hello, LRI!
-
-...
 ```
 
-## Code Walkthrough
-
-### Server Handler
+## Server Walkthrough (`server.js`)
 
 ```javascript
+const { WebSocketServer } = require('ws');
 const { ws } = require('node-lri');
 
-const server = new ws.LRIWSServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 8080 });
 
-server.onMessage = (sessionId, lce, payload) => {
-  // Modify LCE for response
-  const responseLCE = {
-    v: 1,
-    intent: { type: 'tell', goal: `Echo of: ${lce.intent.goal}` },
-    policy: { consent: 'private' }
-  };
+wss.on('connection', (socket) => {
+  const adapter = new ws.LRIWebSocketAdapter({ role: 'server', ws: socket, features: ['lss'] });
 
-  // Echo back
-  server.send(sessionId, responseLCE, `Echo: ${payload}`);
-};
+  adapter.once('ready', ({ sessionId }) => {
+    console.log(`[Server] Client connected: ${sessionId}`);
+  });
+
+  adapter.on('frame', (lce, payload) => {
+    adapter.send(
+      {
+        v: 1,
+        intent: { type: 'tell', goal: `Echo of: ${lce.intent.goal || 'your message'}` },
+        policy: { consent: 'private' },
+      },
+      `Echo: ${payload.toString()}`
+    );
+  });
+});
 ```
 
-### Client Usage
+## Client Walkthrough (`client.js`)
 
 ```javascript
-const client = new ws.LRIWSClient('ws://localhost:8080');
+const WebSocket = require('ws');
+const { ws } = require('node-lri');
 
-client.onMessage = (lce, payload) => {
-  console.log('Received:', payload.toString());
-};
+const socket = new WebSocket('ws://localhost:8080');
+const adapter = new ws.LRIWebSocketAdapter({ role: 'client', ws: socket });
 
-await client.connect(); // Performs LHS handshake
-
-client.send(
-  { v: 1, intent: { type: 'ask' }, policy: { consent: 'private' } },
-  'Hello!'
-);
+adapter.ready.then(() => {
+  adapter.send(
+    { v: 1, intent: { type: 'ask', goal: 'Ping' }, policy: { consent: 'private' } },
+    'Hello from the client!'
+  );
+});
 ```
 
-## LCE Context Examples
-
-### Basic Message
-```javascript
-{
-  v: 1,
-  intent: { type: 'tell' },
-  policy: { consent: 'private' }
-}
-```
-
-### With Affect and Memory
-```javascript
-{
-  v: 1,
-  intent: { type: 'ask', goal: 'Get data' },
-  affect: {
-    pad: [0.7, 0.5, 0.3],  // Pleasure, Arousal, Dominance
-    tags: ['curious', 'urgent']
-  },
-  memory: {
-    thread: 'thread-123',
-    t: '2025-01-15T10:30:00Z'
-  },
-  policy: { consent: 'team', share: ['service-a'] }
-}
-```
-
-## Protocol Details
-
-### LHS Steps
-
-1. **Hello**: Client announces supported versions and features
-2. **Mirror**: Server selects version and encoding to use
-3. **Bind**: Client provides thread ID and optional auth
-4. **Seal**: Server confirms with session ID and signature
-
-### Frame Encoding
-
-The LCE + payload is encoded as a single frame:
-- First 4 bytes: Big-endian uint32 length of LCE JSON
-- Next N bytes: LCE JSON (UTF-8)
-- Remaining bytes: Binary payload
-
-This allows efficient streaming and clear boundaries between LCE metadata and payload data.
-
-## Testing
-
-Try modifying the client to send different messages:
-
-```javascript
-// Test different intent types
-{ type: 'ask' }      // Question
-{ type: 'tell' }     // Statement
-{ type: 'propose' }  // Suggestion
-{ type: 'notify' }   // Notification
-
-// Test different consent levels
-{ consent: 'private' }  // Only me
-{ consent: 'team' }     // My team
-{ consent: 'public' }   // Everyone
-```
-
-## Next Steps
-
-- Add authentication in the Bind step
-- Implement session persistence with LSS
-- Add cryptographic signatures (LTP)
-- Create a chat UI demo
-- Test with multiple concurrent clients
-
-## Related
-
-- [Node.js SDK Documentation](../../packages/node-lri/README.md)
-- [RFC-000: LRI Specification](../../docs/rfcs/rfc-000.md)
-- [LHS Protocol](../../docs/rfcs/rfc-000.md#lhs-liminal-handshake-sequence)
+Both sides receive parsed LCE objects and raw payload buffers via the adapter, letting you concentrate on semantics rather than protocol wiring.

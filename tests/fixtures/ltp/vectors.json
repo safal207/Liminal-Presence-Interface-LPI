@@ -1,0 +1,78 @@
+{
+  "description": "Shared LTP canonicalization and Ed25519 signature vectors",
+  "vectors": [
+    {
+      "name": "basic-lce",
+      "lce": {
+        "v": 1,
+        "intent": {
+          "type": "tell",
+          "audience": [
+            "alpha",
+            "beta"
+          ]
+        },
+        "policy": {
+          "consent": "public",
+          "expires": "2025-01-01T00:00:00Z"
+        },
+        "payload": {
+          "msg": "Hello, liminal world!",
+          "count": 2
+        }
+      },
+      "canonical": "{\"intent\":{\"audience\":[\"alpha\",\"beta\"],\"type\":\"tell\"},\"payload\":{\"count\":2,\"msg\":\"Hello, liminal world!\"},\"policy\":{\"consent\":\"public\",\"expires\":\"2025-01-01T00:00:00Z\"},\"v\":1}",
+      "key": {
+        "jwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "d": "0aoSj9GPkznIHIFkgDIVogXSBopXTwJgvj0JQc_vIv0",
+          "x": "OW2pIBP_zGAs1eCkVZN-Zj60nd6wzTQE4hoo5JHNn3Y"
+        }
+      },
+      "signature": "qy9FzsZ9fqFY8_H6zSrqZTYFSE9QqhqzPq7f0fNBRC10bvkG5ixpgzUCzpviAozYSnWAdV8ZgUUSXyJ67bSyDw"
+    },
+    {
+      "name": "complex-lce",
+      "lce": {
+        "v": 1,
+        "intent": {
+          "type": "ask",
+          "topic": "thresholds"
+        },
+        "policy": {
+          "consent": "private",
+          "retention": {
+            "ttl": 3600
+          }
+        },
+        "payload": {
+          "nested": [
+            {
+              "z": 2,
+              "a": 1
+            },
+            {
+              "values": [
+                3.14,
+                2.72
+              ]
+            }
+          ],
+          "active": true,
+          "meta": null
+        }
+      },
+      "canonical": "{\"intent\":{\"topic\":\"thresholds\",\"type\":\"ask\"},\"payload\":{\"active\":true,\"meta\":null,\"nested\":[{\"a\":1,\"z\":2},{\"values\":[3.14,2.72]}]},\"policy\":{\"consent\":\"private\",\"retention\":{\"ttl\":3600}},\"v\":1}",
+      "key": {
+        "jwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "d": "m7Vq3hzCt0zMQWSXINHaKdrmzpebS7rgVvV5xamtFyo",
+          "x": "T3Op-2BJJ1AQsSHZ5mRoPjVvunPgvTW9_Vh3Wuc5k0M"
+        }
+      },
+      "signature": "OYxWa433qY4GlyiZMBIGk4m57H2CGycANgbuQkjg_S1OyuREKLGMbp-0KiZaizYZA0VTAyc7LhOo9SfoH-4eDQ"
+    }
+  ]
+}

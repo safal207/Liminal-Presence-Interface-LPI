@@ -4,7 +4,7 @@ LRI main class for FastAPI integration
 
 import base64
 import json
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 from fastapi import Request, HTTPException
 from .types import LCE
 from .validator import validate_lce
@@ -102,6 +102,25 @@ class LRI:
                     "message": str(e),
                 },
             )
+
+    def dependency(self, required: bool = False) -> Callable[[Request], Awaitable[Optional[LCE]]]:
+        """Return a FastAPI dependency for parsing LCE headers.
+
+        Args:
+            required: When ``True`` the dependency raises ``HTTPException`` with
+                status code ``428`` if the header is missing. Defaults to
+                ``False`` so routes can degrade gracefully when the header is
+                absent.
+
+        Returns:
+            Callable that FastAPI can use with ``Depends`` to inject an
+            ``Optional[LCE]`` into the route handler.
+        """
+
+        async def _dependency(request: Request) -> Optional[LCE]:
+            return await self.parse_request(request, required=required)
+
+        return _dependency
 
     @staticmethod
     def create_header(lce: LCE) -> str:

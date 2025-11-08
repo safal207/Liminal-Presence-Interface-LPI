@@ -1,224 +1,451 @@
-# Liminal Handshake Sequence (LHS)
+# LHS-001: Liminal Handshake Sequence (Hello → Mirror → Bind → Seal → Flow)
 
-The Liminal Handshake Sequence establishes mutual awareness between an LRI-aware
-client and server before any Liminal Communication Envelope (LCE) payloads are
-exchanged. It harmonises connection setup across HTTP upgrade and native
-WebSocket transports by enforcing a canonical five-step progression:
-
-1. **Hello** – the client proposes protocol capabilities.
-2. **Mirror** – the server reflects compatibility and resolves the channel
-   contract.
-3. **Bind** – the client anchors intent to a session/thread context.
-4. **Seal** – the server commits cryptographic trust guarantees for the flow.
-5. **Flow** – both parties exchange LCE frames under the negotiated contract.
-
-The sequence is intentionally symmetrical with the Layer-8 ethos: each stage
-captures a distinct human/agent need (intention, acknowledgement, attachment,
-trust and resonance) while remaining machine-verifiable.
+**Status:** Final
+**Author(s):** LRI Protocol Working Group
+**Created:** 2025-01-20
+**Updated:** 2025-02-15
+**Version:** 1.0.0
 
 ---
 
-## 1. Transport Overview
+## Table of Contents
 
-LHS can ride on any duplex transport that supports message framing. The default
-profile targets WebSocket, but the same semantics can be expressed via HTTP
-Upgrade headers. Implementations MUST treat the negotiated result as binding for
-the duration of the session.
-
-Key transport properties:
-
-- **Deterministic ordering.** Steps must arrive in the precise order
-  `hello → mirror → bind → seal`. Any deviation is a protocol error.
-- **Idempotent retries.** `hello` MAY be retried after connection loss; all
-  subsequent steps are single-shot per connection.
-- **Capability envelopes.** Both `hello` and `mirror` contain capability maps so
-  the client and server can converge on supported encodings, features and
-  maximum payload sizes.
+- [Abstract](#abstract)
+- [1. Purpose and Scope](#1-purpose-and-scope)
+- [2. Sequence Overview](#2-sequence-overview)
+  - [2.1 Roles](#21-roles)
+  - [2.2 Message Envelope](#22-message-envelope)
+  - [2.3 Timing Expectations](#23-timing-expectations)
+- [3. Step Narratives](#3-step-narratives)
+  - [3.1 Hello](#31-hello)
+  - [3.2 Mirror](#32-mirror)
+  - [3.3 Bind](#33-bind)
+  - [3.4 Seal](#34-seal)
+  - [3.5 Flow](#35-flow)
+- [4. State & Timing Models](#4-state--timing-models)
+  - [4.1 Client State Machine](#41-client-state-machine)
+  - [4.2 Server State Machine](#42-server-state-machine)
+  - [4.3 Temporal Sequence Diagram](#43-temporal-sequence-diagram)
+  - [4.4 Timing Budget Timeline](#44-timing-budget-timeline)
+- [5. Transport Bindings](#5-transport-bindings)
+  - [5.1 HTTP Negotiation Headers](#51-http-negotiation-headers)
+  - [5.2 WebSocket First Frames](#52-websocket-first-frames)
+- [6. Failure Handling](#6-failure-handling)
+- [7. Security Considerations](#7-security-considerations)
+- [8. References and Examples](#8-references-and-examples)
 
 ---
 
-## 2. State Machine
+## Abstract
 
-```mermaid
-stateDiagram-v2
-    [*] --> HELLO : Client connects
-    HELLO --> MIRROR : Server accepts capabilities
-    MIRROR --> BIND : Client attaches session context
-    BIND --> SEAL : Server commits trust/crypto
-    SEAL --> FLOW : Normal LCE exchange
-    state FLOW {
-      [*] --> Resonance
-      Resonance --> Resonance : LCE Frames
-      Resonance --> [*] : Close
-    }
-    HELLO --> [*] : Reject / timeout
-    MIRROR --> [*] : Incompatible features
-    BIND --> [*] : Invalid session context
-    SEAL --> [*] : Trust failure
+The **Liminal Handshake Sequence (LHS)** establishes mutual capability awareness between LRI-aware clients and servers before any semantic payload is exchanged. Each step refines the shared context, negotiates features, and produces a sealed session that transitions into sustained **Flow** of LCE (Liminal Context Envelope) messages. This document narrates each step and defines normative state-machine transitions for implementations.
+
+---
+
+## 1. Purpose and Scope
+
+1. Define the ordered steps (**Hello → Mirror → Bind → Seal → Flow**) that precede LCE exchange.
+2. Describe required and optional fields for each message.
+3. Provide canonical state machines for clients and servers.
+4. Specify transport bindings for HTTP headers and WebSocket frames.
+5. Outline failure handling and security expectations for interoperable agents.
+
+This specification does **not** redefine LCE structure, cryptography primitives, or application-specific payloads.
+
+---
+
+## 2. Sequence Overview
+
+The handshake is a four-message negotiation followed by a steady-state flow. Hello and Bind originate from the client; Mirror and Seal originate from the server.
+
+```text
+Client                                       Server
+  │                                             │
+  │  1. Hello (capabilities, preferences)       │
+  ├────────────────────────────────────────────►│
+  │                                             │
+  │  2. Mirror (negotiated view)                │
+  │◄────────────────────────────────────────────┤
+  │                                             │
+  │  3. Bind (session context & auth)           │
+  ├────────────────────────────────────────────►│
+  │                                             │
+  │  4. Seal (session commitment)               │
+  │◄────────────────────────────────────────────┤
+  │                                             │
+  │  5. Flow (bidirectional LCE exchange)       │
+  │◄══════════════════════════════════════════►│
 ```
 
----
+### 2.1 Roles
 
-## 3. Message Definitions
+| Role | Responsibility |
+|------|----------------|
+| **Initiator (Client)** | Starts Hello, supplies Bind, validates Seal, and begins Flow after confirmation. |
+| **Responder (Server)** | Mirrors negotiated options, validates Bind, issues Seal, and enforces policies during Flow. |
 
-All LHS control frames are JSON objects with the following canonical structure:
+### 2.2 Message Envelope
 
-### 3.1 Hello (client → server)
+All LHS messages share a JSON envelope with a `step` discriminator. Additional fields vary per step and are listed in [Section 3](#3-step-narratives).
 
 ```json
 {
   "step": "hello",
-  "lri_version": "0.1",
-  "encodings": ["json", "cbor"],
-  "features": ["ltp", "lss"],
-  "max_frame_bytes": 65536,
-  "session": {
-    "kind": "ephemeral",
-    "locale": "en-US"
-  }
+  "…": "…"
 }
 ```
 
-Required fields:
+Identifiers (`client_id`, `server_id`, `session_id`, `thread`) are opaque strings. Feature flags reference the capability names defined in [RFC-000](../rfcs/rfc-000.md).
 
-- `lri_version` – LRI semantic version string. The server MUST compare against
-  supported versions and reject unknown majors.
-- `encodings` – ordered preference list for LCE framing (e.g. `json`, `cbor`).
-- `features` – requested optional capabilities (`ltp`, `lss`, `telemetry`).
-- `max_frame_bytes` – soft limit for downstream frames.
+### 2.3 Timing Expectations
 
-Optional `session` metadata allows the client to communicate user agent hints
-without committing to a thread yet.
+Default watchdogs for each phase are shown below. Implementations MAY shorten the durations when transport latency is predictable but MUST communicate custom budgets in deployment documentation.
 
-### 3.2 Mirror (server → client)
+| Phase | Default Watchdog | Notes |
+|-------|------------------|-------|
+| Hello → Mirror | 2.0 s | Includes client transmission and server validation of advertised features. |
+| Mirror → Bind | 1.5 s | Client preparation of authentication material; extend when out-of-band sign-in is required. |
+| Bind → Seal | 2.5 s | Server authorization and session provisioning. |
+| Seal → Flow | 1.0 s | Client verification of signatures and initiation of first Flow payload. |
+
+If the responder advertises a `session_window` in Mirror, that value supersedes the Seal → Flow default. Flow SHOULD begin at least 500 ms before the `session_window` elapses to allow for retransmission if Seal acknowledgment is lost.
+
+---
+
+## 3. Step Narratives
+
+Each subsection below is normative unless otherwise stated. Implementations MUST emit and accept lowercase `step` identifiers.
+
+### 3.1 Hello
+
+**Purpose:** Initiate the handshake and advertise client-side capabilities.
+
+**Payload Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `step` | string | ✅ | Literal value `"hello"`. |
+| `lri_version` | string | ✅ | Highest protocol version supported by the client. |
+| `encodings` | array | ✅ | Ordered preference list of payload encodings (e.g., `"json"`, `"cbor"`). |
+| `features` | array | ✅ | Requested optional features such as `"ltp"`, `"lss"`, `"compression"`. |
+| `client_id` | string | ⚠️ | Optional stable identifier for session analytics or resumption. |
+
+**Narrative:** The client composes Hello with the maximum LRI version and capability wishlist. Servers SHOULD preserve ordering to honor client preference. Unknown feature names MUST be ignored rather than rejected.
+
+**Validation:**
+
+- Reject if `lri_version` is unsupported.
+- Reject if `encodings` is empty.
+- Reject if payload exceeds negotiated size limits (default 4 KB).
+
+**Preconditions:** Client transport session is open and TLS is negotiated. Cached `client_id` SHOULD be stable across resumptions.
+
+**On Success:** Client enters `AwaitingMirror`; server logs the request parameters and prepares Mirror synthesis.
+
+**Timeout Window:** 2 s by default (see [Section 2.3](#23-timing-expectations)).
+
+**Failure Modes:** Version downgrade attempts, feature policy violations, malformed JSON, or exceeded size budget.
+
+**Transition:** Successful Hello transitions the client to `AwaitingMirror` and the server to `EvaluatingHello`.
+
+**Example:**
+
+```json
+{
+  "step": "hello",
+  "lri_version": "0.2",
+  "encodings": ["json", "cbor"],
+  "features": ["ltp", "lss"],
+  "client_id": "agent-458"
+}
+```
+
+### 3.2 Mirror
+
+**Purpose:** Echo client intent, constrain the negotiated surface, and provide server identity hints.
+
+**Payload Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `step` | string | ✅ | Literal `"mirror"`. |
+| `lri_version` | string | ✅ | Version chosen by the server (≤ client proposal). |
+| `encoding` | string | ✅ | Single encoding selected from the client's list. |
+| `features` | array | ✅ | Granted features (subset of client request). |
+| `session_window` | number | ⚠️ | Optional handshake TTL (seconds) before Flow must start. |
+| `server_id` | string | ⚠️ | Optional server identifier for auditing. |
+
+**Narrative:** Mirror confirms the negotiated protocol surface. Clients MUST respect the returned encoding and feature subset. When `session_window` is provided, the client must begin Flow before expiry or restart negotiation.
+
+**Preconditions:** Server completed Hello validation and has access to policy configuration (required features, supported versions).
+
+**On Success:** Client caches negotiated parameters (`lri_version`, `encoding`, `features`) and prepares Bind. Server transitions to `AwaitingBind` with pending session context.
+
+**Timeout Window:** 1.5 s. Clients SHOULD retransmit Hello once before aborting if Mirror does not arrive.
+
+**Failure Modes:** Server policy rejection, unsupported encoding, invalid `session_window`, or TLS renegotiation requirements.
+
+**Transition:** Client moves to `PreparingBind`; server advances to `AwaitingBind`.
+
+**Example:**
 
 ```json
 {
   "step": "mirror",
-  "lri_version": "0.1",
+  "lri_version": "0.2",
   "encoding": "json",
   "features": ["ltp"],
-  "max_frame_bytes": 32768,
-  "nonce": "srvr-47f89a"
+  "session_window": 300,
+  "server_id": "gateway-nyc"
 }
 ```
 
-The server MUST echo a compatible version and choose a single encoding. Features
-reported here are authoritative: any capability absent from the array is
-considered disabled. The `nonce` MUST be a unique token bound into the Seal
-signature to prevent replay.
+### 3.3 Bind
 
-### 3.3 Bind (client → server)
+**Purpose:** Provide session context, authentication material, and any negotiation metadata required by the responder.
+
+**Payload Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `step` | string | ✅ | Literal `"bind"`. |
+| `thread` | string | ⚠️ | Client-selected thread identifier for LCE continuity. |
+| `auth` | string | ⚠️ | Bearer token or credential reference; semantics defined by deployment. |
+| `metadata` | object | ⚠️ | Arbitrary key/value pairs relevant to session initialization. |
+
+**Narrative:** Bind attaches all contextual state necessary for the server to allocate resources. Servers MUST treat unknown keys in `metadata` as opaque. Authentication failures at this step terminate the handshake with an explicit error.
+
+**Preconditions:** Client has validated Mirror, possesses necessary credentials, and ensures thread identifier uniqueness per concurrent session.
+
+**On Success:** Server associates the provided context with a provisional session, generates audit entries, and proceeds to Seal emission.
+
+**Timeout Window:** 2.5 s. Servers MAY extend the window for external identity providers but MUST signal delays via retryable errors.
+
+**Failure Modes:** Credential rejection, unsupported metadata keys that violate policy, replay detection triggers, or resource exhaustion.
+
+**Transition:** Client enters `AwaitingSeal`; server processes Bind and either issues Seal or aborts with an error.
+
+**Example:**
 
 ```json
 {
   "step": "bind",
-  "thread": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "auth": {
-    "scheme": "Bearer",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  },
-  "context": {
-    "intent": {
-      "type": "teach"
-    },
-    "affect": {
-      "pad": [0.2, 0.1, 0.3]
-    }
+  "thread": "550e8400-e29b-41d4-a716-446655440000",
+  "auth": "Bearer eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+  "metadata": {
+    "locale": "en-US",
+    "timezone": "America/New_York"
   }
 }
 ```
 
-Bind ties the connection to an LRI session. `thread` MUST be a stable identifier
-(UUID or ULID). Authentication material MAY be embedded or referenced out-of-
-band. Optional `context` seeds LSS metrics before the first flow frame.
+### 3.4 Seal
 
-### 3.4 Seal (server → client)
+**Purpose:** Finalize the negotiated session, bind it to cryptographic attestation, and communicate expiry constraints.
+
+**Payload Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `step` | string | ✅ | Literal `"seal"`. |
+| `session_id` | string | ✅ | Authoritative session identifier assigned by the server. |
+| `sig` | string | ⚠️ | Optional detached JWS signature over the concatenated Hello+Bind transcript. |
+| `expires` | string | ⚠️ | ISO-8601 timestamp after which the session is invalid. |
+
+**Narrative:** Seal affirms that the server accepts the negotiated parameters. When `sig` is present, clients MUST verify the signature before entering Flow. Expired sessions MUST renegotiate.
+
+**Preconditions:** Server successfully authenticated Bind and generated a session identifier. Optional signatures require access to configured key material.
+
+**On Success:** Both peers mark the session as active, and clients unlock Flow transmission using the negotiated encoding.
+
+**Timeout Window:** 1.0 s for delivery plus 500 ms for client-side signature verification.
+
+**Failure Modes:** Signature verification failures, expired attestation keys, duplicate `session_id`, or integrity mismatches between Hello/Bind transcripts.
+
+**Transition:** Both peers enter the `Flow` state upon Seal acceptance. Clients that fail signature verification MUST abort and report the failure.
+
+**Example:**
 
 ```json
 {
   "step": "seal",
-  "session_id": "flow-13d8a2",
-  "expires_at": "2024-05-18T12:05:11Z",
-  "signature": "ltp:jws:eyJhbGciOiJFZERTQSIsInR5cCI6IkxURUwi...",
-  "features": {
-    "ltp": {
-      "jws": {
-        "alg": "EdDSA",
-        "nonce": "srvr-47f89a"
-      }
-    }
-  }
+  "session_id": "a1f1f94c-4e9f-4a64-94c5-ccd8d4a82b52",
+  "sig": "eyJhbGciOiJFZERTQSJ9..signature",
+  "expires": "2025-01-31T12:00:00Z"
 }
 ```
 
-Seal finalises the contract. The `signature` MUST be produced via LTP over the
-canonical concatenation of the `hello`, `mirror` and `bind` payloads plus the
-server nonce. If verification fails, the client MUST abort the connection.
+### 3.5 Flow
+
+**Purpose:** Represent the steady-state in which LCE-wrapped payloads are exchanged.
+
+**Narrative:** Flow is not a standalone handshake message; it is the state entered after a valid Seal. Transports MAY emit an optional `flow` acknowledgement carrying the `session_id` (and optionally the negotiated `thread`) for observability, but they MUST NOT introduce new negotiation parameters at this stage. All subsequent communication MUST include LCE metadata according to the negotiated encoding.
+
+**Preconditions:** Seal verified by both peers; `session_window` (if provided) has not elapsed.
+
+**On Success:** Bi-directional LCE exchange continues until termination or re-handshake. Monitoring systems SHOULD track throughput and latency metrics per `session_id`.
+
+**Timeout Window:** Governed by transport keep-alive and policy; recommended idle timeout is 60 s with keep-alive pings every 20 s.
+
+**Failure Modes:** Idle timeout, policy revocation, resource reclamation, or detection of integrity violations in Flow frames.
+
+**Exit Conditions:**
+
+- Session expiry (`expires` elapsed).
+- Feature renegotiation (restart from Hello).
+- Transport closure or fatal error.
 
 ---
 
-## 4. Error Handling
+## 4. State & Timing Models
 
-If any step fails validation, the rejecting party SHOULD send a terminal error
-frame:
+The following diagrams are normative for implementations. Additional transient substates are permitted provided that external behaviors remain equivalent.
 
-```json
-{
-  "step": "error",
-  "code": "lhs.invalid_bind",
-  "detail": "thread missing or malformed"
-}
+### 4.1 Client State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> SendingHello: send Hello
+    SendingHello --> AwaitingMirror: transmit success
+    SendingHello --> Failed: timeout or transport error
+    AwaitingMirror --> PreparingBind: Mirror accepted
+    AwaitingMirror --> Failed: mirror error
+    PreparingBind --> SendingBind: compose Bind
+    SendingBind --> AwaitingSeal: transmit success
+    SendingBind --> Failed: timeout or validation error
+    AwaitingSeal --> Flow: Seal validated
+    AwaitingSeal --> Failed: seal rejected or signature invalid
+    Flow --> Rehandshake: feature upgrade requested
+    Flow --> Closed: transport closed
+    Rehandshake --> SendingHello
+    Failed --> Closed
+    Closed --> [*]
 ```
 
-After emitting an error the connection MUST close without entering `flow`.
+### 4.2 Server State Machine
 
-Common error codes:
+```mermaid
+stateDiagram-v2
+    [*] --> Listening
+    Listening --> EvaluatingHello: Hello received
+    EvaluatingHello --> RespondingMirror: Hello valid
+    EvaluatingHello --> Rejected: unsupported version or policy violation
+    RespondingMirror --> AwaitingBind: Mirror sent
+    RespondingMirror --> Rejected: transport error
+    AwaitingBind --> ProcessingBind: Bind received
+    AwaitingBind --> Rejected: timeout
+    ProcessingBind --> SendingSeal: authentication + context ok
+    ProcessingBind --> Rejected: auth failure or context invalid
+    SendingSeal --> Flow: Seal delivered
+    SendingSeal --> Rejected: transport error
+    Flow --> Rehandshake: policy change requires renegotiation
+    Flow --> Terminated: normal close
+    Rehandshake --> EvaluatingHello
+    Rejected --> Terminated
+    Terminated --> [*]
+```
 
-| Code | Description |
-| --- | --- |
-| `lhs.version_mismatch` | `hello` references an unsupported version |
-| `lhs.encoding_negotiation_failed` | no shared encoding between hello/mirror |
-| `lhs.invalid_bind` | session thread/auth data missing or invalid |
-| `lhs.trust_failed` | seal signature verification failed |
+### 4.3 Temporal Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server
+    C->>S: Hello (capabilities, encodings)
+    Note right of S: Validate version & features
+    S-->>C: Mirror (negotiated surface)
+    Note left of C: Cache encoding + granted features
+    C->>S: Bind (thread, auth, metadata)
+    Note right of S: Authenticate & allocate session
+    S-->>C: Seal (session_id, signature, expiry)
+    C->>S: Flow Ack (optional)
+    S-->>C: Flow Payloads (bidirectional)
+```
+
+### 4.4 Timing Budget Timeline
+
+```mermaid
+timeline
+    title LHS Nominal Timing Budget
+    0 ms : Client sends Hello
+    200 ms : Server responds with Mirror
+    350 ms : Client delivers Bind
+    650 ms : Server issues Seal
+    700 ms : Optional Flow acknowledgement
+    800 ms : Regular Flow payloads begin
+    5000 ms : Mirror session_window expiry example
+```
 
 ---
 
-## 5. HTTP Upgrade Profile
+## 5. Transport Bindings
 
-When LHS is negotiated via HTTP Upgrade, the handshake maps to headers detailed
-in [`examples/lhs/http.json`](../../examples/lhs/http.json). Servers SHOULD
-respond with `101 Switching Protocols` only after validating the proposed
-capabilities and generating the Seal commitment.
+### 5.1 HTTP Negotiation Headers
 
-Key headers:
+LHS-over-HTTP uses request/response headers prior to (or alongside) REST or gRPC semantics.
 
-- `LHS-Hello` – base64url encoded JSON hello payload.
-- `LHS-Mirror` – server reflection header with chosen encoding/features.
-- `LHS-Seal` – final commitment header containing `session_id` and `signature`.
+| Header | Direction | Description |
+|--------|-----------|-------------|
+| `LRI-LHS-Step` | Request & Response | Indicates the handshake step associated with the HTTP message (`hello`, `mirror`, `bind`, `seal`, `flow`). |
+| `LRI-LHS` | Request & Response | Base64-encoded JSON envelope for the indicated step. Standard Base64 with padding (`=`) MUST be used. |
+| `LCE` | Request & Response | Base64-encoded LCE payload, only present once Flow begins. |
+
+**Usage Notes:**
+
+1. Hello and Bind are typically `POST` requests to a negotiation endpoint (e.g., `/lri/connect`).
+2. Mirror and Seal are expressed via HTTP responses bearing the same headers.
+3. Flow transitions to application endpoints (`/chat`, `/stream`, etc.) with `LCE` headers and optional `LRI-LHS-Step: flow` to indicate the steady state.
+4. Implementations SHOULD persist the negotiated session identifier in application cookies or headers as needed.
+
+A complete HTTP transcript is available at [`examples/lhs/http.json`](../../examples/lhs/http.json).
+
+### 5.2 WebSocket First Frames
+
+For WebSocket transports, the handshake occurs within the first four text frames immediately after the underlying WebSocket connection is established. Flow frames thereafter follow the binary LRI framing defined in [RFC-000](../rfcs/rfc-000.md#10-protocol-subsystems).
+
+| Frame Index | Direction | Content Type | Description |
+|-------------|-----------|--------------|-------------|
+| 1 | Client → Server | Text | Hello JSON envelope. |
+| 2 | Server → Client | Text | Mirror JSON envelope. |
+| 3 | Client → Server | Text | Bind JSON envelope. |
+| 4 | Server → Client | Text | Seal JSON envelope (optionally signed). |
+| ≥5 | Bidirectional | Binary | Length-prefixed LCE + payload frames. |
+
+Clients MUST NOT send binary frames before Seal is acknowledged. Servers MUST close the connection with code `1002` (protocol error) if the ordering is violated.
+
+A fully populated frame trace, including an encoded Flow frame, is provided at [`examples/lhs/ws.json`](../../examples/lhs/ws.json).
 
 ---
 
-## 6. WebSocket Profile
+## 6. Failure Handling
 
-Native WebSocket implementations transmit each control frame before switching to
-LCE flow frames. See [`examples/lhs/ws.json`](../../examples/lhs/ws.json) for a
-line-by-line trace. After the Seal acknowledgment, endpoints MUST prefix all
-subsequent messages with LCE payloads encoded according to the negotiated
-`encoding`.
+- **Timeouts:** Each handshake step SHOULD have a watchdog (default 5 seconds). On timeout, peers abort with an explicit error (`408` over HTTP, `4401` close code over WebSocket).
+- **Version mismatch:** Responders MAY return `426 Upgrade Required` with supported versions in `LRI-LHS` payload.
+- **Authentication failure:** Bind rejection MUST specify `reason` and `code` fields in an error payload to aid diagnostics.
+- **Signature failure:** Clients MUST terminate the session and optionally restart from Hello; servers SHOULD audit repeated signature failures.
 
 ---
 
-## 7. Compliance Checklist
+## 7. Security Considerations
 
-An implementation is LHS compliant when it:
+1. **Integrity:** When `sig` is present in Seal, canonicalize the Hello and Bind payloads (JCS) before verification.
+2. **Replay Protection:** Include nonces or timestamps in Bind metadata when using bearer tokens to prevent replay of Bind messages.
+3. **Privacy:** Avoid embedding personally identifiable information in cleartext fields; rely on encrypted transports (TLS 1.2+).
+4. **Downgrade Resistance:** Compare the negotiated `lri_version` and `features` against policy. Reject Mirror responses that drop mandatory features (e.g., `ltp` when required).
+5. **Logging:** Log session identifiers and handshake decisions for audit trails, omitting raw credentials in Bind.
 
-1. Validates step ordering and required fields.
-2. Enforces negotiated encoding/features during flow.
-3. Produces a Seal signature that covers Hello, Mirror, Bind and the server
-   nonce.
-4. Surfaces structured error frames and terminates on trust failures.
-5. Emits telemetry hooks so LSS can initialise coherence metrics from Bind.
+---
 
-When these criteria are satisfied the handshake is considered **Ratified** and
-ready for integration across SDKs and services.
+## 8. References and Examples
+
+- **Normative:** [RFC-000: The Liminal Resonance Interface — Overview](../rfcs/rfc-000.md)
+- **Examples:**
+  - [`examples/lhs/http.json`](../../examples/lhs/http.json) — HTTP negotiation using `LRI-LHS-Step` and `LRI-LHS` headers.
+  - [`examples/lhs/ws.json`](../../examples/lhs/ws.json) — WebSocket frames covering Hello → Flow.
+- **Related Protocols:** LTP (Liminal Trust Protocol), LSS (Liminal Session Store) defined in RFC-000 Section 10.
+
+---
+
+*End of specification.*

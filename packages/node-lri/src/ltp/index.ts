@@ -8,7 +8,7 @@
  */
 
 import { SignJWT, jwtVerify, generateKeyPair, exportJWK, importJWK } from 'jose';
-import canonicalize from 'canonicalize';
+import { canonicalizeLtpPayload } from './jcs';
 import { LCE } from '../types';
 
 /**
@@ -123,10 +123,7 @@ export async function sign(
   const { sig, ...lceWithoutSig } = lce as any;
 
   // Canonicalize JSON (RFC 8785)
-  const canonical = canonicalize(lceWithoutSig);
-  if (!canonical) {
-    throw new Error('Failed to canonicalize LCE');
-  }
+  const canonical = canonicalizeLtpPayload(lceWithoutSig);
 
   // Create JWS with canonical JSON as payload
   const jwt = new SignJWT({ lce: canonical })
@@ -194,10 +191,7 @@ export async function verify(
     const { sig, ...lceWithoutSig } = lce;
 
     // Canonicalize
-    const canonical = canonicalize(lceWithoutSig);
-    if (!canonical) {
-      return false;
-    }
+    const canonical = canonicalizeLtpPayload(lceWithoutSig);
 
     // Verify JWS
     const { payload } = await jwtVerify(sig, publicKey, {
@@ -253,5 +247,8 @@ export const LTP = {
   verify,
   inspectSignature,
 };
+
+export * from './jcs';
+export * from './ed25519';
 
 export default LTP;
