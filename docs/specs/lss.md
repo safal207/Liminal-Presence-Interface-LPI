@@ -49,10 +49,10 @@ Both SDKs expose the same operations for reading and adjusting telemetry:
 | Operation        | Node.js                         | Python                           | Notes |
 |------------------|---------------------------------|----------------------------------|-------|
 | Store message    | `lss.store(threadId, lce, payload?)` | `lss.store(thread_id, lce, payload=None)` | Appends to history and recalculates metrics. |
-| Read metrics     | `lss.getMetrics(threadId)`      | `lss.get_metrics(thread_id)`     | Returns `CoherenceResult` plus drift history. |
+| Read metrics     | `lss.getMetrics(threadId)` | `lss.get_metrics(thread_id)` | Returns `CoherenceResult` plus drift history. |
 | Update metrics   | `lss.updateMetrics(threadId, { coherence, driftEvents })` | `lss.update_metrics(thread_id, coherence=..., drift_events=...)` | Override values when an external service provides better estimates. |
-| Enumerate stats  | `lss.getStats()`                | `lss.get_stats()`                | Aggregated counts and average coherence. |
-| Listen for drift | `lss.on('drift', listener)`     | `lss.on('drift', callback)`      | Receives `DriftEvent` objects for real-time mitigation. |
+| Enumerate stats  | `lss.getStats()` | `lss.get_stats()` | Aggregated counts and average coherence. |
+| Listen for drift | `lss.on('drift', listener)` | `lss.on('drift', callback)` | Receives `DriftEvent` objects for real-time mitigation. |
 
 Metrics are persisted alongside the session and include `previousCoherence`
 (`previous_coherence`) so downstream components can inspect the trend even if
