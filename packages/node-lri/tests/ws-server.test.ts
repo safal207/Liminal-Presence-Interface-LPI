@@ -7,15 +7,23 @@ import { LRIWSServer } from '../src/ws/server';
 import { LCE } from '../src/types';
 import { encodeLRIFrame } from '../src/ws/types';
 
+// Increase timeout for slow CI environments
+jest.setTimeout(10000);
+
 describe('LRIWSServer', () => {
   let server: LRIWSServer;
   const TEST_PORT = 8765;
 
+  beforeEach(async () => {
+    // Give time for any previous test's port to fully release
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+
   afterEach(async () => {
     if (server) {
       await server.close();
-      // Give extra time for socket cleanup
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Give extra time for socket cleanup in CI
+      await new Promise((resolve) => setTimeout(resolve, 500));
       server = null as any;
     }
   });
