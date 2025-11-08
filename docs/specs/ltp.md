@@ -59,7 +59,7 @@ LTP uses detached Ed25519 signatures (EdDSA) over the canonical UTF-8 bytes.  Ea
 5. Treat verification failure as a hard stop—do not attempt to repair or coerce invalid payloads.
 
 Cross-language verification is exercised by the Node Jest suite (`npm run test:workspace -- node-lri`) and the Python pytest
-suite (`pytest packages/python-lri/tests`).  The shared vectors are consumed directly by `packages/node-lri/src/__tests__/ltp.vectors.test.ts`
+suite (`pytest packages/python-lri/tests`).  The shared vectors are consumed directly by `packages/node-lri/tests/ltp.test.ts`
 and `packages/python-lri/tests/test_ltp_vectors.py`.
 
 ## Interoperability Test Vectors
