@@ -90,6 +90,17 @@ export class LRIWSServer {
   }
 
   /**
+   * Get the actual port the server is listening on
+   */
+  get port(): number {
+    const address = this.wss.address();
+    if (address && typeof address !== 'string') {
+      return address.port;
+    }
+    return this.options.port;
+  }
+
+  /**
    * Start listening for connections
    */
   listen(): Promise<void> {

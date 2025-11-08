@@ -2,8 +2,73 @@
  * LSS (Liminal Session Store) tests
  */
 
-import { LSS } from '../src/lss';
+import { LSS, RedisCompatibleClient, RedisSessionStorage } from '../src/lss';
+import type { CoherenceResult, DriftEvent } from '../src/lss';
 import { LCE } from '../src/types';
+
+class FakeRedis implements RedisCompatibleClient {
+  private readonly store = new Map<string, { value: string; expiresAt?: number }>();
+
+  async get(key: string): Promise<string | null> {
+    this.evictExpired();
+    const entry = this.store.get(key);
+    return entry?.value ?? null;
+  }
+
+  async set(key: string, value: string, ...args: Array<string | number>): Promise<'OK'> {
+    let ttlMs: number | undefined;
+    if (args[0] === 'PX' && typeof args[1] === 'number') {
+      ttlMs = Number(args[1]);
+    }
+
+    const expiresAt = ttlMs ? Date.now() + ttlMs : undefined;
+    this.store.set(key, { value: value.toString(), expiresAt });
+    return 'OK';
+  }
+
+  async del(...keys: string[]): Promise<number> {
+    let removed = 0;
+    for (const key of keys) {
+      if (this.store.delete(key)) {
+        removed++;
+      }
+    }
+    return removed;
+  }
+
+  async scan(cursor: number | string, ...args: Array<string | number>): Promise<[string, string[]]> {
+    this.evictExpired();
+    let pattern = '*';
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === 'MATCH' && args[i + 1] !== undefined) {
+        pattern = String(args[i + 1]);
+        break;
+      }
+    }
+
+    const keys = Array.from(this.store.keys()).filter((key) => this.matches(pattern, key));
+    return ['0', keys];
+  }
+
+  private evictExpired(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.store.entries()) {
+      if (entry.expiresAt !== undefined && entry.expiresAt <= now) {
+        this.store.delete(key);
+      }
+    }
+  }
+
+  private matches(pattern: string, key: string): boolean {
+    if (pattern === '*') {
+      return true;
+    }
+    if (pattern.endsWith('*')) {
+      return key.startsWith(pattern.slice(0, -1));
+    }
+    return key === pattern;
+  }
+}
 
 describe('LSS (Liminal Session Store)', () => {
   let lss: LSS;
@@ -13,7 +78,7 @@ describe('LSS (Liminal Session Store)', () => {
   });
 
   afterEach(async () => {
-    lss.destroy(); // Clear timer and sessions
+    await lss.destroy();
   });
 
   describe('store and retrieve', () => {
@@ -376,9 +441,58 @@ describe('LSS (Liminal Session Store)', () => {
     });
   });
 
+  describe('metrics API', () => {
+    it('should expose metrics snapshot and persist manual overrides', async () => {
+      const messages: LCE[] = [
+        { v: 1, intent: { type: 'ask' }, meaning: { topic: 'alpha' }, policy: { consent: 'private' } },
+        { v: 1, intent: { type: 'tell' }, meaning: { topic: 'alpha' }, policy: { consent: 'private' } },
+      ];
+
+      for (const lce of messages) {
+        await lss.store('thread-metrics', lce);
+      }
+
+      const initialMetrics = await lss.getMetrics('thread-metrics');
+      expect(initialMetrics).not.toBeNull();
+      const baselineCoherence = initialMetrics!.coherence.overall;
+
+      const override: CoherenceResult = {
+        overall: 0.42,
+        intentSimilarity: 0.4,
+        affectStability: 0.5,
+        semanticAlignment: 0.6,
+      };
+
+      const driftEvents: DriftEvent[] = [
+        {
+          type: 'topic_shift',
+          severity: 'medium',
+          timestamp: new Date(),
+          details: { reason: 'manual' },
+        },
+      ];
+
+      const updated = await lss.updateMetrics('thread-metrics', {
+        coherence: override,
+        driftEvents,
+      });
+
+      expect(updated).not.toBeNull();
+      expect(updated?.coherence.overall).toBeCloseTo(0.42);
+      expect(updated?.driftEvents).toHaveLength(1);
+      expect(updated?.driftEvents[0].threadId).toBe('thread-metrics');
+
+      const refreshed = await lss.getMetrics('thread-metrics');
+      expect(refreshed?.coherence.overall).toBeCloseTo(0.42);
+      expect(refreshed?.previousCoherence?.overall).toBeCloseTo(
+        baselineCoherence,
+      );
+    });
+  });
+
   describe('statistics', () => {
-    it('should return correct stats for empty store', () => {
-      const stats = lss.getStats();
+    it('should return correct stats for empty store', async () => {
+      const stats = await lss.getStats();
 
       expect(stats.sessionCount).toBe(0);
       expect(stats.totalMessages).toBe(0);
@@ -396,7 +510,7 @@ describe('LSS (Liminal Session Store)', () => {
       await lss.store('thread-1', lce);
       await lss.store('thread-2', lce);
 
-      const stats = lss.getStats();
+      const stats = await lss.getStats();
 
       expect(stats.sessionCount).toBe(2);
       expect(stats.totalMessages).toBe(3);
@@ -419,7 +533,7 @@ describe('LSS (Liminal Session Store)', () => {
 
       const session = await lssLimited.getSession('thread-1');
       expect(session?.messages.length).toBe(3);
-      lssLimited.destroy();
+      await lssLimited.destroy();
     });
 
     it('should respect coherenceWindow', async () => {
@@ -438,7 +552,48 @@ describe('LSS (Liminal Session Store)', () => {
       // Coherence should only use last 2 messages (sync, plan)
       const session = await lssSmallWindow.getSession('thread-1');
       expect(session?.coherence).toBeDefined();
-      lssSmallWindow.destroy();
+      await lssSmallWindow.destroy();
+    });
+  });
+
+  describe('storage adapters', () => {
+    it('should persist sessions using redis storage adapter', async () => {
+      const redis = new FakeRedis();
+      const store = new LSS({ storage: new RedisSessionStorage(redis) });
+      const lce: LCE = {
+        v: 1,
+        intent: { type: 'tell' },
+        policy: { consent: 'private' },
+      };
+
+      await store.store('redis-thread', lce);
+
+      const raw = await redis.get('lss:session:redis-thread');
+      expect(raw).not.toBeNull();
+
+      const session = await store.getSession('redis-thread');
+      expect(session?.threadId).toBe('redis-thread');
+
+      await store.destroy();
+    });
+
+    it('should apply ttl cleanup for redis storage', async () => {
+      const redis = new FakeRedis();
+      const store = new LSS({ sessionTTL: 5, storage: new RedisSessionStorage(redis) });
+      const lce: LCE = {
+        v: 1,
+        intent: { type: 'tell' },
+        policy: { consent: 'private' },
+      };
+
+      await store.store('redis-ttl', lce);
+
+      await new Promise((resolve) => setTimeout(resolve, 25));
+
+      const session = await store.getSession('redis-ttl');
+      expect(session).toBeNull();
+
+      await store.destroy();
     });
   });
 

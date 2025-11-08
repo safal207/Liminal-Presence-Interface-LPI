@@ -1,0 +1,118 @@
+{
+  "version": 0.1,
+  "title": "LRI Intent Vocabulary",
+  "description": "Communicative intent types for LCE",
+  "intents": {
+    "ask": {
+      "description": "Request information or action",
+      "examples": [
+        "What is the weather today?",
+        "Can you help me with this code?"
+      ],
+      "expected_response": [
+        "tell",
+        "confirm",
+        "propose"
+      ]
+    },
+    "tell": {
+      "description": "Provide information or state facts",
+      "examples": [
+        "The temperature is 20°C",
+        "The build passed successfully"
+      ],
+      "expected_response": [
+        "confirm",
+        "reflect"
+      ]
+    },
+    "propose": {
+      "description": "Suggest an action or approach",
+      "examples": [
+        "I suggest we refactor this module",
+        "How about using a cache here?"
+      ],
+      "expected_response": [
+        "agree",
+        "disagree",
+        "reflect"
+      ]
+    },
+    "confirm": {
+      "description": "Acknowledge or verify information",
+      "examples": [
+        "Yes, that's correct",
+        "I understand your request"
+      ],
+      "expected_response": [
+        "tell",
+        "plan"
+      ]
+    },
+    "notify": {
+      "description": "Alert or inform without expecting response",
+      "examples": [
+        "Build started",
+        "Deployment in progress"
+      ],
+      "expected_response": []
+    },
+    "sync": {
+      "description": "Request or establish shared context",
+      "examples": [
+        "Let me make sure we're aligned on the goal",
+        "Are we on the same page?"
+      ],
+      "expected_response": [
+        "confirm",
+        "reflect"
+      ]
+    },
+    "plan": {
+      "description": "Outline future actions or strategy",
+      "examples": [
+        "Here's my approach: 1) First... 2) Then...",
+        "I'll start by analyzing the code"
+      ],
+      "expected_response": [
+        "agree",
+        "disagree",
+        "propose"
+      ]
+    },
+    "agree": {
+      "description": "Express agreement or acceptance",
+      "examples": [
+        "That sounds good",
+        "I agree with your approach"
+      ],
+      "expected_response": [
+        "plan",
+        "tell"
+      ]
+    },
+    "disagree": {
+      "description": "Express disagreement or alternative view",
+      "examples": [
+        "I think there's a better way",
+        "That might not work because..."
+      ],
+      "expected_response": [
+        "propose",
+        "reflect"
+      ]
+    },
+    "reflect": {
+      "description": "Introspect or reason about the interaction",
+      "examples": [
+        "Let me think about why this matters",
+        "Looking at this from another angle..."
+      ],
+      "expected_response": [
+        "tell",
+        "propose",
+        "plan"
+      ]
+    }
+  }
+}

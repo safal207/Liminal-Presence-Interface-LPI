@@ -2,9 +2,10 @@
 
 > **Layer 8 for Human-AI Communication**
 
+[![CI](https://github.com/safal207/LRI-Liminal-Resonance-Interface./actions/workflows/ci.yml/badge.svg)](https://github.com/safal207/LRI-Liminal-Resonance-Interface./actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/lri/lri)
-[![Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/lri/lri)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/lri/lri)
+[![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/lri/lri)
 
 LRI (Liminal Resonance Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
 
@@ -29,6 +30,14 @@ Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LR
 | Raw text | Rich semantic context |
 | No quality metrics | Coherence tracking |
 | Implicit trust | Cryptographic proof |
+
+---
+
+📚 **[Get Started with LRI →](docs/getting-started.md)**
+
+Complete guide with WebSocket, LTP (cryptographic signing), LSS (session management), and production examples.
+
+---
 
 ## Quick Start
 
@@ -82,6 +91,97 @@ async def get_data(request: Request):
 ```
 
 ## LCE - Liminal Context Envelope
+
+## LSS - Liminal Session Store
+
+LSS keeps lightweight conversational state with coherence and drift metrics.
+It ships with pluggable storage adapters so you can run entirely in-memory or
+persist to Redis when scaling out workers.
+
+- **Node.js** – `import { LSS } from 'node-lri/lss'`
+- **Python** – `from lri.lss import LSS`
+
+Use `store(threadId, lce)` to append messages, `getMetrics` / `get_metrics` to
+read coherence breakdowns, `updateMetrics` / `update_metrics` to override them,
+and subscribe to the `drift` event to react when conversations lose alignment.
+`getStats()` / `get_stats()` provide quick session counts and average coherence
+for dashboards. See [docs/specs/lss.md](docs/specs/lss.md) for the full
+specification and integration snippets.
+
+```ts
+import Redis from 'ioredis';
+import { LSS, RedisSessionStorage } from 'node-lri/lss';
+
+const lss = new LSS({ storage: new RedisSessionStorage(new Redis()) });
+```
+
+#### Message flow (Node.js)
+
+```ts
+app.post('/messages', async (req, res) => {
+  const { lce } = req.body;
+  const threadId = lce?.memory?.thread ?? req.headers['x-thread-id'];
+
+  if (threadId && lce) {
+    await lss.store(threadId, lce);
+    const metrics = await lss.getMetrics(threadId);
+
+    if (metrics && metrics.coherence.overall < 0.5) {
+      res.status(202).json({ action: 'clarify', coherence: metrics.coherence });
+      return;
+    }
+  }
+
+  res.json({ action: 'continue' });
+});
+
+lss.on('drift', (event) => {
+  console.warn('Thread drift detected', event.threadId, event.details);
+});
+```
+
+#### Message flow (Python)
+
+```python
+from fastapi import Depends, FastAPI, Request
+
+from lri.lss import LSS
+from lri.types import LCE
+
+lss = LSS()
+app = FastAPI()
+
+
+def session_state_payload(payload: dict | None) -> tuple[str | None, dict | None]:
+    if not payload:
+        return None, None
+    lce = payload.get("lce")
+    if not isinstance(lce, dict):
+        return None, None
+    thread = lce.get("memory", {}).get("thread") if isinstance(lce.get("memory"), dict) else None
+    return thread, lce
+
+
+async def session_state(request: Request) -> dict[str, float]:
+    payload = await request.json()
+    thread, lce_payload = session_state_payload(payload)
+    if thread and lce_payload:
+        lss.store(thread, LCE.model_validate(lce_payload))
+        metrics = lss.get_metrics(thread)
+        if metrics and metrics.coherence.overall < 0.5:
+            return {"coherence": metrics.coherence.overall}
+    return {"coherence": 1.0}
+
+
+@app.post("/messages")
+async def handle_message(state = Depends(session_state)):
+    if state["coherence"] < 0.5:
+        return {"action": "clarify"}
+    return {"action": "continue"}
+
+
+lss.on("drift", lambda event: print("drift", event.thread_id, event.details))
+```
 
 The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 
@@ -166,6 +266,7 @@ lri/
 ├── examples/
 │   ├── express-app/     # Express example
 │   ├── fastapi-app/     # FastAPI example
+│   ├── lhs/             # Handshake traces (HTTP + WS)
 │   └── ws-echo/         # WebSocket example
 ├── sidecar/             # Transparent proxy
 ├── tools/               # CLI tools
@@ -174,7 +275,7 @@ lri/
 
 ## Features
 
-### Current (v0.1.0 - Alpha)
+### Current (v0.2.0 - Beta)
 
 - ✅ LCE JSON Schema v1
 - ✅ Intent/Affect vocabularies
@@ -182,15 +283,12 @@ lri/
 - ✅ Python SDK (FastAPI integration)
 - ✅ Base64 HTTP header encoding
 - ✅ Schema validation
-
-### Planned (v0.2.0)
-
-- [x] LHS (Liminal Handshake Sequence) for WebSocket ✅
-- [x] LTP (Liminal Trust Protocol) - Ed25519 + JWS signatures ✅
-- [ ] LSS (Liminal Session Store) - coherence calculation
-- [ ] CBOR encoding for IoT
-- [ ] gRPC metadata adapter
-- [ ] CLI tool (`lrictl`)
+- ✅ LHS (Liminal Handshake Sequence) specification and transport transcripts
+- ✅ LTP (Liminal Trust Protocol) - Ed25519 + JWS signatures
+- ✅ LSS (Liminal Session Store) - coherence calculation
+- ✅ CBOR encoding for IoT
+- ✅ gRPC metadata adapter
+- ✅ CLI tool (`lrictl`)
 
 ### Future (v1.0)
 
@@ -202,12 +300,32 @@ lri/
 
 ## Documentation
 
-- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md) (Coming soon)
+### Getting Started
+- **[📘 Getting Started Guide](docs/getting-started.md)** - Complete tutorial with examples
+  - Installation & First LCE message
+  - WebSocket server & client setup
+  - LTP (Trust Protocol) with Ed25519 signatures
+  - LSS (Session Store) for coherence tracking
+  - Express.js integration & production examples
+
+### Reference
+- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md)
+- [LHS Handshake Spec](docs/specs/lhs.md)
 - [LCE Schema Spec](schemas/lce-v0.1.json)
 - [Intent Vocabulary](vocab/intent.yaml)
 - [Affect Vocabulary](vocab/affect.yaml)
 - [Node SDK Guide](packages/node-lri/README.md) (Coming soon)
 - [Python SDK Guide](packages/python-lri/README.md) (Coming soon)
+
+### Vocabulary Builds
+
+Generate distributable JSON vocabularies from the canonical YAML files:
+
+```bash
+npm run vocab:build
+```
+
+Artifacts are written to `vocab/dist/*.json` for publishing or SDK bundling.
 
 ## Examples
 
@@ -282,6 +400,10 @@ const valid = await ltp.verify(signed, keys.publicKey);
 console.log('Valid:', valid); // true
 ```
 
+### LHS Negotiation Transcripts
+
+See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LRI-LHS-Step`, `LRI-LHS`, and `LCE` headers.
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -315,9 +437,9 @@ We have 22 planned issues across spec, SDK, security, and tooling. See [docs/iss
 
 | Milestone | Version | Target | Status |
 |-----------|---------|--------|--------|
-| Core spec + basic SDKs | v0.1.0 | Q1 2025 | 🟡 In Progress |
-| WebSocket + Crypto | v0.2.0 | Q2 2025 | 📋 Planned |
-| Production ready | v1.0.0 | Q3 2025 | 📋 Planned |
+| Core spec + basic SDKs | v0.1.0 | Q1 2025 | ✅ Complete |
+| WebSocket + Crypto | v0.2.0 | Nov 2025 | ✅ Complete |
+| Production ready | v1.0.0 | Q1 2026 | 📋 Planned |
 
 ## Use Cases
 

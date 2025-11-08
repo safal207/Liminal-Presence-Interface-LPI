@@ -45,9 +45,9 @@ Copy each issue to GitHub individually.
 **Tasks:**
 - `vocab/intent.yaml` ✅
 - `vocab/affect.yaml` ✅
-- Build-скрипт конвертит в JSON в `dist/vocab/`
+- Build-скрипт конвертит в JSON в `dist/vocab/` ✅ (`npm run vocab:build`)
 
-**Acceptance:** Примеры и unit-тест на загрузку.
+**Acceptance:** Примеры и unit-тест на загрузку. ✅ Unit-тест оформлен (`npm test`).
 
 ---
 
@@ -57,7 +57,9 @@ Copy each issue to GitHub individually.
 
 **Goal:** Определить шаги Hello/Mirror/Bind/Seal/Flow.
 
-**Acceptance:** JSON-примеры первого фрейма WS и заголовков HTTP.
+**Status:** ✅ Ratified in `docs/specs/lhs.md`.
+
+**Status:** ✅ Final specification in `docs/specs/lhs.md` with synchronized HTTP and WebSocket transcripts in `examples/lhs/`.
 
 **Description:**
 
@@ -69,9 +71,7 @@ Define the Liminal Handshake Sequence (LHS) protocol:
 4. **Seal** - Cryptographic commitment
 5. **Flow** - Regular LCE exchange
 
-Create examples for:
-- WebSocket first frame
-- HTTP headers for LHS negotiation
+**Acceptance:** JSON-примеры первого фрейма WS и заголовков HTTP. ✅ Выполнено, см. `examples/lhs/`.
 
 ---
 
@@ -139,6 +139,9 @@ server.on('message', (lce, payload) => {
 
 **Acceptance:** Кросс-тест Node↔Python на одинаковом LCE.
 
+**Status:** ✅ Implemented with shared fixtures (`tests/fixtures/ltp/vectors.json`),
+cross-SDK tests, and documentation in `docs/specs/ltp.md`.
+
 **Description:**
 
 Implement Liminal Trust Protocol (LTP):
@@ -149,8 +152,8 @@ Implement Liminal Trust Protocol (LTP):
 4. Cross-language compatibility tests
 
 Libraries:
-- Node: `@noble/ed25519`, `canonicalize`
-- Python: `PyNaCl`, `jcs`
+- Node: `tweetnacl`, `canonicalize`
+- Python: `cryptography`, `jcs`
 
 ---
 

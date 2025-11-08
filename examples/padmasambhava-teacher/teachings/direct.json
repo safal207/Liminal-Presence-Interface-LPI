@@ -1,0 +1,119 @@
+{
+  "title": "Direct Path Teachings",
+  "description": "Immediate pointing-out instructions for direct realization",
+  "level": "advanced",
+  "teachings": [
+    {
+      "id": "direct_001",
+      "title": "Look at the Looker",
+      "teaching": "Who is aware right now? Don't think about it - LOOK. That which is reading these words, where is it? Can you find it? This unfindable awareness is what you are. Stop searching and rest as That.",
+      "context": {
+        "student_state": ["analytical", "seeking"],
+        "intent_match": ["ask", "reflect"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["direct", "powerful"],
+        "pad": [0.2, 0.4, 0.6]
+      }
+    },
+    {
+      "id": "direct_002",
+      "title": "The Thought-Free Wakefulness",
+      "teaching": "Right now, in the gap between thoughts - THAT. Don't wait for a special state. The ordinary awareness present this very moment is already enlightened. Nothing to achieve, nowhere to go. Just THIS.",
+      "context": {
+        "student_state": ["striving", "seeking"],
+        "intent_match": ["sync", "reflect"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["serious", "direct"],
+        "pad": [0.1, 0.3, 0.7]
+      }
+    },
+    {
+      "id": "direct_003",
+      "title": "Self-Liberating Awareness",
+      "teaching": "Emotions arise - let them self-liberate in the space of awareness. Don't suppress, don't indulge. Like writing on water, thoughts dissolve the moment they appear. This is the natural freedom you already possess.",
+      "context": {
+        "student_state": ["struggling", "emotional"],
+        "intent_match": ["ask", "reflect"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["empowering", "direct"],
+        "pad": [0.3, 0.2, 0.6]
+      }
+    },
+    {
+      "id": "direct_004",
+      "title": "The Ever-Present Now",
+      "teaching": "There is only NOW. The past is a memory happening now. The future is imagination happening now. Even 'now' cannot be grasped - it's already gone. What remains? That which witnesses all time but is timeless.",
+      "context": {
+        "student_state": ["analytical", "philosophical"],
+        "intent_match": ["reflect", "ask"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["analytical", "profound"],
+        "pad": [0.1, 0.1, 0.5]
+      }
+    },
+    {
+      "id": "direct_005",
+      "title": "Non-Dual Seeing",
+      "teaching": "There is no 'you' here and 'world' there. That duality is conceptual. In direct experience, there's just seeing without a seer, hearing without a hearer. The subject-object split is the root illusion. See through it.",
+      "context": {
+        "student_state": ["curious", "ready"],
+        "intent_match": ["ask", "sync"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["precise", "powerful"],
+        "pad": [0.2, 0.3, 0.7]
+      }
+    },
+    {
+      "id": "direct_006",
+      "title": "The Pathless Path",
+      "teaching": "All spiritual paths are fingers pointing at the moon. You are already the moon. The search itself is the obstacle. Drop the search. What remains when there's no one seeking anything?",
+      "context": {
+        "student_state": ["exhausted", "ready"],
+        "intent_match": ["reflect", "sync"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["liberating", "direct"],
+        "pad": [0.4, 0.2, 0.6]
+      }
+    },
+    {
+      "id": "direct_007",
+      "title": "Resting in Natural Perfection",
+      "teaching": "Everything is already perfect as it is. Not perfect as in 'good' - perfect as in complete, whole, lacking nothing. Even imperfection is perfection playing. Relax into this natural state. It was never otherwise.",
+      "context": {
+        "student_state": ["peaceful", "open"],
+        "intent_match": ["sync", "reflect"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["peaceful", "confident"],
+        "pad": [0.6, -0.3, 0.4]
+      }
+    },
+    {
+      "id": "direct_008",
+      "title": "The Thunderbolt of Doubt-Cutting",
+      "teaching": "All your doubts and questions arise FROM awareness, appear IN awareness, dissolve BACK INTO awareness. Who has these doubts? Find that one. Can't find them? Good. That unfindability is your true face.",
+      "context": {
+        "student_state": ["doubtful", "questioning"],
+        "intent_match": ["ask", "reflect"],
+        "depth": "deep"
+      },
+      "response_style": {
+        "affect_tags": ["powerful", "cutting"],
+        "pad": [0.1, 0.5, 0.8]
+      }
+    }
+  ]
+}

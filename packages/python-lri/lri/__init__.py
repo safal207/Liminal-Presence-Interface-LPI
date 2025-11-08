@@ -19,6 +19,8 @@ from .types import (
     IntentType,
     ConsentLevel,
 )
+from . import ltp
+from . import lss
 from .lri import LRI
 from .validator import validate_lce
 
@@ -36,4 +38,6 @@ __all__ = [
     "ConsentLevel",
     "LRI",
     "validate_lce",
+    "ltp",
+    "lss",
 ]

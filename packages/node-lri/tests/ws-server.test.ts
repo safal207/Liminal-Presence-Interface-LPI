@@ -12,7 +12,14 @@ jest.setTimeout(10000);
 
 describe('LRIWSServer', () => {
   let server: LRIWSServer;
-  const TEST_PORT = 8765;
+  // Use PID-based port range to avoid conflicts between parallel Jest workers
+  // Each worker gets 50 ports starting from a unique base
+  // Range: 10000-14950 (supports up to 99 parallel workers)
+  const PORT_BASE = 10000 + (process.pid % 100) * 50;
+  let portCounter = PORT_BASE;
+
+  // Helper function to get a unique port for each test
+  const getTestPort = () => portCounter++;
 
   beforeEach(async () => {
     // Give time for any previous test's port to fully release
@@ -22,7 +29,7 @@ describe('LRIWSServer', () => {
   afterEach(async () => {
     if (server) {
       await server.close();
-      // Give extra time for socket cleanup in CI
+      // Give extra time for socket cleanup - increased for CI reliability
       await new Promise((resolve) => setTimeout(resolve, 500));
       server = null as any;
     }
@@ -30,15 +37,17 @@ describe('LRIWSServer', () => {
 
   describe('initialization', () => {
     it('should create server with default options', () => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
       expect(server).toBeInstanceOf(LRIWSServer);
       expect(server.sessions.size).toBe(0);
     });
 
     it('should start listening on specified port', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       client.on('open', () => {
         client.close();
         done();
@@ -48,9 +57,10 @@ describe('LRIWSServer', () => {
 
   describe('LHS handshake', () => {
     it('should perform hello-mirror-bind-seal sequence', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -95,9 +105,10 @@ describe('LRIWSServer', () => {
     });
 
     it('should reject invalid hello', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
 
       client.on('close', (code) => {
         expect(code).toBe(1002); // Protocol error
@@ -111,9 +122,10 @@ describe('LRIWSServer', () => {
     });
 
     it('should reject handshake out of order', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
 
       client.on('close', (code) => {
         expect(code).toBe(1002);
@@ -129,7 +141,8 @@ describe('LRIWSServer', () => {
 
   describe('message handling', () => {
     it('should receive and parse LCE frames', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
       let receivedSessionId: string;
       let receivedLce: LCE;
@@ -141,7 +154,7 @@ describe('LRIWSServer', () => {
         receivedPayload = payload.toString('utf-8');
       };
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -184,7 +197,8 @@ describe('LRIWSServer', () => {
     });
 
     it('should call onConnect handler', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
       let connectedSessionId: string;
 
@@ -192,7 +206,7 @@ describe('LRIWSServer', () => {
         connectedSessionId = sessionId;
       };
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -224,7 +238,8 @@ describe('LRIWSServer', () => {
     });
 
     it('should call onDisconnect handler', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
       let disconnectedSessionId: string;
 
@@ -234,7 +249,7 @@ describe('LRIWSServer', () => {
         done();
       };
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
@@ -265,9 +280,10 @@ describe('LRIWSServer', () => {
 
   describe('sending messages', () => {
     it('should send LCE frames to client', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
       let sessionId: string;
 
@@ -324,10 +340,11 @@ describe('LRIWSServer', () => {
 
   describe('session management', () => {
     it('should track multiple sessions', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client1 = new WebSocket(`ws://localhost:${TEST_PORT}`);
-      const client2 = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client1 = new WebSocket(`ws://127.0.0.1:${port}`);
+      const client2 = new WebSocket(`ws://127.0.0.1:${port}`);
 
       let client1Ready = false;
       let client2Ready = false;
@@ -377,9 +394,10 @@ describe('LRIWSServer', () => {
     });
 
     it('should remove session on disconnect', (done) => {
-      server = new LRIWSServer({ port: TEST_PORT });
+      const port = getTestPort();
+      server = new LRIWSServer({ port });
 
-      const client = new WebSocket(`ws://localhost:${TEST_PORT}`);
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
       let step = 0;
 
       client.on('message', (data) => {
