@@ -310,7 +310,7 @@ jobs:
       - validate-schemas
       - node-sdk
       - python-sdk
-      - lrictl
+      - lpictl
       - examples
       - vocab
     steps:
