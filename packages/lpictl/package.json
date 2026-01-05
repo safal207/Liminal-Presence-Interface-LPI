@@ -1,9 +1,10 @@
 {
-  "name": "lrictl",
+  "name": "lpictl",
   "version": "0.1.0",
-  "description": "Command-line tool for Liminal Resonance Interface (LRI)",
+  "description": "Command-line tool for Liminal Presence Interface (LPI)",
   "main": "dist/index.js",
   "bin": {
+    "lpictl": "./dist/cli.js",
     "lrictl": "./dist/cli.js"
   },
   "scripts": {

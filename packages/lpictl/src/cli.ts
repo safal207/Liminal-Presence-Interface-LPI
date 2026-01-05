@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * lrictl - CLI Tool for Liminal Resonance Interface
+ * lpictl - CLI Tool for Liminal Presence Interface
  *
  * The Vajra Path - Direct tool for working with LCE
  */
@@ -8,17 +8,23 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import * as fs from 'fs';
+import path from 'path';
 import { validate, validateFile } from './validator';
 import { formatLCE, LCE } from './formatter';
 import { encodeObject, decodeToObject, isValidBase64 } from './encoder';
 import inquirer from 'inquirer';
 
 const program = new Command();
+const invokedAs = path.basename(process.argv[1] ?? '');
 
 program
-  .name('lrictl')
-  .description('🗝️  CLI tool for Liminal Resonance Interface (LRI)')
+  .name('lpictl')
+  .description('🗝️  CLI tool for Liminal Presence Interface (LPI)')
   .version('0.1.0');
+
+if (invokedAs === 'lrictl') {
+  console.warn('lrictl is deprecated; use lpictl instead.');
+}
 
 /**
  * Command: validate
@@ -85,7 +91,7 @@ program
       const validation = validate(lce);
       if (!validation.valid) {
         console.log(chalk.yellow('⚠️  Warning: LCE has validation errors'));
-        console.log(chalk.gray('   Run `lrictl validate` for details'));
+        console.log(chalk.gray('   Run `lpictl validate` for details'));
         console.log();
       }
     } catch (err) {

@@ -155,56 +155,20 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: |
-          CLI_DIR="packages/lpictl"
-          if [ ! -d "$CLI_DIR" ]; then
-            CLI_DIR="packages/lrictl"
-          fi
-          if [ ! -d "$CLI_DIR" ]; then
-            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
-            exit 1
-          fi
-          cd "$CLI_DIR"
-          npm install
+        working-directory: packages/lpictl
+        run: npm install
 
       - name: Lint
-        run: |
-          CLI_DIR="packages/lpictl"
-          if [ ! -d "$CLI_DIR" ]; then
-            CLI_DIR="packages/lrictl"
-          fi
-          if [ ! -d "$CLI_DIR" ]; then
-            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
-            exit 1
-          fi
-          cd "$CLI_DIR"
-          npm run lint
+        working-directory: packages/lpictl
+        run: npm run lint
 
       - name: Build
-        run: |
-          CLI_DIR="packages/lpictl"
-          if [ ! -d "$CLI_DIR" ]; then
-            CLI_DIR="packages/lrictl"
-          fi
-          if [ ! -d "$CLI_DIR" ]; then
-            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
-            exit 1
-          fi
-          cd "$CLI_DIR"
-          npm run build
+        working-directory: packages/lpictl
+        run: npm run build
 
       - name: Test
-        run: |
-          CLI_DIR="packages/lpictl"
-          if [ ! -d "$CLI_DIR" ]; then
-            CLI_DIR="packages/lrictl"
-          fi
-          if [ ! -d "$CLI_DIR" ]; then
-            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
-            exit 1
-          fi
-          cd "$CLI_DIR"
-          npm test
+        working-directory: packages/lpictl
+        run: npm test
 
 
   # Examples
@@ -310,7 +274,7 @@ jobs:
       - validate-schemas
       - node-sdk
       - python-sdk
-      - lrictl
+      - lpictl
       - examples
       - vocab
     steps:

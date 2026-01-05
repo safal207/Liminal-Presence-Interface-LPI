@@ -1,10 +1,10 @@
-# Getting Started with LRI
+# Getting Started with LPI
 
-Welcome to the **Liminal Resonance Interface (LRI)**! This guide will help you get up and running with LRI in minutes.
+Welcome to the **Liminal Presence Interface (LPI)**! This guide will help you get up and running with LPI in minutes.
 
-## What is LRI?
+## What is LPI?
 
-LRI is a protocol for **semantic context exchange** between AI systems and applications. It provides:
+LPI is a protocol for **semantic context exchange** between AI systems and applications. It provides:
 
 - 🔌 **WebSocket Communication** - Real-time bidirectional messaging
 - 🔐 **Cryptographic Trust** - Ed25519 signatures via LTP (Liminal Trust Protocol)
@@ -31,7 +31,7 @@ pip install python-lri
 
 ## Your First LCE Message
 
-LCE (Liminal Context Exchange) is the core message format in LRI. Every message includes:
+LCE (Liminal Context Exchange) is the core message format in LPI. Every message includes:
 
 - **Intent** - What you're trying to do (`tell`, `ask`, `notify`, etc.)
 - **Policy** - Privacy and consent settings
@@ -111,7 +111,7 @@ server.onDisconnect = (sessionId) => {
   console.log(`Client disconnected: ${sessionId}`);
 };
 
-console.log('LRI WebSocket server running on ws://localhost:8080');
+console.log('LPI WebSocket server running on ws://localhost:8080');
 ```
 
 ### What's Happening?
@@ -125,7 +125,7 @@ console.log('LRI WebSocket server running on ws://localhost:8080');
 
 ## WebSocket Client (Node.js)
 
-Connect to an LRI WebSocket server:
+Connect to an LPI WebSocket server:
 
 ```typescript
 import { LRIWSClient } from 'node-lri';
@@ -337,14 +337,14 @@ server.onConnect = (sessionId) => {
     v: 1,
     intent: { type: 'notify', goal: 'Welcome' },
     policy: { consent: 'private' }
-  }, 'Welcome to LRI Chat!');
+  }, 'Welcome to LPI Chat!');
 };
 
 server.onDisconnect = (sessionId) => {
   console.log(`❌ Client disconnected: ${sessionId}`);
 };
 
-console.log('🚀 LRI Chat Server running on ws://localhost:8080');
+console.log('🚀 LPI Chat Server running on ws://localhost:8080');
 console.log('📝 Features: WebSocket + LTP + LSS');
 ```
 
@@ -352,7 +352,7 @@ console.log('📝 Features: WebSocket + LTP + LSS');
 
 ## Express.js Integration
 
-Use LRI with Express for HTTP endpoints:
+Use LPI with Express for HTTP endpoints:
 
 ```typescript
 import express from 'express';
@@ -360,7 +360,7 @@ import { lriMiddleware, validateLCE } from 'node-lri';
 
 const app = express();
 
-// Add LRI middleware
+// Add LPI middleware
 app.use(lriMiddleware());
 
 // Create endpoint that accepts LCE
@@ -384,7 +384,7 @@ app.post('/message', async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log('LRI HTTP server running on http://localhost:3000');
+  console.log('LPI HTTP server running on http://localhost:3000');
 });
 ```
 
@@ -400,7 +400,7 @@ app.listen(3000, () => {
 
 ### 🔧 Tools
 
-- **[lrictl](../packages/lrictl/)** - CLI tool for LRI development
+- **[lrictl](../packages/lrictl/)** - CLI tool for LPI development (legacy package name)
 - **WebSocket Examples** - See `examples/ws-echo/`
 - **LTP Examples** - See `examples/ltp-signing/`
 - **LSS Examples** - See `examples/lss-coherence/`
@@ -411,7 +411,7 @@ app.listen(3000, () => {
 - **Custom Validators** - Add your own validation rules
 - **Authentication** - Integrate with your auth system
 - **Rate Limiting** - Protect your servers
-- **Metrics** - Monitor LRI usage
+- **Metrics** - Monitor LPI usage
 
 ---
 
@@ -423,4 +423,4 @@ app.listen(3000, () => {
 
 ---
 
-**Happy coding with LRI!** 🚀
+**Happy coding with LPI!** 🚀

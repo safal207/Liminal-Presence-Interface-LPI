@@ -1,6 +1,6 @@
-# LRI Versioning Policy
+# LPI Versioning Policy
 
-> Semantic versioning strategy for LRI protocol, schemas, and SDKs
+> Semantic versioning strategy for LPI protocol, schemas, and SDKs
 
 **Version:** 1.0
 **Date:** 2025-01-15
@@ -20,7 +20,7 @@
 
 ## Overview
 
-LRI uses **Semantic Versioning 2.0.0** (SemVer) for all components with specific rules for protocol stability and backward compatibility.
+LPI uses **Semantic Versioning 2.0.0** (SemVer) for all components with specific rules for protocol stability and backward compatibility.
 
 **Key Principles:**
 1. **Backward compatibility** is paramount
@@ -30,7 +30,7 @@ LRI uses **Semantic Versioning 2.0.0** (SemVer) for all components with specific
 
 ## Versioning Components
 
-LRI has three independently versioned components:
+LPI has three independently versioned components:
 
 | Component | Current Version | Versioning Scope |
 |-----------|----------------|------------------|
@@ -297,9 +297,9 @@ npm install node-lri@^0.2.0
 
 2. Optional: Add WebSocket support:
 ```typescript
-import { LRIWSServer } from 'node-lri/ws';
+import { LPIWSServer } from 'node-lri/ws';
 
-const server = new LRIWSServer({ port: 8080 });
+const server = new LPIWSServer({ port: 8080 });
 ```
 
 3. Optional: Add LTP signatures:
@@ -485,6 +485,6 @@ All releases MUST update [CHANGELOG.md](../CHANGELOG.md) following [Keep a Chang
 
 ---
 
-**Document Owner:** LRI Core Team
+**Document Owner:** LPI Core Team
 **Review Cycle:** Quarterly
 **Next Review:** 2025-04-15

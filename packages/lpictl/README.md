@@ -1,18 +1,20 @@
-# 🗝️ lrictl - The Vajra Path
+# 🗝️ lpictl - The Vajra Path
 
 > *"The diamond cuts through ignorance. The CLI tool cuts through confusion."*
 > — Adapted from Padmasambhava's teachings
 
-Command-line tool for **Liminal Resonance Interface (LRI)**.
+Command-line tool for **Liminal Presence Interface (LPI)**.
 
-## 🌟 What is lrictl?
+Legacy alias: `lrictl` (deprecated; use `lpictl`).
 
-`lrictl` is a CLI tool for working with **LCE** (Liminal Context Envelopes) - the semantic context protocol for human-AI communication. It provides direct, immediate access to validation, inspection, encoding, and creation of LCE documents.
+## 🌟 What is lpictl?
+
+`lpictl` is a CLI tool for working with **LCE** (Liminal Context Envelopes) - the semantic context protocol for human-AI communication. It provides direct, immediate access to validation, inspection, encoding, and creation of LCE documents.
 
 ### The Four Liberating Actions
 
 ```
-lrictl
+lpictl
   ├── validate    🔍 Purification    - Verify LCE correctness
   ├── inspect     👁️  Vision         - See LCE nature
   ├── encode      🔄 Transformation - JSON → Base64
@@ -25,13 +27,15 @@ lrictl
 ## 📦 Installation
 
 ```bash
-npm install -g lrictl
+npm install -g lpictl
 ```
+
+`lrictl` remains available as a legacy alias.
 
 Or use from source:
 
 ```bash
-cd packages/lrictl
+cd packages/lpictl
 npm install
 npm run build
 npm link
@@ -46,7 +50,7 @@ npm link
 Check if an LCE file is valid according to the schema:
 
 ```bash
-lrictl validate my-lce.json
+lpictl validate my-lce.json
 ```
 
 **Output:**
@@ -61,7 +65,7 @@ lrictl validate my-lce.json
 For detailed error information:
 
 ```bash
-lrictl validate invalid-lce.json --verbose
+lpictl validate invalid-lce.json --verbose
 ```
 
 ---
@@ -71,7 +75,7 @@ lrictl validate invalid-lce.json --verbose
 Display LCE in beautiful, human-readable format:
 
 ```bash
-lrictl inspect my-lce.json
+lpictl inspect my-lce.json
 ```
 
 **Output:**
@@ -117,7 +121,7 @@ Version: v1
 Disable colors:
 
 ```bash
-lrictl inspect my-lce.json --no-color
+lpictl inspect my-lce.json --no-color
 ```
 
 ---
@@ -127,7 +131,7 @@ lrictl inspect my-lce.json --no-color
 Convert JSON LCE to Base64 for HTTP headers:
 
 ```bash
-lrictl encode my-lce.json
+lpictl encode my-lce.json
 ```
 
 **Output:**
@@ -138,7 +142,7 @@ ewogICJ2IjogMSwKICAiaW50ZW50IjogewogICAgInR5cGUiOiAiYXNrIgogIH0sCiAgInBvbGljeSI6
 Save to file:
 
 ```bash
-lrictl encode my-lce.json -o encoded.txt
+lpictl encode my-lce.json -o encoded.txt
 ```
 
 ---
@@ -148,13 +152,13 @@ lrictl encode my-lce.json -o encoded.txt
 Convert Base64 back to JSON:
 
 ```bash
-lrictl decode "ewogICJ2IjogMS..." --pretty
+lpictl decode "ewogICJ2IjogMS..." --pretty
 ```
 
 Or from file:
 
 ```bash
-lrictl decode encoded.txt --pretty -o decoded.json
+lpictl decode encoded.txt --pretty -o decoded.json
 ```
 
 ---
@@ -164,7 +168,7 @@ lrictl decode encoded.txt --pretty -o decoded.json
 Interactive creation wizard:
 
 ```bash
-lrictl create
+lpictl create
 ```
 
 **Interactive prompts:**
@@ -192,7 +196,7 @@ lrictl create
 Save to file:
 
 ```bash
-lrictl create -o my-new-lce.json
+lpictl create -o my-new-lce.json
 ```
 
 ---
@@ -208,9 +212,9 @@ The `examples/` directory contains sample LCE files:
 Try them:
 
 ```bash
-lrictl inspect examples/complete-tell.json
-lrictl validate examples/invalid-lce.json --verbose
-lrictl encode examples/simple-ask.json
+lpictl inspect examples/complete-tell.json
+lpictl validate examples/invalid-lce.json --verbose
+lpictl encode examples/simple-ask.json
 ```
 
 ---
@@ -220,7 +224,7 @@ lrictl encode examples/simple-ask.json
 > *"Form is emptiness, emptiness is form."*
 > — Heart Sutra
 
-LCE is both structure (JSON Schema) and flow (semantic meaning). `lrictl` helps you navigate this duality:
+LCE is both structure (JSON Schema) and flow (semantic meaning). `lpictl` helps you navigate this duality:
 
 - **Validate** ensures *form* is correct
 - **Inspect** reveals the *meaning*
@@ -304,4 +308,4 @@ The Vajra Path cuts through complexity, revealing the luminous nature of communi
 
 ---
 
-**lrictl** - Where form meets meaning. 🗝️✨
+**lpictl** - Where form meets meaning. 🗝️✨

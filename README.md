@@ -1,4 +1,4 @@
-# LRI - Liminal Resonance Interface
+# LPI — Liminal Presence Interface
 
 > **Layer 8 for Human-AI Communication**
 
@@ -7,11 +7,11 @@
 [![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/lri/lri)
 [![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/lri/lri)
 
-LRI (Liminal Resonance Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
+LPI (Liminal Presence Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
 
-## What is LRI?
+## What is LPI?
 
-LRI introduces **Layer 8** - a semantic layer that wraps application-level messages with rich contextual metadata:
+LPI introduces **Layer 8** - a semantic layer that wraps application-level messages with rich contextual metadata:
 
 - **Intent** - What the message aims to achieve (ask, tell, propose, etc.)
 - **Affect** - Emotional context (PAD model: Pleasure, Arousal, Dominance)
@@ -22,9 +22,9 @@ LRI introduces **Layer 8** - a semantic layer that wraps application-level messa
 
 ### Why?
 
-Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LRI bridges this gap:
+Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LPI bridges this gap:
 
-| Traditional | With LRI |
+| Traditional | With LPI |
 |-------------|----------|
 | `{"query": "weather"}` | Intent: `ask`, Affect: `curious`, Consent: `private` |
 | Raw text | Rich semantic context |
@@ -33,9 +33,23 @@ Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LR
 
 ---
 
-📚 **[Get Started with LRI →](docs/getting-started.md)**
+📚 **[Get Started with LPI →](docs/getting-started.md)**
 
 Complete guide with WebSocket, LTP (cryptographic signing), LSS (session management), and production examples.
+
+---
+
+## Terminology
+
+Quick definitions:
+
+- **LPI** = Liminal Presence Interface (the protocol layer)
+- **LRI** = Living Relational Identity (entity/invariant; persists even in silence)
+
+For a concise glossary and historical naming notes, see:
+
+- [Glossary](docs/glossary.md)
+- [Migration notes](MIGRATION.md)
 
 ---
 
@@ -59,7 +73,7 @@ app.get('/api/data', (req: any, res) => {
   console.log('Intent:', lce?.intent.type);
 
   res.json({
-    message: 'Hello from LRI!',
+    message: 'Hello from LPI!',
     intent: lce?.intent.type
   });
 });
@@ -85,7 +99,7 @@ async def get_data(request: Request):
     lce = await lri.parse_request(request, required=False)
 
     return {
-        "message": "Hello from LRI!",
+        "message": "Hello from LPI!",
         "intent": lce.intent.type if lce else None
     }
 ```
@@ -183,7 +197,7 @@ async def handle_message(state = Depends(session_state)):
 lss.on("drift", lambda event: print("drift", event.thread_id, event.details))
 ```
 
-The core data structure of LRI is the **LCE** (Liminal Context Envelope):
+The core data structure of LPI is the **LCE** (Liminal Context Envelope):
 
 ```json
 {
@@ -235,7 +249,7 @@ The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 
 ```
 ┌─────────────────────────────────────────┐
-│  Layer 8: LRI (Semantic/Context)        │  ← LCE, Intent, Affect
+│  Layer 8: LPI (Semantic/Context)        │  ← LCE, Intent, Affect
 ├─────────────────────────────────────────┤
 │  Layer 7: Application (HTTP/WS/gRPC)    │  ← Traditional protocols
 ├─────────────────────────────────────────┤
@@ -245,7 +259,7 @@ The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 └─────────────────────────────────────────┘
 ```
 
-LRI operates **on top of** existing Layer 7 protocols:
+LPI operates **on top of** existing Layer 7 protocols:
 
 - **HTTP** - LCE in headers (`LCE: base64(json)`)
 - **WebSocket** - LCE prefix on each frame
@@ -288,7 +302,7 @@ lri/
 - ✅ LSS (Liminal Session Store) - coherence calculation
 - ✅ CBOR encoding for IoT
 - ✅ gRPC metadata adapter
-- ✅ CLI tool (`lrictl`)
+- ✅ CLI tool (`lpictl`, legacy alias: `lrictl`)
 
 ### Future (v1.0)
 
@@ -309,7 +323,7 @@ lri/
   - Express.js integration & production examples
 
 ### Reference
-- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md)
+- [RFC-000: LPI Overview](docs/rfcs/rfc-000.md)
 - [LHS Handshake Spec](docs/specs/lhs.md)
 - [LCE Schema Spec](schemas/lce-v0.1.json)
 - [Intent Vocabulary](vocab/intent.yaml)
@@ -402,7 +416,7 @@ console.log('Valid:', valid); // true
 
 ### LHS Negotiation Transcripts
 
-See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LRI-LHS-Step`, `LRI-LHS`, and `LCE` headers.
+See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LPI-LHS-Step`, `LPI-LHS`, and `LCE` headers.
 
 ## Contributing
 
@@ -451,7 +465,7 @@ We have 22 planned issues across spec, SDK, security, and tooling. See [docs/iss
 
 ## Philosophy
 
-LRI is built on these principles:
+LPI is built on these principles:
 
 1. **Semantic-first** - Meaning matters more than bytes
 2. **Privacy by design** - Explicit consent on every message
@@ -462,7 +476,7 @@ LRI is built on these principles:
 ## FAQ
 
 **Q: Do I need to change my existing API?**
-A: No! LRI wraps your existing API with metadata. Your endpoints work as-is.
+A: No! LPI wraps your existing API with metadata. Your endpoints work as-is.
 
 **Q: What's the performance overhead?**
 A: Minimal - typically <10% for size and <5% for CPU. See benchmarks (coming soon).
@@ -474,7 +488,7 @@ A: No, but it's optimized for human-AI interaction. Human-human chat benefits to
 A: We do! LCE is transmitted via headers, but with a standardized semantic structure.
 
 **Q: Does this work with REST/GraphQL/gRPC?**
-A: Yes! LRI sits above these protocols and works with all of them.
+A: Yes! LPI sits above these protocols and works with all of them.
 
 ## License
 
@@ -484,8 +498,8 @@ MIT - See [LICENSE](LICENSE) for details.
 
 ```bibtex
 @misc{lri2025,
-  title={LRI: Liminal Resonance Interface},
-  author={LRI Contributors},
+  title={LPI: Liminal Presence Interface},
+  author={LPI Contributors},
   year={2025},
   url={https://github.com/lri/lri}
 }
@@ -499,6 +513,6 @@ MIT - See [LICENSE](LICENSE) for details.
 
 ---
 
-**Built with ❤️ by the LRI community**
+**Built with ❤️ by the LPI community**
 
 *"Adding meaning to the message, context to the conversation."*
