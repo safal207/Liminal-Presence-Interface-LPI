@@ -2,11 +2,19 @@
 
 ## LRI — Living Relational Identity
 
-An entity/invariant that persists even in silence. It represents the enduring relational presence of an agent or system.
+- **Entity / invariant**
+- Persists across time and non-action
+- **Not** an interface or protocol
+
+Represents the enduring relational presence of an agent or system.
 
 ## LPI — Liminal Presence Interface
 
-The semantic interface layer: how presence enters contact. LPI is the protocol layer that wraps application traffic with intent, affect, consent, and context.
+- **Interface layer**
+- How presence enters interaction
+- Tooling, CLI, and SDKs belong here
+
+LPI is the protocol layer that wraps application traffic with intent, affect, consent, and context.
 
 ## LTP — Liminal Trust Protocol
 

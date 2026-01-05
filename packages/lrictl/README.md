@@ -3,7 +3,7 @@
 > *"The diamond cuts through ignorance. The CLI tool cuts through confusion."*
 > — Adapted from Padmasambhava's teachings
 
-Command-line tool for **Liminal Resonance Interface (LRI)**.
+Command-line tool for **Liminal Presence Interface (LPI)**.
 
 ## 🌟 What is lrictl?
 

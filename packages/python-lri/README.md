@@ -1,6 +1,6 @@
 # python-lri
 
-Python SDK for Liminal Resonance Interface (LRI)
+Python SDK for Liminal Presence Interface (LPI)
 
 **Version:** 0.1.0 (Alpha)
 
@@ -18,9 +18,9 @@ pip install python-lri
 
 #### Wiring the dependency with `Depends`
 
-`LRI.dependency()` plugs directly into FastAPI so every route receives a
+`LPI.dependency()` plugs directly into FastAPI so every route receives a
 fully-validated `LCE` (or `None` if the header is optional). Instantiate a
-single `LRI` object, then re-use the dependency wherever context-aware handling
+single `LPI` object, then re-use the dependency wherever context-aware handling
 is required:
 
 ```python
@@ -28,10 +28,10 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from lri import LCE, LRI
+from lri import LCE, LPI
 
 app = FastAPI()
-lri = LRI()
+lri = LPI()
 
 
 @app.get("/optional")
@@ -53,11 +53,11 @@ async def ingest_event(
 
 @app.exception_handler(HTTPException)
 async def handle_http_exception(_, exc: HTTPException):
-    """Pass through structured LRI errors in a predictable JSON shape."""
+    """Pass through structured LPI errors in a predictable JSON shape."""
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 ```
 
-Behind the scenes the dependency delegates to `LRI.parse_request`, converts the
+Behind the scenes the dependency delegates to `LPI.parse_request`, converts the
 header into an `LCE` Pydantic model and raises an `HTTPException` when
 validation fails. Optional routes simply return `None` so you can progressively
 enhance behaviour without forcing every client to send metadata.
@@ -101,7 +101,7 @@ Typical JSON payloads pairing application data with an LCE header look like:
 
 #### Exception handling strategies
 
-Because `LRI.dependency()` surfaces problems as `HTTPException`, a single global
+Because `LPI.dependency()` surfaces problems as `HTTPException`, a single global
 handler keeps error payloads consistent for both clients and tests. The helper
 raises:
 
@@ -125,10 +125,10 @@ You can still call `parse_request` manually if you need fine-grained control:
 
 ```python
 from fastapi import FastAPI, Request
-from lri import LRI
+from lri import LPI
 
 app = FastAPI()
-lri = LRI()
+lri = LPI()
 
 
 @app.get("/api/data")
@@ -140,7 +140,7 @@ async def get_data(request: Request):
 ### Creating LCE Headers
 
 ```python
-from lri import LRI, LCE, Intent, Policy
+from lri import LPI, LCE, Intent, Policy
 
 # Create LCE
 lce = LCE(
@@ -150,7 +150,7 @@ lce = LCE(
 )
 
 # Create Base64 header
-header = LRI.create_header(lce)
+header = LPI.create_header(lce)
 
 # Add to response
 response.headers["LCE"] = header
@@ -171,9 +171,9 @@ if errors:
 
 ### Classes
 
-#### `LRI(header_name="LCE", validate=True)`
+#### `LPI(header_name="LCE", validate=True)`
 
-Main LRI handler for FastAPI.
+Main LPI handler for FastAPI.
 
 **Methods:**
 - `parse_request(request, required=False)` - Parse LCE from request
@@ -233,7 +233,7 @@ echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64
 
 ### Error Handling
 
-`LRI.parse_request` and the dependency helper raise `HTTPException` with
+`LPI.parse_request` and the dependency helper raise `HTTPException` with
 structured error payloads that you can expose directly or transform inside a
 global exception handler:
 
@@ -346,7 +346,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 - [Node SDK](../node-lri/) - For advanced features
 - [FastAPI Example](../../examples/fastapi-app/)
-- [LRI Documentation](../../docs/getting-started.md)
+- [LPI Documentation](../../docs/getting-started.md)
 - [RFC-000](../../docs/rfcs/rfc-000.md)
 - [LCE Schema](../../schemas/lce-v0.1.json)
 

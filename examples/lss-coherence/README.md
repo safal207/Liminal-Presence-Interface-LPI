@@ -477,7 +477,7 @@ A: Enable auto-cleanup or call `store.destroy()` when done
 
 ## Resources
 
-- [LRI Documentation](../../docs/getting-started.md)
+- [LPI Documentation](../../docs/getting-started.md)
 - [Node SDK API](../../packages/node-lri/)
 - [RFC-000: LSS Section](../../docs/rfcs/rfc-000.md#103-lss-liminal-session-store)
 - [LCE Schema](../../schemas/lce-v0.1.json)

@@ -2,10 +2,10 @@
 
 > **Layer 8 for Human-AI Communication**
 
-[![CI](https://github.com/safal207/LRI-Liminal-Resonance-Interface./actions/workflows/ci.yml/badge.svg)](https://github.com/safal207/LRI-Liminal-Resonance-Interface./actions/workflows/ci.yml)
+[![CI](https://github.com/safal207/Liminal-Presence-Interface-LPI/actions/workflows/ci.yml/badge.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/lri/lri)
-[![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/lri/lri)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
+[![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
 
 LPI (Liminal Presence Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
 

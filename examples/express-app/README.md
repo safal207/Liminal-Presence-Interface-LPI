@@ -1,4 +1,4 @@
-# Express + LRI Demo Application
+# Express + LPI Demo Application
 
 > Example Express server that shows how to integrate the `node-lri` middleware, parse LCE metadata, and shape responses based on intent.
 
@@ -82,7 +82,7 @@ Mirror a JSON payload and watch the middleware mint a follow-up LCE header.
 curl -i -X POST http://localhost:3000/echo \
   -H "Content-Type: application/json" \
   -H "LCE: $LCE" \
-  -d '{"message": "Hello LRI!"}'
+  -d '{"message": "Hello LPI!"}'
 ```
 
 Trimmed response:
@@ -91,7 +91,7 @@ Trimmed response:
 HTTP/1.1 200 OK
 LCE: eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6InRlbGwifSwibWVtb3J5Ijp7InRocmVhZCI6Ii4uLiJ9fQ==
 
-{"echo":{"message":"Hello LRI!"},"lce":{"intent":{"type":"tell"}},"received":true}
+{"echo":{"message":"Hello LPI!"},"lce":{"intent":{"type":"tell"}},"received":true}
 ```
 
 Notes:
@@ -138,4 +138,4 @@ curl -i -H "LCE: $SYNC_LCE" http://localhost:3000/api/data
 - Inspect the middleware implementation in [`packages/node-lri/src/middleware.ts`](../../packages/node-lri/src/middleware.ts).
 - Read the LCE schema reference in [`schemas/lce-v0.1.json`](../../schemas/lce-v0.1.json).
 
-MIT © LRI Contributors
+MIT © LPI Contributors

@@ -1,6 +1,6 @@
-# Contributing to LRI
+# Contributing to LPI
 
-Thank you for your interest in contributing to the Liminal Resonance Interface (LRI) project! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to the Liminal Presence Interface (LPI) project! This document provides guidelines and information for contributors.
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ This project adheres to a code of conduct that all contributors are expected to 
 - Check if the enhancement has been suggested
 - Use the feature request template
 - Explain the use case and benefits
-- Consider if it fits LRI's scope and philosophy
+- Consider if it fits LPI's scope and philosophy
 
 ### Good First Issues
 
@@ -396,6 +396,6 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-Thank you for contributing to LRI! Together we're building the future of human-AI communication.
+Thank you for contributing to LPI! Together we're building the future of human-AI communication.
 
 **Questions?** Open a [discussion](https://github.com/lri/lri/discussions) or reach out to maintainers.

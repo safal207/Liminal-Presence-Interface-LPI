@@ -1,6 +1,8 @@
 # Migration: LRI → LPI terminology
 
-The repository previously used **LRI** to refer to the interface/protocol layer ("Liminal Resonance Interface"). The interface/protocol name is now **LPI (Liminal Presence Interface)**. **LRI** is reserved exclusively for **Living Relational Identity**.
+The repository previously used **LRI** to refer to the interface/protocol layer (formerly "Liminal Resonance Interface"). The interface/protocol name is now **LPI (Liminal Presence Interface)**. **LRI** is reserved exclusively for **Living Relational Identity**.
+
+This document-only change introduces no code changes.
 
 ## Legacy names (no code changes in this PR)
 
