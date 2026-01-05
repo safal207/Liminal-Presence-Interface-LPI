@@ -1,12 +1,12 @@
-# FastAPI + LPI Example
+# FastAPI + LRI Example
 
-> Complete example demonstrating LPI usage with FastAPI and Python
+> Complete example demonstrating LRI usage with FastAPI and Python
 
-This example shows how to build an LPI-aware REST API server using FastAPI and the `python-lri` SDK.
+This example shows how to build an LRI-aware REST API server using FastAPI and the `python-lri` SDK.
 
 ## Features Demonstrated
 
-- ✅ **LPI Request Parsing** - Parse LCE from request headers
+- ✅ **LRI Request Parsing** - Parse LCE from request headers
 - ✅ **FastAPI Depends helper** - Inject validated `LCE` objects directly (optional & required)
 - ✅ **Intent-aware routing** - Different responses based on intent type
 - ✅ **LCE response headers** - Attaching LCE metadata to responses
@@ -60,7 +60,7 @@ curl http://localhost:8000/
 **Response:**
 ```json
 {
-  "name": "LPI FastAPI Example",
+  "name": "LRI FastAPI Example",
   "version": "0.1.0",
   "endpoints": ["/ping", "/echo", "/ingest", "/chat", "/api/data"],
   "lri": {
@@ -106,14 +106,14 @@ Echo endpoint that mirrors your request and responds with fresh LCE metadata.
 curl -X POST http://localhost:8000/echo \
   -H "Content-Type: application/json" \
   -H "LCE: $(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64)" \
-  -d '{"message": "Hello LPI!"}'
+  -d '{"message": "Hello LRI!"}'
 ```
 
 **Response:**
 ```json
 {
   "echo": {
-    "message": "Hello LPI!"
+    "message": "Hello LRI!"
   },
   "lce": {
     "v": 1,
@@ -264,16 +264,16 @@ curl http://localhost:8000/api/data
 
 ## Code Walkthrough
 
-### 1. Initialize LPI
+### 1. Initialize LRI
 
 ```python
-from lri import LPI
+from lri import LRI
 
-app = FastAPI(title="LPI FastAPI Example")
-lri = LPI()
+app = FastAPI(title="LRI FastAPI Example")
+lri = LRI()
 ```
 
-The `LPI` class provides:
+The `LRI` class provides:
 - Request parsing
 - LCE validation
 - Header encoding
@@ -420,7 +420,7 @@ print(response.json())
 response = requests.post(
     "http://localhost:8000/echo",
     headers=headers,
-    json={"message": "Hello LPI!"}
+    json={"message": "Hello LRI!"}
 )
 print(response.json())
 print(f"Response LCE: {response.headers.get('LCE')}")
@@ -504,18 +504,18 @@ async def get_data(request: Request):
 ```python
 from starlette.middleware.base import BaseHTTPMiddleware
 
-class LPILoggingMiddleware(BaseHTTPMiddleware):
+class LRILoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
-        lri_instance = LPI()
+        lri_instance = LRI()
         lce = await lri_instance.parse_request(request, required=False)
 
         if lce:
-            print(f"[LPI] Intent: {lce.intent.type}, Consent: {lce.policy.consent}")
+            print(f"[LRI] Intent: {lce.intent.type}, Consent: {lce.policy.consent}")
 
         response = await call_next(request)
         return response
 
-app.add_middleware(LPILoggingMiddleware)
+app.add_middleware(LRILoggingMiddleware)
 ```
 
 ### 4. CORS Support
@@ -627,7 +627,7 @@ See [Node.js examples](../express-app/) for these features.
 
 ## Resources
 
-- [LPI Documentation](../../docs/getting-started.md)
+- [LRI Documentation](../../docs/getting-started.md)
 - [Python SDK API](../../packages/python-lri/)
 - [LCE Schema](../../schemas/lce-v0.1.json)
 - [RFC-000](../../docs/rfcs/rfc-000.md)

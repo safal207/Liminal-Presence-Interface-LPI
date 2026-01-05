@@ -1,6 +1,6 @@
 # node-lri
 
-Node.js SDK for Liminal Presence Interface (LPI)
+Node.js SDK for Liminal Resonance Interface (LRI)
 
 **Version:** 0.2.0 (Beta)
 
@@ -31,7 +31,7 @@ import { lriMiddleware, createLCEHeader, LCE } from 'node-lri';
 
 const app = express();
 
-// Add LPI middleware
+// Add LRI middleware
 app.use(lriMiddleware({
   required: false,  // Make LCE optional
   validate: true,   // Validate against schema
@@ -62,9 +62,9 @@ app.listen(3000);
 ### WebSocket Server
 
 ```typescript
-import { LPIWSServer } from 'node-lri/ws';
+import { LRIWSServer } from 'node-lri/ws';
 
-const server = new LPIWSServer({ port: 8080 });
+const server = new LRIWSServer({ port: 8080 });
 
 server.on('connected', (ws, sessionId) => {
   console.log('Client connected:', sessionId);
@@ -221,10 +221,10 @@ function handler(call, callback) {
 
 ### WebSocket (`node-lri/ws`)
 
-#### `LPIWSServer`
+#### `LRIWSServer`
 
 ```typescript
-const server = new LPIWSServer(options);
+const server = new LRIWSServer(options);
 
 // Events
 server.on('connected', (ws, sessionId) => {});
@@ -237,10 +237,10 @@ server.broadcast(lce, payload);
 server.close();
 ```
 
-#### `LPIWSClient`
+#### `LRIWSClient`
 
 ```typescript
-const client = new LPIWSClient(url, options);
+const client = new LRIWSClient(url, options);
 
 await client.connect();
 client.on('message', (lce, payload) => {});
@@ -316,7 +316,7 @@ store.destroy();
 
 ### Complete Examples
 
-- **[Express App](../../examples/express-app)** - REST API with LPI middleware
+- **[Express App](../../examples/express-app)** - REST API with LRI middleware
 - **[WebSocket Echo](../../examples/ws-echo)** - WebSocket server with LHS handshake
 - **[LTP Signing](../../examples/ltp-signing)** - Cryptographic signatures
 - **[LSS Coherence](../../examples/lss-coherence)** - Coherence tracking
@@ -345,10 +345,10 @@ app.get('/api/data', (req: any, res) => {
 #### WebSocket with LSS
 
 ```typescript
-import { LPIWSServer } from 'node-lri/ws';
+import { LRIWSServer } from 'node-lri/ws';
 import { lss } from 'node-lri';
 
-const server = new LPIWSServer({ port: 8080 });
+const server = new LRIWSServer({ port: 8080 });
 const store = new lss.LSS();
 
 server.on('message', async (ws, lce, payload) => {
@@ -466,7 +466,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## Resources
 
-- [LPI Documentation](../../docs/getting-started.md)
+- [LRI Documentation](../../docs/getting-started.md)
 - [RFC-000](../../docs/rfcs/rfc-000.md)
 - [LCE Schema](../../schemas/lce-v0.1.json)
 - [GitHub Repository](https://github.com/lri/lri)

@@ -45,7 +45,7 @@ npm run client
 Server logs:
 
 ```
-LPI WebSocket Echo Server (adapter) listening on port 8080
+LRI WebSocket Echo Server (adapter) listening on port 8080
 [Server] Client connected: 7f0d...
   Client ID: ws-echo-adapter-client
   Encoding: json
@@ -53,7 +53,7 @@ LPI WebSocket Echo Server (adapter) listening on port 8080
 [Server] Received from 7f0d...:
   Intent: ask
   Goal: Test basic echo
-  Payload: Hello, LPI!
+  Payload: Hello, LRI!
 ```
 
 Client logs:
@@ -69,11 +69,11 @@ Connecting to ws://localhost:8080 using adapter...
   Session expires at: 2024-01-01T00:05:00.000Z
 [Client] Sending message 1/3:
   Intent: ask
-  Payload: Hello, LPI!
+  Payload: Hello, LRI!
 [Client] Received response:
   Intent: tell
   Goal: Echo of: Test basic echo
-  Payload: Echo: Hello, LPI!
+  Payload: Echo: Hello, LRI!
 ```
 
 ## Server Walkthrough (`server.js`)

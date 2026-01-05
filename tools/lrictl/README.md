@@ -1,6 +1,6 @@
-# lrictl - LPI Command Line Tool
+# lrictl - LRI Command Line Tool
 
-CLI tool for LPI (Liminal Presence Interface) operations.
+CLI tool for LRI (Liminal Resonance Interface) operations.
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # 🪷 Padmasambhava Teacher - The Vajra Path
 
-An adaptive wisdom teacher powered by the LPI (Liminal Presence Interface) protocol. Inspired by Padmasambhava, the 8th-century Buddhist master known for his skillful means (*upaya*) in adapting teachings to each student's capacity.
+An adaptive wisdom teacher powered by the LRI (Liminal Resonance Interface) protocol. Inspired by Padmasambhava, the 8th-century Buddhist master known for his skillful means (*upaya*) in adapting teachings to each student's capacity.
 
 > *"The mind is like the sky - thoughts are like clouds passing through. Do not grasp the clouds, rest in the vast openness of sky-like awareness."*
 
@@ -8,12 +8,12 @@ An adaptive wisdom teacher powered by the LPI (Liminal Presence Interface) proto
 
 The Padmasambhava Teacher is a **WebSocket-based teaching system** that:
 
-1. **Understands your emotional state** through LPI's affect tags
+1. **Understands your emotional state** through LRI's affect tags
 2. **Tracks your comprehension** using LSS (Liminal Session Store) coherence scoring
 3. **Selects appropriate teachings** based on your context and readiness
 4. **Adapts its teaching style** using the principle of skillful means
 
-This is a demonstration of how LPI's semantic protocol enables **context-aware, emotionally intelligent communication** between humans and AI.
+This is a demonstration of how LRI's semantic protocol enables **context-aware, emotionally intelligent communication** between humans and AI.
 
 ## 🏗️ Architecture
 
@@ -22,10 +22,10 @@ This is a demonstration of how LPI's semantic protocol enables **context-aware, 
 │  Student Client │
 │  (client.js)    │
 └────────┬────────┘
-         │ WebSocket + LPI Protocol
+         │ WebSocket + LRI Protocol
          │
 ┌────────▼────────────────────────────┐
-│  LPI WebSocket Server               │
+│  LRI WebSocket Server               │
 │  - LHS Handshake                    │
 │  - LSS Coherence Tracking           │
 └────────┬────────────────────────────┘
@@ -343,11 +343,11 @@ Inspired by:
 - **Padmasambhava** (Guru Rinpoche) - 8th century Buddhist master
 - **The Tibetan Book of the Dead** (Bardo Thodol)
 - **Dzogchen teachings** - The Great Perfection tradition
-- **LPI Protocol** - Liminal Presence Interface for semantic communication
+- **LRI Protocol** - Liminal Resonance Interface for semantic communication
 
 ## 📜 License
 
-Part of the LPI project. See main project LICENSE.
+Part of the LRI project. See main project LICENSE.
 
 ---
 

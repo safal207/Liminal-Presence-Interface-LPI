@@ -117,7 +117,7 @@ app.post('/api/message', async (req, res) => {
   const signed = await ltp.sign(lce, privateKey);
 
   // Отправка с подписью
-  res.setHeader('X-LPI-Context', Buffer.from(JSON.stringify(signed)).toString('base64'));
+  res.setHeader('X-LRI-Context', Buffer.from(JSON.stringify(signed)).toString('base64'));
   res.json({ status: 'ok' });
 });
 ```
