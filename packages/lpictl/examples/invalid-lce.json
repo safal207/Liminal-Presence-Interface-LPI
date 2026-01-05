@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "intent": {
+    "type": "invalid-intent-type"
+  },
+  "policy": {
+    "consent": "wrong-consent-level"
+  }
+}
