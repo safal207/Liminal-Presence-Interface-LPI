@@ -1,6 +1,6 @@
 # Liminal Session Store (LSS)
 
-LSS provides lightweight session state for Liminal Resonance Interface
+LSS provides lightweight session state for Liminal Presence Interface
 clients. It tracks message history, calculates coherence, and emits drift
 signals when the dialogue diverges from the established context. The store
 ships with pluggable backends so you can keep state in memory for local

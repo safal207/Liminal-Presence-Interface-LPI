@@ -1,6 +1,6 @@
-# LRI Threat Model
+# LPI Threat Model
 
-> STRIDE threat analysis and security mitigations for the Liminal Resonance Interface
+> STRIDE threat analysis and security mitigations for the Liminal Presence Interface
 
 **Version:** 1.0
 **Date:** 2025-01-15
@@ -19,7 +19,7 @@
 
 ## Overview
 
-This document provides a comprehensive threat model for LRI (Liminal Resonance Interface) using the **STRIDE** framework:
+This document provides a comprehensive threat model for LPI (Liminal Presence Interface) using the **STRIDE** framework:
 
 - **S**poofing - Impersonating another user or system
 - **T**ampering - Modifying data or code
@@ -667,7 +667,7 @@ app.use(rateLimit({ windowMs: 900000, max: 100 }));
 
 ```python
 # 1. Enable validation
-lri = LRI(validate=True)
+lri = LPI(validate=True)
 
 # 2. Enforce consent
 def can_share(lce: LCE, recipient: str) -> bool:
@@ -762,6 +762,6 @@ async def endpoint(request: Request):
 
 ---
 
-**Document Owner:** LRI Security Team
+**Document Owner:** LPI Security Team
 **Review Cycle:** Quarterly
 **Next Review:** 2025-04-15

@@ -1,7 +1,7 @@
 # LHS-001: Liminal Handshake Sequence (Hello → Mirror → Bind → Seal → Flow)
 
 **Status:** Final
-**Author(s):** LRI Protocol Working Group
+**Author(s):** LPI Protocol Working Group
 **Created:** 2025-01-20
 **Updated:** 2025-02-15
 **Version:** 1.0.0
@@ -38,7 +38,7 @@
 
 ## Abstract
 
-The **Liminal Handshake Sequence (LHS)** establishes mutual capability awareness between LRI-aware clients and servers before any semantic payload is exchanged. Each step refines the shared context, negotiates features, and produces a sealed session that transitions into sustained **Flow** of LCE (Liminal Context Envelope) messages. This document narrates each step and defines normative state-machine transitions for implementations.
+The **Liminal Handshake Sequence (LHS)** establishes mutual capability awareness between LPI-aware clients and servers before any semantic payload is exchanged. Each step refines the shared context, negotiates features, and produces a sealed session that transitions into sustained **Flow** of LCE (Liminal Context Envelope) messages. This document narrates each step and defines normative state-machine transitions for implementations.
 
 ---
 
@@ -130,7 +130,7 @@ Each subsection below is normative unless otherwise stated. Implementations MUST
 | `features` | array | ✅ | Requested optional features such as `"ltp"`, `"lss"`, `"compression"`. |
 | `client_id` | string | ⚠️ | Optional stable identifier for session analytics or resumption. |
 
-**Narrative:** The client composes Hello with the maximum LRI version and capability wishlist. Servers SHOULD preserve ordering to honor client preference. Unknown feature names MUST be ignored rather than rejected.
+**Narrative:** The client composes Hello with the maximum LPI version and capability wishlist. Servers SHOULD preserve ordering to honor client preference. Unknown feature names MUST be ignored rather than rejected.
 
 **Validation:**
 
@@ -388,22 +388,22 @@ LHS-over-HTTP uses request/response headers prior to (or alongside) REST or gRPC
 
 | Header | Direction | Description |
 |--------|-----------|-------------|
-| `LRI-LHS-Step` | Request & Response | Indicates the handshake step associated with the HTTP message (`hello`, `mirror`, `bind`, `seal`, `flow`). |
-| `LRI-LHS` | Request & Response | Base64-encoded JSON envelope for the indicated step. Standard Base64 with padding (`=`) MUST be used. |
+| `LPI-LHS-Step` | Request & Response | Indicates the handshake step associated with the HTTP message (`hello`, `mirror`, `bind`, `seal`, `flow`). |
+| `LPI-LHS` | Request & Response | Base64-encoded JSON envelope for the indicated step. Standard Base64 with padding (`=`) MUST be used. |
 | `LCE` | Request & Response | Base64-encoded LCE payload, only present once Flow begins. |
 
 **Usage Notes:**
 
 1. Hello and Bind are typically `POST` requests to a negotiation endpoint (e.g., `/lri/connect`).
 2. Mirror and Seal are expressed via HTTP responses bearing the same headers.
-3. Flow transitions to application endpoints (`/chat`, `/stream`, etc.) with `LCE` headers and optional `LRI-LHS-Step: flow` to indicate the steady state.
+3. Flow transitions to application endpoints (`/chat`, `/stream`, etc.) with `LCE` headers and optional `LPI-LHS-Step: flow` to indicate the steady state.
 4. Implementations SHOULD persist the negotiated session identifier in application cookies or headers as needed.
 
 A complete HTTP transcript is available at [`examples/lhs/http.json`](../../examples/lhs/http.json).
 
 ### 5.2 WebSocket First Frames
 
-For WebSocket transports, the handshake occurs within the first four text frames immediately after the underlying WebSocket connection is established. Flow frames thereafter follow the binary LRI framing defined in [RFC-000](../rfcs/rfc-000.md#10-protocol-subsystems).
+For WebSocket transports, the handshake occurs within the first four text frames immediately after the underlying WebSocket connection is established. Flow frames thereafter follow the binary LPI framing defined in [RFC-000](../rfcs/rfc-000.md#10-protocol-subsystems).
 
 | Frame Index | Direction | Content Type | Description |
 |-------------|-----------|--------------|-------------|
@@ -422,7 +422,7 @@ A fully populated frame trace, including an encoded Flow frame, is provided at [
 ## 6. Failure Handling
 
 - **Timeouts:** Each handshake step SHOULD have a watchdog (default 5 seconds). On timeout, peers abort with an explicit error (`408` over HTTP, `4401` close code over WebSocket).
-- **Version mismatch:** Responders MAY return `426 Upgrade Required` with supported versions in `LRI-LHS` payload.
+- **Version mismatch:** Responders MAY return `426 Upgrade Required` with supported versions in `LPI-LHS` payload.
 - **Authentication failure:** Bind rejection MUST specify `reason` and `code` fields in an error payload to aid diagnostics.
 - **Signature failure:** Clients MUST terminate the session and optionally restart from Hello; servers SHOULD audit repeated signature failures.
 
@@ -440,9 +440,9 @@ A fully populated frame trace, including an encoded Flow frame, is provided at [
 
 ## 8. References and Examples
 
-- **Normative:** [RFC-000: The Liminal Resonance Interface — Overview](../rfcs/rfc-000.md)
+- **Normative:** [RFC-000: The Liminal Presence Interface — Overview](../rfcs/rfc-000.md)
 - **Examples:**
-  - [`examples/lhs/http.json`](../../examples/lhs/http.json) — HTTP negotiation using `LRI-LHS-Step` and `LRI-LHS` headers.
+  - [`examples/lhs/http.json`](../../examples/lhs/http.json) — HTTP negotiation using `LPI-LHS-Step` and `LPI-LHS` headers.
   - [`examples/lhs/ws.json`](../../examples/lhs/ws.json) — WebSocket frames covering Hello → Flow.
 - **Related Protocols:** LTP (Liminal Trust Protocol), LSS (Liminal Session Store) defined in RFC-000 Section 10.
 
