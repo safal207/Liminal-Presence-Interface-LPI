@@ -417,9 +417,9 @@ app.listen(3000, () => {
 
 ## Need Help?
 
-- 📖 **Documentation**: https://github.com/safal207/LRI-Liminal-Resonance-Interface.
-- 🐛 **Issues**: https://github.com/safal207/LRI-Liminal-Resonance-Interface./issues
-- 💬 **Discussions**: https://github.com/safal207/LRI-Liminal-Resonance-Interface./discussions
+- 📖 **Documentation**: https://github.com/safal207/Liminal-Presence-Interface-LPI
+- 🐛 **Issues**: https://github.com/safal207/Liminal-Presence-Interface-LPI/issues
+- 💬 **Discussions**: https://github.com/safal207/Liminal-Presence-Interface-LPI/discussions
 
 ---
 

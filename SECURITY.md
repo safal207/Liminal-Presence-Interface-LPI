@@ -7,11 +7,11 @@
 | 0.1.x   | :white_check_mark: |
 | < 0.1   | :x:                |
 
-**Note:** LRI is currently in alpha (0.1.0). Security guarantees are limited until 1.0.0 release.
+**Note:** LPI is currently in alpha (0.1.0). Security guarantees are limited until 1.0.0 release.
 
 ## Reporting a Vulnerability
 
-We take security seriously. If you discover a security vulnerability in LRI, please report it responsibly:
+We take security seriously. If you discover a security vulnerability in LPI, please report it responsibly:
 
 ### How to Report
 
@@ -41,7 +41,7 @@ Instead:
 
 ## Security Considerations
 
-### LRI Protocol
+### LPI Protocol
 
 #### 1. Trust & Authentication (LTP)
 
