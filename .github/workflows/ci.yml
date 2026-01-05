@@ -140,8 +140,8 @@ jobs:
           python -m pytest -v
 
   # CLI Tool
-  lrictl:
-    name: CLI Tool (lrictl)
+  lpictl:
+    name: CLI Tool (lpictl)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -160,6 +160,10 @@ jobs:
           if [ ! -d "$CLI_DIR" ]; then
             CLI_DIR="packages/lrictl"
           fi
+          if [ ! -d "$CLI_DIR" ]; then
+            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
+            exit 1
+          fi
           cd "$CLI_DIR"
           npm install
 
@@ -168,6 +172,10 @@ jobs:
           CLI_DIR="packages/lpictl"
           if [ ! -d "$CLI_DIR" ]; then
             CLI_DIR="packages/lrictl"
+          fi
+          if [ ! -d "$CLI_DIR" ]; then
+            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
+            exit 1
           fi
           cd "$CLI_DIR"
           npm run lint
@@ -178,6 +186,10 @@ jobs:
           if [ ! -d "$CLI_DIR" ]; then
             CLI_DIR="packages/lrictl"
           fi
+          if [ ! -d "$CLI_DIR" ]; then
+            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
+            exit 1
+          fi
           cd "$CLI_DIR"
           npm run build
 
@@ -186,6 +198,10 @@ jobs:
           CLI_DIR="packages/lpictl"
           if [ ! -d "$CLI_DIR" ]; then
             CLI_DIR="packages/lrictl"
+          fi
+          if [ ! -d "$CLI_DIR" ]; then
+            echo "❌ Neither packages/lpictl nor packages/lrictl exists"
+            exit 1
           fi
           cd "$CLI_DIR"
           npm test
@@ -228,7 +244,8 @@ jobs:
 
           module_name = "lpi" if importlib.util.find_spec("lpi") else "lri"
           module = __import__(module_name, fromlist=["LPI", "LRI"])
-          getattr(module, "LPI", None) or getattr(module, "LRI", None)
+          sym = getattr(module, "LPI", None) or getattr(module, "LRI", None)
+          assert sym is not None, f"Neither LPI nor LRI found in {module_name}"
           print("✓ FastAPI example OK")
           PY
 
