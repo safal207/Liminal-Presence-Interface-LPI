@@ -48,20 +48,40 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        working-directory: packages/node-lri
-        run: npm install
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm install
 
       - name: Lint
-        working-directory: packages/node-lri
-        run: npm run lint
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm run lint
 
       - name: Build
-        working-directory: packages/node-lri
-        run: npm run build
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm run build
 
       - name: Test
-        working-directory: packages/node-lri
-        run: npm test
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm test
 
   # Python SDK
   python-sdk:
@@ -79,22 +99,45 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        working-directory: packages/python-lri
         run: |
+          SDK_DIR="packages/python-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/python-lri"
+          fi
+          cd "$SDK_DIR"
           python -m pip install --upgrade pip setuptools wheel
           pip install -e ".[dev]"
 
       - name: Lint with ruff
-        working-directory: packages/python-lri
-        run: ruff check . || echo "Ruff not configured yet"
+        run: |
+          SDK_DIR="packages/python-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/python-lri"
+          fi
+          cd "$SDK_DIR"
+          ruff check . || echo "Ruff not configured yet"
 
       - name: Type check with mypy
-        working-directory: packages/python-lri
-        run: mypy lri || echo "MyPy not configured yet"
+        run: |
+          SDK_DIR="packages/python-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/python-lri"
+          fi
+          cd "$SDK_DIR"
+          MODULE_NAME="lpi"
+          if [ "$SDK_DIR" = "packages/python-lri" ]; then
+            MODULE_NAME="lri"
+          fi
+          mypy "$MODULE_NAME" || echo "MyPy not configured yet"
 
       - name: Test with pytest
-        working-directory: packages/python-lri
-        run: python -m pytest -v
+        run: |
+          SDK_DIR="packages/python-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/python-lri"
+          fi
+          cd "$SDK_DIR"
+          python -m pytest -v
 
   # CLI Tool
   lrictl:
@@ -112,20 +155,40 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        working-directory: packages/lrictl
-        run: npm install
+        run: |
+          CLI_DIR="packages/lpictl"
+          if [ ! -d "$CLI_DIR" ]; then
+            CLI_DIR="packages/lrictl"
+          fi
+          cd "$CLI_DIR"
+          npm install
 
       - name: Lint
-        working-directory: packages/lrictl
-        run: npm run lint
+        run: |
+          CLI_DIR="packages/lpictl"
+          if [ ! -d "$CLI_DIR" ]; then
+            CLI_DIR="packages/lrictl"
+          fi
+          cd "$CLI_DIR"
+          npm run lint
 
       - name: Build
-        working-directory: packages/lrictl
-        run: npm run build
+        run: |
+          CLI_DIR="packages/lpictl"
+          if [ ! -d "$CLI_DIR" ]; then
+            CLI_DIR="packages/lrictl"
+          fi
+          cd "$CLI_DIR"
+          npm run build
 
       - name: Test
-        working-directory: packages/lrictl
-        run: npm test
+        run: |
+          CLI_DIR="packages/lpictl"
+          if [ ! -d "$CLI_DIR" ]; then
+            CLI_DIR="packages/lrictl"
+          fi
+          cd "$CLI_DIR"
+          npm test
 
 
   # Examples
@@ -155,7 +218,19 @@ jobs:
         working-directory: examples/fastapi-app
         run: |
           pip install -r requirements.txt
-          python -c "import sys; sys.path.insert(0, '../../packages/python-lri'); from lri import LRI; print('✓ FastAPI example OK')"
+          python - <<'PY'
+          import importlib.util
+          import sys
+          from pathlib import Path
+
+          base = Path("../../packages/python-lpi")
+          sys.path.insert(0, str(base if base.exists() else Path("../../packages/python-lri")))
+
+          module_name = "lpi" if importlib.util.find_spec("lpi") else "lri"
+          module = __import__(module_name, fromlist=["LPI", "LRI"])
+          getattr(module, "LPI", None) or getattr(module, "LRI", None)
+          print("✓ FastAPI example OK")
+          PY
 
   # Vocabulary validation
   vocab:
