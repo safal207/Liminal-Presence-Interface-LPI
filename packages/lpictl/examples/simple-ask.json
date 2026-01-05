@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "intent": {
+    "type": "ask",
+    "goal": "Get current weather information"
+  },
+  "policy": {
+    "consent": "private"
+  }
+}

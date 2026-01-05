@@ -1,0 +1,32 @@
+{
+  "v": 1,
+  "intent": {
+    "type": "tell",
+    "goal": "Share system status update"
+  },
+  "affect": {
+    "pad": [0.7, 0.4, 0.8],
+    "tags": ["confident", "analytical"]
+  },
+  "meaning": {
+    "topic": "system-status",
+    "ontology": "https://schema.org/Status"
+  },
+  "memory": {
+    "thread": "550e8400-e29b-41d4-a716-446655440000",
+    "t": "2024-01-15T10:30:00Z",
+    "ttl": "PT1H"
+  },
+  "policy": {
+    "consent": "team",
+    "share": ["analytics@example.com"]
+  },
+  "qos": {
+    "coherence": 0.95,
+    "stability": "high"
+  },
+  "trace": {
+    "hop": 2,
+    "provenance": ["service-a", "service-b"]
+  }
+}
