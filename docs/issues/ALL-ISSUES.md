@@ -1,20 +1,20 @@
-# LRI - All GitHub Issues
+# LPI - All GitHub Issues
 
-This document contains all 22 planned GitHub issues for the LRI project.
+This document contains all 22 planned GitHub issues for the LPI project.
 Copy each issue to GitHub individually.
 
 ---
 
-## Issue #1: RFC-000: The Liminal Resonance Interface (LRI) — Overview
+## Issue #1: RFC-000: The Liminal Presence Interface (LPI) — Overview
 
 **Labels:** `spec`, `rfc`, `v0.1`
 
-**Goal:** Описать цели LRI, терминологию и границы слоя (L8 поверх L7).
+**Goal:** Описать цели LPI, терминологию и границы слоя (L8 поверх L7).
 
 **Acceptance Criteria:**
 
 - Разделы: Problem, Scope, Non-Goals, Terminology (LCE, LHS, LSS, LTP), On-wire.
-- Диаграмма слоёв (classic OSI vs LRI).
+- Диаграмма слоёв (classic OSI vs LPI).
 - Правила совместимости: инкапсуляция в HTTP/WS/gRPC.
 - Media types: `application/liminal.lce+json`, `+cbor`.
 
@@ -79,7 +79,7 @@ Define the Liminal Handshake Sequence (LHS) protocol:
 
 **Labels:** `sdk`, `node`, `good first issue`
 
-**Goal:** `packages/node-lri` — middleware, который:
+**Goal:** `packages/node-lpi` — middleware, который:
 
 - Читает/пишет заголовок LCE ✅
 - Валидирует по JSON Schema ✅
@@ -95,7 +95,7 @@ Define the Liminal Handshake Sequence (LHS) protocol:
 
 **Labels:** `sdk`, `python`
 
-**Goal:** `packages/python-lri` — Depends, валидация, ошибки 422, примеры.
+**Goal:** `packages/python-lpi` — Depends, валидация, ошибки 422, примеры.
 
 **Acceptance:** `examples/fastapi-app` ✅
 
@@ -120,9 +120,9 @@ Create WebSocket adapter that:
 
 Example:
 ```typescript
-import { LRIWebSocket } from 'node-lri/ws';
+import { LPIWebSocket } from 'node-lpi/ws';
 
-const server = new LRIWebSocket({ port: 8080 });
+const server = new LPIWebSocket({ port: 8080 });
 server.on('message', (lce, payload) => {
   console.log('Intent:', lce.intent.type);
   server.send({ v:1, intent:{type:'tell'}, policy:{consent:'private'} }, payload);
@@ -209,24 +209,24 @@ coherence = α·intent_similarity + β·affect_stability + γ·semantic_alignmen
 
 - Вставляет LCE в исходящий трафик
 - Логирует audit (policy/consent)
-- Экспортит Prometheus-метрики: `lri_coherence`, `lri_drift`
+- Экспортит Prometheus-метрики: `lpi_coherence`, `lpi_drift`
 
 **Acceptance:** Dockerfile, пример docker-compose.
 
 **Description:**
 
-Transparent LRI sidecar proxy:
+Transparent LPI sidecar proxy:
 
 ```yaml
 # docker-compose.yml
 services:
   app:
     image: myapp
-  lri-sidecar:
-    image: lri/sidecar:latest
+  lpi-sidecar:
+    image: lpi/sidecar:latest
     environment:
       - UPSTREAM=http://app:3000
-      - LRI_MODE=inject
+      - LPI_MODE=inject
     ports:
       - "8080:8080"
 ```
@@ -238,26 +238,26 @@ Features:
 
 ---
 
-## Issue #12: Demo: "plain chat" vs "LRI chat"
+## Issue #12: Demo: "plain chat" vs "LPI chat"
 
 **Labels:** `demo`, `ui`
 
-**Goal:** Веб-демо с двумя колонками: обычный чат и LRI-чат (тон, intent-фильтры, coherence).
+**Goal:** Веб-демо с двумя колонками: обычный чат и LPI-чат (тон, intent-фильтры, coherence).
 
 **Acceptance:** GIF в README.
 
 **Description:**
 
-Interactive web demo showing LRI benefits:
+Interactive web demo showing LPI benefits:
 
 **Left column:** Plain text chat
-**Right column:** LRI-enhanced chat with:
+**Right column:** LPI-enhanced chat with:
 - Intent type indicators
 - Affect visualization (PAD chart)
 - Real-time coherence score
 - Intent filters (show only "ask", "propose", etc.)
 
-Tech: React + WebSocket + node-lri
+Tech: React + WebSocket + node-lpi
 
 ---
 
@@ -302,14 +302,14 @@ Features:
 
 **Description:**
 
-LRI support for gRPC:
+LPI support for gRPC:
 
 **Server:**
 ```typescript
-import { lriInterceptor } from 'node-lri/grpc';
+import { lpiInterceptor } from 'node-lpi/grpc';
 
 const server = new grpc.Server();
-server.use(lriInterceptor());
+server.use(lpiInterceptor());
 ```
 
 **Client:**
@@ -323,33 +323,33 @@ LCE transported in gRPC metadata fields.
 
 ---
 
-## Issue #15: CLI: lrictl
+## Issue #15: CLI: lpictl
 
 **Labels:** `tooling`
 
 **Goal:** Инспекция/валидация/подпись LCE, генерация примеров, конверсия YAML→JSON.
 
-**Acceptance:** `lrictl validate/sign/convert`, бинарники через pkg/pyinstaller.
+**Acceptance:** `lpictl validate/sign/convert`, бинарники через pkg/pyinstaller.
 
 **Description:**
 
-Command-line tool for LRI:
+Command-line tool for LPI:
 
 ```bash
 # Validate LCE
-lrictl validate lce.json
+lpictl validate lce.json
 
 # Sign LCE
-lrictl sign lce.json --key ed25519.key > signed.json
+lpictl sign lce.json --key ed25519.key > signed.json
 
 # Generate example
-lrictl generate --intent ask --consent private > lce.json
+lpictl generate --intent ask --consent private > lce.json
 
 # Convert vocab
-lrictl convert vocab/intent.yaml -o dist/intent.json
+lpictl convert vocab/intent.yaml -o dist/intent.json
 
 # Inspect
-lrictl inspect lce.json
+lpictl inspect lce.json
 ```
 
 Distribute as standalone binary.
@@ -387,7 +387,7 @@ Distribute as standalone binary.
 
 **Description:**
 
-STRIDE threat analysis for LRI:
+STRIDE threat analysis for LPI:
 
 | Threat | Risk | Mitigation |
 |--------|------|------------|
@@ -516,20 +516,20 @@ Templates:
 
 **Labels:** `docs`, `good first issue`
 
-**Goal:** Чёткий README: что такое LRI, зачем, demo-скрин, установка, quickstart.
+**Goal:** Чёткий README: что такое LPI, зачем, demo-скрин, установка, quickstart.
 
 **Acceptance:** Copy-paste пример Express и FastAPI, ссылки на demo.
 
 **Structure:**
 
-1. **What is LRI?** - Layer 8 for human-AI communication
+1. **What is LPI?** - Layer 8 for human-AI communication
 2. **Why?** - Intent, affect, consent, coherence
 3. **Quick start** - Express + FastAPI examples
 4. **Demo** - Link to interactive demo
 5. **Documentation** - Links to guides
 6. **Contributing** - How to get involved
 
-Target: Developers understand LRI in <2 minutes.
+Target: Developers understand LPI in <2 minutes.
 
 ---
 

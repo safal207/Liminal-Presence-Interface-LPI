@@ -7,7 +7,7 @@
         "opcode": "text",
         "payload": {
           "step": "hello",
-          "lri_version": "0.2",
+          "lpi_version": "0.2",
           "encodings": ["json", "cbor"],
           "features": ["ltp", "lss"],
           "client_id": "agent-458"
@@ -33,7 +33,7 @@
         "opcode": "text",
         "payload": {
           "step": "mirror",
-          "lri_version": "0.2",
+          "lpi_version": "0.2",
           "encoding": "json",
           "features": ["ltp"],
           "session_window": 300,

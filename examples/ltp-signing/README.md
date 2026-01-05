@@ -58,7 +58,7 @@ npm start
 ### Генерация ключей
 
 ```javascript
-const { ltp } = require('node-lri');
+const { ltp } = require('node-lpi');
 
 const keys = await ltp.generateKeys();
 // Сохраните privateKey в секретном месте
@@ -98,7 +98,7 @@ if (valid) {
 ```javascript
 const keys = await ltp.generateKeys();
 
-const server = new ws.LRIWSServer({
+const server = new ws.LPIWSServer({
   port: 8080,
   ltp: true,                        // Включить LTP
   ltpPrivateKey: keys.privateKey,   // Ваш приватный ключ
@@ -111,13 +111,13 @@ const server = new ws.LRIWSServer({
 
 ```javascript
 app.post('/api/message', async (req, res) => {
-  const lce = req.lri;  // Из middleware
+  const lce = req.lpi;  // Из middleware
 
   // Подпись LCE
   const signed = await ltp.sign(lce, privateKey);
 
   // Отправка с подписью
-  res.setHeader('X-LRI-Context', Buffer.from(JSON.stringify(signed)).toString('base64'));
+  res.setHeader('X-LPI-Context', Buffer.from(JSON.stringify(signed)).toString('base64'));
   res.json({ status: 'ok' });
 });
 ```

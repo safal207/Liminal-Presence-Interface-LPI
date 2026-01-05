@@ -1,6 +1,6 @@
 # WebSocket Echo Server Example (Adapter Edition)
 
-This example demonstrates the `LRIWebSocketAdapter`, a lightweight helper that performs the LHS (Liminal Handshake Sequence) and LCE framing on top of plain `ws` sockets.
+This example demonstrates the `LPIWebSocketAdapter`, a lightweight helper that performs the LHS (Liminal Handshake Sequence) and LCE framing on top of plain `ws` sockets.
 
 ## Highlights
 
@@ -45,7 +45,7 @@ npm run client
 Server logs:
 
 ```
-LRI WebSocket Echo Server (adapter) listening on port 8080
+LPI WebSocket Echo Server (adapter) listening on port 8080
 [Server] Client connected: 7f0d...
   Client ID: ws-echo-adapter-client
   Encoding: json
@@ -53,7 +53,7 @@ LRI WebSocket Echo Server (adapter) listening on port 8080
 [Server] Received from 7f0d...:
   Intent: ask
   Goal: Test basic echo
-  Payload: Hello, LRI!
+  Payload: Hello, LPI!
 ```
 
 Client logs:
@@ -69,23 +69,23 @@ Connecting to ws://localhost:8080 using adapter...
   Session expires at: 2024-01-01T00:05:00.000Z
 [Client] Sending message 1/3:
   Intent: ask
-  Payload: Hello, LRI!
+  Payload: Hello, LPI!
 [Client] Received response:
   Intent: tell
   Goal: Echo of: Test basic echo
-  Payload: Echo: Hello, LRI!
+  Payload: Echo: Hello, LPI!
 ```
 
 ## Server Walkthrough (`server.js`)
 
 ```javascript
 const { WebSocketServer } = require('ws');
-const { ws } = require('node-lri');
+const { ws } = require('node-lpi');
 
 const wss = new WebSocketServer({ port: 8080 });
 
 wss.on('connection', (socket) => {
-  const adapter = new ws.LRIWebSocketAdapter({
+  const adapter = new ws.LPIWebSocketAdapter({
     role: 'server',
     ws: socket,
     features: ['lss'],
@@ -117,10 +117,10 @@ wss.on('connection', (socket) => {
 
 ```javascript
 const WebSocket = require('ws');
-const { ws } = require('node-lri');
+const { ws } = require('node-lpi');
 
 const socket = new WebSocket('ws://localhost:8080');
-const adapter = new ws.LRIWebSocketAdapter({
+const adapter = new ws.LPIWebSocketAdapter({
   role: 'client',
   ws: socket,
   clientId: 'ws-echo-adapter-client',

@@ -70,7 +70,7 @@ node example.js
 ### 1. Basic Session Storage
 
 ```javascript
-const { lss } = require('node-lri');
+const { lss } = require('node-lpi');
 
 // Create LSS instance
 const store = new lss.LSS();
@@ -217,7 +217,7 @@ const diverged = [
 
 ```javascript
 async function chatEndpoint(req, res) {
-  const lce = req.lri.lce;
+  const lce = req.lpi.lce;
   const threadId = lce.memory.thread;
 
   // Store message
@@ -424,10 +424,10 @@ const coherence = store.calculateCoherence(recent);
 See [ws-echo example](../ws-echo/) for WebSocket + LSS integration:
 
 ```javascript
-const { LRIWSServer } = require('node-lri/ws');
-const { lss } = require('node-lri');
+const { LPIWSServer } = require('node-lpi/ws');
+const { lss } = require('node-lpi');
 
-const server = new LRIWSServer({ port: 8080 });
+const server = new LPIWSServer({ port: 8080 });
 const store = new lss.LSS();
 
 server.on('message', async (ws, lce, payload) => {
@@ -477,8 +477,8 @@ A: Enable auto-cleanup or call `store.destroy()` when done
 
 ## Resources
 
-- [LRI Documentation](../../docs/getting-started.md)
-- [Node SDK API](../../packages/node-lri/)
+- [LPI Documentation](../../docs/getting-started.md)
+- [Node SDK API](../../packages/node-lpi/)
 - [RFC-000: LSS Section](../../docs/rfcs/rfc-000.md#103-lss-liminal-session-store)
 - [LCE Schema](../../schemas/lce-v0.1.json)
 

@@ -1,6 +1,6 @@
-# LRI Versioning Policy
+# LPI Versioning Policy
 
-> Semantic versioning strategy for LRI protocol, schemas, and SDKs
+> Semantic versioning strategy for LPI protocol, schemas, and SDKs
 
 **Version:** 1.0
 **Date:** 2025-01-15
@@ -20,7 +20,7 @@
 
 ## Overview
 
-LRI uses **Semantic Versioning 2.0.0** (SemVer) for all components with specific rules for protocol stability and backward compatibility.
+LPI uses **Semantic Versioning 2.0.0** (SemVer) for all components with specific rules for protocol stability and backward compatibility.
 
 **Key Principles:**
 1. **Backward compatibility** is paramount
@@ -30,13 +30,13 @@ LRI uses **Semantic Versioning 2.0.0** (SemVer) for all components with specific
 
 ## Versioning Components
 
-LRI has three independently versioned components:
+LPI has three independently versioned components:
 
 | Component | Current Version | Versioning Scope |
 |-----------|----------------|------------------|
 | **LCE Schema** | v1 | LCE structure and fields |
 | **Protocol** | v0.2.0 | LHS, LTP, LSS subsystems |
-| **SDKs** | node-lri@0.2.0<br>python-lri@0.1.0 | Implementation libraries |
+| **SDKs** | node-lpi@0.2.0<br>python-lpi@0.1.0 | Implementation libraries |
 
 ## Semantic Versioning
 
@@ -133,7 +133,7 @@ Clients SHOULD specify version in media type. Servers MUST support version negot
 
 ## SDK Versioning
 
-### Node.js SDK (`node-lri`)
+### Node.js SDK (`node-lpi`)
 
 **Current:** 0.2.0 (Beta)
 
@@ -147,7 +147,7 @@ Clients SHOULD specify version in media type. Servers MUST support version negot
 - `0.2.x` - Beta (feature complete, API stabilizing)
 - `1.0.x` - Stable (production ready)
 
-### Python SDK (`python-lri`)
+### Python SDK (`python-lpi`)
 
 **Current:** 0.1.0 (Alpha)
 
@@ -164,7 +164,7 @@ Version negotiated in `Hello` message:
 
 ```json
 {
-  "lri_version": "0.2",
+  "lpi_version": "0.2",
   "features": ["ltp", "lss", "cbor"]
 }
 ```
@@ -292,19 +292,19 @@ function oldMethod() {
 
 1. Update package:
 ```bash
-npm install node-lri@^0.2.0
+npm install node-lpi@^0.2.0
 ```
 
 2. Optional: Add WebSocket support:
 ```typescript
-import { LRIWSServer } from 'node-lri/ws';
+import { LPIWSServer } from 'node-lpi/ws';
 
-const server = new LRIWSServer({ port: 8080 });
+const server = new LPIWSServer({ port: 8080 });
 ```
 
 3. Optional: Add LTP signatures:
 ```typescript
-import { ltp } from 'node-lri';
+import { ltp } from 'node-lpi';
 
 const keys = await ltp.generateKeys();
 const signed = await ltp.sign(lce, keys.privateKey);
@@ -432,14 +432,14 @@ Content-Type: application/json
 // Client Hello
 {
   "type": "hello",
-  "lri_version": "0.2",
+  "lpi_version": "0.2",
   "lce_versions": ["1", "2"]
 }
 
 // Server Mirror
 {
   "type": "mirror",
-  "lri_version": "0.2",
+  "lpi_version": "0.2",
   "lce_version": "1"
 }
 ```
@@ -485,6 +485,6 @@ All releases MUST update [CHANGELOG.md](../CHANGELOG.md) following [Keep a Chang
 
 ---
 
-**Document Owner:** LRI Core Team
+**Document Owner:** LPI Core Team
 **Review Cycle:** Quarterly
 **Next Review:** 2025-04-15

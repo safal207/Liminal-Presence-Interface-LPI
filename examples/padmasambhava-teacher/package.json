@@ -1,7 +1,7 @@
 {
-  "name": "lri-padmasambhava-teacher",
+  "name": "lpi-padmasambhava-teacher",
   "version": "0.1.0",
-  "description": "Padmasambhava Teacher - Adaptive wisdom teachings using LRI protocol",
+  "description": "Padmasambhava Teacher - Adaptive wisdom teachings using LPI protocol",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,10 +10,10 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
-    "node-lri": "file:../../packages/node-lri"
+    "node-lpi": "file:../../packages/node-lpi"
   },
   "keywords": [
-    "lri",
+    "lpi",
     "padmasambhava",
     "buddhism",
     "wisdom",

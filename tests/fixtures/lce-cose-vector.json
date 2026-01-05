@@ -7,15 +7,22 @@
       "goal": "synchronize-state"
     },
     "affect": {
-      "pad": [0.1, -0.2, 0.3]
+      "pad": [
+        0.1,
+        -0.2,
+        0.3
+      ]
     },
     "meaning": {
       "topic": "telemetry",
-      "ontology": "https://lri.dev/ontology/telemetry"
+      "ontology": "https://lpi.dev/ontology/telemetry"
     },
     "policy": {
       "consent": "team",
-      "share": ["ops", "research"],
+      "share": [
+        "ops",
+        "research"
+      ],
       "dp": "epsilon=1.0"
     },
     "memory": {
@@ -34,5 +41,5 @@
       ]
     }
   },
-  "expectedCose": "hEOhASegWQF_qGF2AWNxb3OiaWNvaGVyZW5jZfs_7XCj1wo9cWlzdGFiaWxpdHlmc3RlYWR5ZXRyYWNlomNob3ACanByb3ZlbmFuY2WCb2VkZ2UtZ2F0ZXdheS0wMW9yZWdpb25hbC1odWItMDJmYWZmZWN0oWNwYWSD-z-5mZmZmZma-7_JmZmZmZma-z_TMzMzMzMzZmludGVudKJkZ29hbHFzeW5jaHJvbml6ZS1zdGF0ZWR0eXBlY2Fza2ZtZW1vcnmiYXR0MjAyNC0wMS0wMVQwMDowMDowMFpmdGhyZWFkeCQxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTVmcG9saWN5o2JkcGtlcHNpbG9uPTEuMGVzaGFyZYJjb3BzaHJlc2VhcmNoZ2NvbnNlbnRkdGVhbWdtZWFuaW5nomV0b3BpY2l0ZWxlbWV0cnlob250b2xvZ3l4Imh0dHBzOi8vbHJpLmRldi9vbnRvbG9neS90ZWxlbWV0cnlYQMI8hLpMW7_dFlx83O3rCKCKATl8uZyXTju-g4-pwGwHmd9EAwkb1KLmxUyUrRWCPCjxpQCnDiu0kAjcMMHl6w0"
+  "expectedCose": "hEOhASegWQF_qGF2AWNxb3OiaWNvaGVyZW5jZfs_7XCj1wo9cWlzdGFiaWxpdHlmc3RlYWR5ZXRyYWNlomNob3ACanByb3ZlbmFuY2WCb2VkZ2UtZ2F0ZXdheS0wMW9yZWdpb25hbC1odWItMDJmYWZmZWN0oWNwYWSD-z-5mZmZmZma-7_JmZmZmZma-z_TMzMzMzMzZmludGVudKJkZ29hbHFzeW5jaHJvbml6ZS1zdGF0ZWR0eXBlY2Fza2ZtZW1vcnmiYXR0MjAyNC0wMS0wMVQwMDowMDowMFpmdGhyZWFkeCQxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTVmcG9saWN5o2JkcGtlcHNpbG9uPTEuMGVzaGFyZYJjb3BzaHJlc2VhcmNoZ2NvbnNlbnRkdGVhbWdtZWFuaW5nomV0b3BpY2l0ZWxlbWV0cnlob250b2xvZ3l4Imh0dHBzOi8vbHBpLmRldi9vbnRvbG9neS90ZWxlbWV0cnlYQJWuJuARnde8uyYl_JuNSKRwh1CVX9itn1ztaYcbKO1eP74WU_SjMw5sCmpP1sGwwClLZvfUU_KK1GBtl_TNkgY"
 }

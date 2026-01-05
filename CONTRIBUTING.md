@@ -1,6 +1,6 @@
-# Contributing to LRI
+# Contributing to LPI
 
-Thank you for your interest in contributing to the Liminal Resonance Interface (LRI) project! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to the Liminal Presence Interface (LPI) project! This document provides guidelines and information for contributors.
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ This project adheres to a code of conduct that all contributors are expected to 
 
 ### Reporting Bugs
 
-- Check if the bug has already been reported in [Issues](https://github.com/lri/lri/issues)
+- Check if the bug has already been reported in [Issues](https://github.com/safal207/Liminal-Presence-Interface-LPI/issues)
 - Use the bug report template
 - Include reproduction steps, expected behavior, and actual behavior
 - Add relevant labels (bug, sdk, spec, etc.)
@@ -38,7 +38,7 @@ This project adheres to a code of conduct that all contributors are expected to 
 - Check if the enhancement has been suggested
 - Use the feature request template
 - Explain the use case and benefits
-- Consider if it fits LRI's scope and philosophy
+- Consider if it fits LPI's scope and philosophy
 
 ### Good First Issues
 
@@ -69,16 +69,16 @@ For significant changes, open an RFC (Request for Comments):
 
 ```bash
 # Clone the repository
-git clone https://github.com/lri/lri.git
-cd lri
+git clone https://github.com/safal207/Liminal-Presence-Interface-LPI.git
+cd lpi
 
 # Node.js SDK
-cd packages/node-lri
+cd packages/node-lpi
 npm install
 npm run build
 
 # Python SDK
-cd packages/python-lri
+cd packages/python-lpi
 pip install -e ".[dev]"
 
 # Run tests
@@ -89,12 +89,12 @@ pytest    # Python
 ### Project Structure
 
 ```
-lri/
+lpi/
 ├── schemas/           # JSON schemas
 ├── vocab/            # Vocabularies (YAML)
 ├── packages/
-│   ├── node-lri/     # Node.js SDK
-│   └── python-lri/   # Python SDK
+│   ├── node-lpi/     # Node.js SDK
+│   └── python-lpi/   # Python SDK
 ├── examples/         # Example applications
 ├── docs/             # Documentation
 └── tools/            # CLI tools
@@ -292,7 +292,7 @@ For major changes (new features, protocol changes, breaking changes):
 ### Node.js SDK
 
 ```bash
-cd packages/node-lri
+cd packages/node-lpi
 npm test                 # Run all tests
 npm test -- --watch     # Watch mode
 npm run test:coverage   # Coverage report
@@ -301,7 +301,7 @@ npm run test:coverage   # Coverage report
 ### Python SDK
 
 ```bash
-cd packages/python-lri
+cd packages/python-lpi
 pytest                   # Run all tests
 pytest --cov            # Coverage report
 pytest -k test_name     # Run specific test
@@ -396,6 +396,6 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-Thank you for contributing to LRI! Together we're building the future of human-AI communication.
+Thank you for contributing to LPI! Together we're building the future of human-AI communication.
 
-**Questions?** Open a [discussion](https://github.com/lri/lri/discussions) or reach out to maintainers.
+**Questions?** Open a [discussion](https://github.com/safal207/Liminal-Presence-Interface-LPI/discussions) or reach out to maintainers.

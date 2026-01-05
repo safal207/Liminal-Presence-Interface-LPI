@@ -1,12 +1,12 @@
-# FastAPI + LRI Example
+# FastAPI + LPI Example
 
-> Complete example demonstrating LRI usage with FastAPI and Python
+> Complete example demonstrating LPI usage with FastAPI and Python
 
-This example shows how to build an LRI-aware REST API server using FastAPI and the `python-lri` SDK.
+This example shows how to build an LPI-aware REST API server using FastAPI and the `python-lpi` SDK.
 
 ## Features Demonstrated
 
-- ✅ **LRI Request Parsing** - Parse LCE from request headers
+- ✅ **LPI Request Parsing** - Parse LCE from request headers
 - ✅ **FastAPI Depends helper** - Inject validated `LCE` objects directly (optional & required)
 - ✅ **Intent-aware routing** - Different responses based on intent type
 - ✅ **LCE response headers** - Attaching LCE metadata to responses
@@ -60,10 +60,10 @@ curl http://localhost:8000/
 **Response:**
 ```json
 {
-  "name": "LRI FastAPI Example",
+  "name": "LPI FastAPI Example",
   "version": "0.1.0",
   "endpoints": ["/ping", "/echo", "/ingest", "/chat", "/api/data"],
-  "lri": {
+  "lpi": {
     "version": "0.1",
     "header": "LCE",
     "media_type": "application/liminal.lce+json"
@@ -106,14 +106,14 @@ Echo endpoint that mirrors your request and responds with fresh LCE metadata.
 curl -X POST http://localhost:8000/echo \
   -H "Content-Type: application/json" \
   -H "LCE: $(echo '{"v":1,"intent":{"type":"ask"},"policy":{"consent":"private"}}' | base64)" \
-  -d '{"message": "Hello LRI!"}'
+  -d '{"message": "Hello LPI!"}'
 ```
 
 **Response:**
 ```json
 {
   "echo": {
-    "message": "Hello LRI!"
+    "message": "Hello LPI!"
   },
   "lce": {
     "v": 1,
@@ -136,7 +136,7 @@ Content-Type: application/liminal.lce+json
 
 ### 4. POST `/ingest`
 
-Write endpoint that **requires** an LCE header. Demonstrates `Depends(lri.dependency(required=True))`.
+Write endpoint that **requires** an LCE header. Demonstrates `Depends(lpi.dependency(required=True))`.
 
 **Request:**
 ```bash
@@ -264,16 +264,16 @@ curl http://localhost:8000/api/data
 
 ## Code Walkthrough
 
-### 1. Initialize LRI
+### 1. Initialize LPI
 
 ```python
-from lri import LRI
+from lpi import LPI
 
-app = FastAPI(title="LRI FastAPI Example")
-lri = LRI()
+app = FastAPI(title="LPI FastAPI Example")
+lpi = LPI()
 ```
 
-The `LRI` class provides:
+The `LPI` class provides:
 - Request parsing
 - LCE validation
 - Header encoding
@@ -287,7 +287,7 @@ require it when necessary:
 from typing import Optional
 from fastapi import Depends, HTTPException
 from fastapi.responses import JSONResponse
-from lri import LCE
+from lpi import LCE
 
 
 @app.exception_handler(HTTPException)
@@ -296,14 +296,14 @@ async def passthrough_http_exception(_, exc: HTTPException):
 
 
 @app.get("/ping")
-async def ping(lce: Optional[LCE] = Depends(lri.dependency())):
+async def ping(lce: Optional[LCE] = Depends(lpi.dependency())):
     return {"ok": True, "received_lce": lce is not None}
 
 
 @app.post("/ingest")
 async def ingest(
     payload: dict,
-    lce: LCE = Depends(lri.dependency(required=True)),
+    lce: LCE = Depends(lpi.dependency(required=True)),
 ):
     return {"intent": lce.intent.type, "echo": payload.get("message", "")}
 
@@ -311,7 +311,7 @@ async def ingest(
 @app.post("/chat")
 async def chat(
     payload: dict,
-    lce: LCE = Depends(lri.dependency(required=True)),
+    lce: LCE = Depends(lpi.dependency(required=True)),
 ):
     return {
         "prompt": payload["prompt"],
@@ -329,13 +329,13 @@ documentation so tests can assert on the `detail` envelope.
 from typing import Optional
 from fastapi import Depends
 from fastapi.responses import JSONResponse
-from lri import LCE, Intent, Policy
+from lpi import LCE, Intent, Policy
 
 
 @app.post("/echo")
 async def echo(
     body: dict,
-    lce: Optional[LCE] = Depends(lri.dependency()),
+    lce: Optional[LCE] = Depends(lpi.dependency()),
 ):
     response_lce = LCE(
         v=1,
@@ -344,7 +344,7 @@ async def echo(
     )
 
     response = JSONResponse(content={"echo": body})
-    response.headers["LCE"] = lri.create_header(response_lce)
+    response.headers["LCE"] = lpi.create_header(response_lce)
     response.headers["Content-Type"] = "application/liminal.lce+json"
     return response
 ```
@@ -357,7 +357,7 @@ from fastapi import Depends
 
 
 @app.get("/api/data")
-async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
+async def get_data(lce: Optional[LCE] = Depends(lpi.dependency())):
     intent_type = lce.intent.type if lce else "unknown"
 
     if intent_type == "ask":
@@ -420,7 +420,7 @@ print(response.json())
 response = requests.post(
     "http://localhost:8000/echo",
     headers=headers,
-    json={"message": "Hello LRI!"}
+    json={"message": "Hello LPI!"}
 )
 print(response.json())
 print(f"Response LCE: {response.headers.get('LCE')}")
@@ -444,10 +444,10 @@ python test_client.py
 
 ## LCE Models (Pydantic)
 
-The `python-lri` SDK uses Pydantic for type-safe LCE models:
+The `python-lpi` SDK uses Pydantic for type-safe LCE models:
 
 ```python
-from lri import LCE, Intent, Affect, Policy, Memory
+from lpi import LCE, Intent, Affect, Policy, Memory
 
 # Create LCE with type checking
 lce = LCE(
@@ -479,7 +479,7 @@ lce = LCE(**lce_dict)
 @app.get("/api/secure")
 async def secure_endpoint(request: Request):
     # Require LCE (raises 400 if missing)
-    lce = await lri.parse_request(request, required=True)
+    lce = await lpi.parse_request(request, required=True)
 
     return {"data": "sensitive information"}
 ```
@@ -492,7 +492,7 @@ from fastapi import HTTPException
 @app.get("/api/data")
 async def get_data(request: Request):
     try:
-        lce = await lri.parse_request(request, required=True)
+        lce = await lpi.parse_request(request, required=True)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid LCE: {str(e)}")
 
@@ -504,18 +504,18 @@ async def get_data(request: Request):
 ```python
 from starlette.middleware.base import BaseHTTPMiddleware
 
-class LRILoggingMiddleware(BaseHTTPMiddleware):
+class LPILoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
-        lri_instance = LRI()
-        lce = await lri_instance.parse_request(request, required=False)
+        lpi_instance = LPI()
+        lce = await lpi_instance.parse_request(request, required=False)
 
         if lce:
-            print(f"[LRI] Intent: {lce.intent.type}, Consent: {lce.policy.consent}")
+            print(f"[LPI] Intent: {lce.intent.type}, Consent: {lce.policy.consent}")
 
         response = await call_next(request)
         return response
 
-app.add_middleware(LRILoggingMiddleware)
+app.add_middleware(LPILoggingMiddleware)
 ```
 
 ### 4. CORS Support
@@ -546,7 +546,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 @app.get("/api/data")
 @limiter.limit("10/minute")
 async def get_data(request: Request):
-    lce = await lri.parse_request(request, required=False)
+    lce = await lpi.parse_request(request, required=False)
     return {"data": "rate-limited endpoint"}
 ```
 
@@ -570,8 +570,8 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ### Build and run
 
 ```bash
-docker build -t lri-fastapi-example .
-docker run -p 8000:8000 lri-fastapi-example
+docker build -t lpi-fastapi-example .
+docker run -p 8000:8000 lpi-fastapi-example
 ```
 
 ## Development
@@ -579,8 +579,8 @@ docker run -p 8000:8000 lri-fastapi-example
 ### Install in editable mode
 
 ```bash
-# Install python-lri in development mode
-cd ../../packages/python-lri
+# Install python-lpi in development mode
+cd ../../packages/python-lpi
 pip install -e ".[dev]"
 
 # Return to example
@@ -627,8 +627,8 @@ See [Node.js examples](../express-app/) for these features.
 
 ## Resources
 
-- [LRI Documentation](../../docs/getting-started.md)
-- [Python SDK API](../../packages/python-lri/)
+- [LPI Documentation](../../docs/getting-started.md)
+- [Python SDK API](../../packages/python-lpi/)
 - [LCE Schema](../../schemas/lce-v0.1.json)
 - [RFC-000](../../docs/rfcs/rfc-000.md)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)

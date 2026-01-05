@@ -1,8 +1,8 @@
 {
-  "$id": "https://lri.dev/schema/lce-v0.1.json",
+  "$id": "https://lpi.dev/schema/lce-v0.1.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Liminal Context Envelope",
-  "description": "LRI Layer 8 semantic context envelope for human-AI communication",
+  "description": "LPI Layer 8 semantic context envelope for human-AI communication",
   "type": "object",
   "required": ["v", "intent", "policy"],
   "properties": {

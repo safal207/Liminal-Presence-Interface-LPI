@@ -1,6 +1,6 @@
-# LRI Threat Model
+# LPI Threat Model
 
-> STRIDE threat analysis and security mitigations for the Liminal Resonance Interface
+> STRIDE threat analysis and security mitigations for the Liminal Presence Interface
 
 **Version:** 1.0
 **Date:** 2025-01-15
@@ -19,7 +19,7 @@
 
 ## Overview
 
-This document provides a comprehensive threat model for LRI (Liminal Resonance Interface) using the **STRIDE** framework:
+This document provides a comprehensive threat model for LPI (Liminal Presence Interface) using the **STRIDE** framework:
 
 - **S**poofing - Impersonating another user or system
 - **T**ampering - Modifying data or code
@@ -309,7 +309,7 @@ function canShare(lce: LCE, recipient: string): boolean {
 
 // REQUIRED: Enforce before forwarding
 app.post('/api/forward', async (req, res) => {
-  const lce = req.lri.lce;
+  const lce = req.lpi.lce;
   const recipient = req.body.recipient;
 
   if (!canShare(lce, recipient)) {
@@ -469,7 +469,7 @@ async function validateWithTimeout(lce: unknown) {
 // NEVER trust client-provided consent values
 
 app.post('/api/data', async (req, res) => {
-  const lce = req.lri.lce;
+  const lce = req.lpi.lce;
   const user = req.user; // From authentication
 
   // Verify signature matches authenticated user
@@ -641,7 +641,7 @@ function sanitizeLCE(lce: LCE): LCE {
 
 ```typescript
 // 1. Enable validation
-app.use(lriMiddleware({ validate: true, required: true }));
+app.use(lpiMiddleware({ validate: true, required: true }));
 
 // 2. Sign outgoing LCE
 const keys = await ltp.generateKeys();
@@ -667,7 +667,7 @@ app.use(rateLimit({ windowMs: 900000, max: 100 }));
 
 ```python
 # 1. Enable validation
-lri = LRI(validate=True)
+lpi = LPI(validate=True)
 
 # 2. Enforce consent
 def can_share(lce: LCE, recipient: str) -> bool:
@@ -686,7 +686,7 @@ app.state.limiter = limiter
 @app.get("/api/data")
 @limiter.limit("100/minute")
 async def endpoint(request: Request):
-    lce = await lri.parse_request(request)
+    lce = await lpi.parse_request(request)
     # ...
 ```
 
@@ -762,6 +762,6 @@ async def endpoint(request: Request):
 
 ---
 
-**Document Owner:** LRI Security Team
+**Document Owner:** LPI Security Team
 **Review Cycle:** Quarterly
 **Next Review:** 2025-04-15

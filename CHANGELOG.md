@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the LRI project will be documented in this file.
+All notable changes to the LPI project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -65,24 +65,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Server-side handler wrappers for LCE extraction
   - Support for unary and streaming calls
 
-- **CLI Tool (lrictl)** for development and testing
-  - `lrictl validate` - Validate LCE against JSON Schema
-  - `lrictl encode/decode` - CBOR ↔ JSON conversion
-  - `lrictl size` - Compare JSON vs CBOR sizes
-  - `lrictl keygen` - Generate Ed25519 key pairs
-  - `lrictl sign/verify` - Cryptographic signatures
-  - `lrictl example` - Generate sample LCE files
+- **CLI Tool (lpictl)** for development and testing
+  - `lpictl validate` - Validate LCE against JSON Schema
+  - `lpictl encode/decode` - CBOR ↔ JSON conversion
+  - `lpictl size` - Compare JSON vs CBOR sizes
+  - `lpictl keygen` - Generate Ed25519 key pairs
+  - `lpictl sign/verify` - Cryptographic signatures
+  - `lpictl example` - Generate sample LCE files
   - JWK (JSON Web Key) format support
 
 #### WebSocket Implementation
-- **LRIWSServer** - WebSocket server with LHS protocol
+- **LPIWSServer** - WebSocket server with LHS protocol
   - Automatic handshake negotiation
   - LCE frame parsing (length-prefixed)
   - Session management with LSS integration
   - Event-driven architecture
   - Configurable timeouts and limits
 
-- **LRIWSClient** - WebSocket client
+- **LPIWSClient** - WebSocket client
   - Automatic handshake initiation
   - Reconnection support
   - Frame encoding/decoding
@@ -123,7 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-01-XX (Planned)
 
 ### Added
-- Core LRI specification (RFC-000)
+- Core LPI specification (RFC-000)
 - LCE schema v1 with validation
 - Basic HTTP support (headers)
 - Node.js and Python SDKs
@@ -131,9 +131,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation site
 
 ### Goals
-- Establish foundational LRI protocol
+- Establish foundational LPI protocol
 - Provide working SDKs for two major ecosystems
-- Enable developers to experiment with LRI
+- Enable developers to experiment with LPI
 
 ## [1.0.0] - 2025-XX-XX (Planned)
 

@@ -1,24 +1,24 @@
 /**
- * Express + LRI Example
+ * Express + LPI Example
  *
- * Demonstrates LRI middleware usage with Express
+ * Demonstrates LPI middleware usage with Express
  */
 
 import express from 'express';
-import { lriMiddleware, createLCEHeader, LCE } from '../../packages/node-lri/src';
+import { lpiMiddleware, createLCEHeader, LCE } from '../../packages/node-lpi/src';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Apply LRI middleware globally
-app.use(lriMiddleware({
+// Apply LPI middleware globally
+app.use(lpiMiddleware({
   required: false,  // LCE is optional
   validate: true,   // Validate against schema
 }));
 
 // Simple ping endpoint
 app.get('/ping', (req: any, res) => {
-  const lce = req.lri?.lce;
+  const lce = req.lpi?.lce;
 
   console.log('Intent:', lce?.intent.type);
   console.log('Affect:', lce?.affect?.tags);
@@ -32,7 +32,7 @@ app.get('/ping', (req: any, res) => {
 
 // Echo endpoint - mirrors LCE with response
 app.post('/echo', express.json(), (req: any, res) => {
-  const requestLCE = req.lri?.lce;
+  const requestLCE = req.lpi?.lce;
 
   // Create response LCE
   const responseLCE: LCE = {
@@ -64,7 +64,7 @@ app.post('/echo', express.json(), (req: any, res) => {
 
 // Intent-aware endpoint
 app.get('/api/data', (req: any, res) => {
-  const lce = req.lri?.lce;
+  const lce = req.lpi?.lce;
   const intentType = lce?.intent.type || 'unknown';
 
   // Respond differently based on intent
@@ -92,7 +92,7 @@ app.get('/api/data', (req: any, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Express + LRI server running on http://localhost:${PORT}`);
+  console.log(`🚀 Express + LPI server running on http://localhost:${PORT}`);
   console.log(`\nTry:\n  curl http://localhost:${PORT}/ping`);
 });
 

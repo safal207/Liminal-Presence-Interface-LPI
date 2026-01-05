@@ -1,6 +1,6 @@
 # Liminal Session Store (LSS)
 
-LSS provides lightweight session state for Liminal Resonance Interface
+LSS provides lightweight session state for Liminal Presence Interface
 clients. It tracks message history, calculates coherence, and emits drift
 signals when the dialogue diverges from the established context. The store
 ships with pluggable backends so you can keep state in memory for local
@@ -85,7 +85,7 @@ storage.
 ### Node.js
 
 ```ts
-import { LSS, RedisSessionStorage } from 'node-lri/lss';
+import { LSS, RedisSessionStorage } from 'node-lpi/lss';
 import Redis from 'ioredis';
 
 const redis = new Redis();
@@ -106,8 +106,8 @@ const stats = await lss.getStats();
 ```python
 from redis import Redis
 
-from lri.lss import LSS, RedisSessionStorage
-from lri.types import LCE, Intent, Policy
+from lpi.lss import LSS, RedisSessionStorage
+from lpi.types import LCE, Intent, Policy
 
 redis = Redis.from_url("redis://localhost:6379/0")
 lss = LSS(coherence_window=8, storage=RedisSessionStorage(redis))
@@ -136,7 +136,7 @@ stats = lss.get_stats()
 ```ts
 // Express middleware snippet
 import type { Request, Response, NextFunction } from 'express';
-import { LSS } from 'node-lri/lss';
+import { LSS } from 'node-lpi/lss';
 
 const lss = new LSS();
 
@@ -161,8 +161,8 @@ export async function attachLss(req: Request, res: Response, next: NextFunction)
 # FastAPI dependency example
 from fastapi import Depends, FastAPI, Request
 
-from lri.lss import LSS
-from lri.types import LCE
+from lpi.lss import LSS
+from lpi.types import LCE
 
 lss = LSS()
 app = FastAPI()

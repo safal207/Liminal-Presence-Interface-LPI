@@ -1,6 +1,6 @@
-# Express + LRI Demo Application
+# Express + LPI Demo Application
 
-> Example Express server that shows how to integrate the `node-lri` middleware, parse LCE metadata, and shape responses based on intent.
+> Example Express server that shows how to integrate the `node-lpi` middleware, parse LCE metadata, and shape responses based on intent.
 
 ## Quick start
 
@@ -15,7 +15,7 @@ Launch the example from the repository root with the following steps:
 2. (Optional, but recommended when hacking on the SDK): rebuild the middleware so the example consumes the latest sources.
 
    ```bash
-   npm run build --workspace node-lri
+   npm run build --workspace node-lpi
    ```
 
 3. Start the Express demo in development mode:
@@ -33,13 +33,13 @@ Launch the example from the repository root with the following steps:
 You can generate a Base64 LCE header with the helper shipped in the SDK:
 
 ```bash
-node -e "const { createLCEHeader } = require('node-lri'); const lce = { v: 1, intent: { type: 'ask', goal: 'Demo request' }, policy: { consent: 'private' } }; console.log(createLCEHeader(lce));"
+node -e "const { createLCEHeader } = require('node-lpi'); const lce = { v: 1, intent: { type: 'ask', goal: 'Demo request' }, policy: { consent: 'private' } }; console.log(createLCEHeader(lce));"
 ```
 
 Store the output in a shell variable for the examples below:
 
 ```bash
-LCE=$(node -e "const { createLCEHeader } = require('node-lri'); const lce = { v: 1, intent: { type: 'ask', goal: 'Demo request' }, policy: { consent: 'private' } }; process.stdout.write(createLCEHeader(lce));")
+LCE=$(node -e "const { createLCEHeader } = require('node-lpi'); const lce = { v: 1, intent: { type: 'ask', goal: 'Demo request' }, policy: { consent: 'private' } }; process.stdout.write(createLCEHeader(lce));")
 ```
 
 ## Demo requests and responses
@@ -82,7 +82,7 @@ Mirror a JSON payload and watch the middleware mint a follow-up LCE header.
 curl -i -X POST http://localhost:3000/echo \
   -H "Content-Type: application/json" \
   -H "LCE: $LCE" \
-  -d '{"message": "Hello LRI!"}'
+  -d '{"message": "Hello LPI!"}'
 ```
 
 Trimmed response:
@@ -91,7 +91,7 @@ Trimmed response:
 HTTP/1.1 200 OK
 LCE: eyJ2IjoxLCJpbnRlbnQiOnsidHlwZSI6InRlbGwifSwibWVtb3J5Ijp7InRocmVhZCI6Ii4uLiJ9fQ==
 
-{"echo":{"message":"Hello LRI!"},"lce":{"intent":{"type":"tell"}},"received":true}
+{"echo":{"message":"Hello LPI!"},"lce":{"intent":{"type":"tell"}},"received":true}
 ```
 
 Notes:
@@ -107,7 +107,7 @@ If you omit the request header while `required` is enabled in `index.ts`, the en
 Intent changes the payload shape. First craft a sync-focused header:
 
 ```bash
-SYNC_LCE=$(node -e "const { createLCEHeader } = require('node-lri'); const lce = { v: 1, intent: { type: 'sync' }, policy: { consent: 'private' }, qos: { coherence: 0.9 } }; process.stdout.write(createLCEHeader(lce));")
+SYNC_LCE=$(node -e "const { createLCEHeader } = require('node-lpi'); const lce = { v: 1, intent: { type: 'sync' }, policy: { consent: 'private' }, qos: { coherence: 0.9 } }; process.stdout.write(createLCEHeader(lce));")
 ```
 
 Request standard data:
@@ -135,7 +135,7 @@ curl -i -H "LCE: $SYNC_LCE" http://localhost:3000/api/data
 ## Next steps
 
 - Explore the WebSocket example in [`examples/ws-echo`](../ws-echo/).
-- Inspect the middleware implementation in [`packages/node-lri/src/middleware.ts`](../../packages/node-lri/src/middleware.ts).
+- Inspect the middleware implementation in [`packages/node-lpi/src/middleware.ts`](../../packages/node-lpi/src/middleware.ts).
 - Read the LCE schema reference in [`schemas/lce-v0.1.json`](../../schemas/lce-v0.1.json).
 
-MIT © LRI Contributors
+MIT © LPI Contributors

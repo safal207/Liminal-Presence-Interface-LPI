@@ -1,7 +1,7 @@
 """
-FastAPI + LRI Example
+FastAPI + LPI Example
 
-Demonstrates LRI usage with FastAPI
+Demonstrates LPI usage with FastAPI
 """
 
 from datetime import datetime
@@ -11,13 +11,13 @@ from fastapi.responses import JSONResponse
 import sys
 from pathlib import Path
 
-# Add python-lri to path
-sys.path.insert(0, str(Path(__file__).parents[2] / "packages" / "python-lri"))
+# Add python-lpi to path
+sys.path.insert(0, str(Path(__file__).parents[2] / "packages" / "python-lpi"))
 
-from lri import LRI, LCE, Intent, Policy
+from lpi import LPI, LCE, Intent, Policy
 
-app = FastAPI(title="LRI FastAPI Example")
-lri = LRI()
+app = FastAPI(title="LPI FastAPI Example")
+lpi = LPI()
 
 
 @app.exception_handler(HTTPException)
@@ -27,7 +27,7 @@ async def passthrough_http_exception(_, exc: HTTPException):
 
 
 @app.get("/ping")
-async def ping(lce: Optional[LCE] = Depends(lri.dependency())):
+async def ping(lce: Optional[LCE] = Depends(lpi.dependency())):
     """Simple ping endpoint with optional LCE"""
     if lce:
         print(f"Intent: {lce.intent.type}")
@@ -42,7 +42,7 @@ async def ping(lce: Optional[LCE] = Depends(lri.dependency())):
 
 
 @app.post("/echo")
-async def echo(body: dict, lce: Optional[LCE] = Depends(lri.dependency())):
+async def echo(body: dict, lce: Optional[LCE] = Depends(lpi.dependency())):
     """Echo endpoint - mirrors LCE with response"""
     # Create response LCE
     response_lce = LCE(
@@ -58,7 +58,7 @@ async def echo(body: dict, lce: Optional[LCE] = Depends(lri.dependency())):
     }
 
     response = JSONResponse(content=response_data)
-    response.headers["LCE"] = lri.create_header(response_lce)
+    response.headers["LCE"] = lpi.create_header(response_lce)
     response.headers["Content-Type"] = "application/liminal.lce+json"
 
     return response
@@ -67,7 +67,7 @@ async def echo(body: dict, lce: Optional[LCE] = Depends(lri.dependency())):
 @app.post("/ingest")
 async def ingest(
     payload: dict,
-    lce: LCE = Depends(lri.dependency(required=True)),
+    lce: LCE = Depends(lpi.dependency(required=True)),
 ):
     """Require an LCE header before accepting data writes."""
     return {"intent": lce.intent.type, "echo": payload.get("message", "")}
@@ -76,7 +76,7 @@ async def ingest(
 @app.post("/chat")
 async def chat(
     payload: dict,
-    lce: LCE = Depends(lri.dependency(required=True)),
+    lce: LCE = Depends(lpi.dependency(required=True)),
 ):
     """Combine request payloads with LCE metadata for downstream reasoning."""
     prompt = payload.get("prompt", "")
@@ -88,7 +88,7 @@ async def chat(
 
 
 @app.get("/api/data")
-async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
+async def get_data(lce: Optional[LCE] = Depends(lpi.dependency())):
     """Intent-aware endpoint"""
     intent_type = lce.intent.type if lce else "unknown"
 
@@ -114,7 +114,7 @@ async def get_data(lce: Optional[LCE] = Depends(lri.dependency())):
 async def root():
     """Root endpoint with API info"""
     return {
-        "name": "LRI FastAPI Example",
+        "name": "LPI FastAPI Example",
         "version": "0.1.0",
         "endpoints": [
             "/ping",
@@ -123,7 +123,7 @@ async def root():
             "/chat",
             "/api/data",
         ],
-        "lri": {
+        "lpi": {
             "version": "0.1",
             "header": "LCE",
             "media_type": "application/liminal.lce+json",
@@ -134,5 +134,5 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
 
-    print("🚀 FastAPI + LRI server starting...")
+    print("🚀 FastAPI + LPI server starting...")
     uvicorn.run(app, host="0.0.0.0", port=8000)

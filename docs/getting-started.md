@@ -1,10 +1,10 @@
-# Getting Started with LRI
+# Getting Started with LPI
 
-Welcome to the **Liminal Resonance Interface (LRI)**! This guide will help you get up and running with LRI in minutes.
+Welcome to the **Liminal Presence Interface (LPI)**! This guide will help you get up and running with LPI in minutes.
 
-## What is LRI?
+## What is LPI?
 
-LRI is a protocol for **semantic context exchange** between AI systems and applications. It provides:
+LPI is a protocol for **semantic context exchange** between AI systems and applications. It provides:
 
 - 🔌 **WebSocket Communication** - Real-time bidirectional messaging
 - 🔐 **Cryptographic Trust** - Ed25519 signatures via LTP (Liminal Trust Protocol)
@@ -18,20 +18,20 @@ LRI is a protocol for **semantic context exchange** between AI systems and appli
 ### Node.js
 
 ```bash
-npm install node-lri
+npm install node-lpi
 ```
 
 ### Python
 
 ```bash
-pip install python-lri
+pip install python-lpi
 ```
 
 ---
 
 ## Your First LCE Message
 
-LCE (Liminal Context Exchange) is the core message format in LRI. Every message includes:
+LCE (Liminal Context Exchange) is the core message format in LPI. Every message includes:
 
 - **Intent** - What you're trying to do (`tell`, `ask`, `notify`, etc.)
 - **Policy** - Privacy and consent settings
@@ -40,7 +40,7 @@ LCE (Liminal Context Exchange) is the core message format in LRI. Every message 
 ### Node.js Example
 
 ```typescript
-import { LCE } from 'node-lri';
+import { LCE } from 'node-lpi';
 
 // Create an LCE message
 const message: LCE = {
@@ -60,7 +60,7 @@ console.log('My first LCE:', message);
 ### Python Example
 
 ```python
-from lri import LCE, Intent, Policy
+from lpi import LCE, Intent, Policy
 
 # Create an LCE message
 message = LCE(
@@ -79,10 +79,10 @@ print(f"My first LCE: {message}")
 Let's create a WebSocket server that uses the LHS (Liminal Handshake Sequence) protocol.
 
 ```typescript
-import { LRIWSServer } from 'node-lri';
+import { LPIWSServer } from 'node-lpi';
 
 // Create server
-const server = new LRIWSServer({
+const server = new LPIWSServer({
   port: 8080,
   ltp: false,  // Cryptographic signing (optional)
   lss: false   // Session storage (optional)
@@ -111,7 +111,7 @@ server.onDisconnect = (sessionId) => {
   console.log(`Client disconnected: ${sessionId}`);
 };
 
-console.log('LRI WebSocket server running on ws://localhost:8080');
+console.log('LPI WebSocket server running on ws://localhost:8080');
 ```
 
 ### What's Happening?
@@ -125,13 +125,13 @@ console.log('LRI WebSocket server running on ws://localhost:8080');
 
 ## WebSocket Client (Node.js)
 
-Connect to an LRI WebSocket server:
+Connect to an LPI WebSocket server:
 
 ```typescript
-import { LRIWSClient } from 'node-lri';
+import { LPIWSClient } from 'node-lpi';
 
 // Create client
-const client = new LRIWSClient({
+const client = new LPIWSClient({
   url: 'ws://localhost:8080'
 });
 
@@ -175,7 +175,7 @@ client.connect();
 Add cryptographic signatures to your messages with LTP:
 
 ```typescript
-import { LTP } from 'node-lri';
+import { LTP } from 'node-lpi';
 
 // Generate a key pair
 const keyPair = await LTP.generateKeyPair();
@@ -208,7 +208,7 @@ console.log('Valid:', isValid);  // true
 ### WebSocket with LTP
 
 ```typescript
-const server = new LRIWSServer({
+const server = new LPIWSServer({
   port: 8080,
   ltp: true,
   ltpPrivateKey: keyPair.privateKey  // Server signs messages
@@ -224,7 +224,7 @@ const server = new LRIWSServer({
 Track conversation coherence and context with LSS:
 
 ```typescript
-import { LSS } from 'node-lri';
+import { LSS } from 'node-lpi';
 
 // Create session store
 const lss = new LSS();
@@ -269,7 +269,7 @@ if (score.overall < 0.5) {
 ### WebSocket with LSS
 
 ```typescript
-const server = new LRIWSServer({
+const server = new LPIWSServer({
   port: 8080,
   lss: true  // Automatic coherence tracking
 });
@@ -291,13 +291,13 @@ server.onMessage = (sessionId, lce, payload) => {
 Here's a complete example combining everything:
 
 ```typescript
-import { LRIWSServer, LTP } from 'node-lri';
+import { LPIWSServer, LTP } from 'node-lpi';
 
 // Generate server keys
 const keyPair = await LTP.generateKeyPair();
 
 // Create server with all features
-const server = new LRIWSServer({
+const server = new LPIWSServer({
   port: 8080,
   ltp: true,
   ltpPrivateKey: keyPair.privateKey,
@@ -337,14 +337,14 @@ server.onConnect = (sessionId) => {
     v: 1,
     intent: { type: 'notify', goal: 'Welcome' },
     policy: { consent: 'private' }
-  }, 'Welcome to LRI Chat!');
+  }, 'Welcome to LPI Chat!');
 };
 
 server.onDisconnect = (sessionId) => {
   console.log(`❌ Client disconnected: ${sessionId}`);
 };
 
-console.log('🚀 LRI Chat Server running on ws://localhost:8080');
+console.log('🚀 LPI Chat Server running on ws://localhost:8080');
 console.log('📝 Features: WebSocket + LTP + LSS');
 ```
 
@@ -352,16 +352,16 @@ console.log('📝 Features: WebSocket + LTP + LSS');
 
 ## Express.js Integration
 
-Use LRI with Express for HTTP endpoints:
+Use LPI with Express for HTTP endpoints:
 
 ```typescript
 import express from 'express';
-import { lriMiddleware, validateLCE } from 'node-lri';
+import { lpiMiddleware, validateLCE } from 'node-lpi';
 
 const app = express();
 
-// Add LRI middleware
-app.use(lriMiddleware());
+// Add LPI middleware
+app.use(lpiMiddleware());
 
 // Create endpoint that accepts LCE
 app.post('/message', async (req, res) => {
@@ -384,7 +384,7 @@ app.post('/message', async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log('LRI HTTP server running on http://localhost:3000');
+  console.log('LPI HTTP server running on http://localhost:3000');
 });
 ```
 
@@ -400,7 +400,7 @@ app.listen(3000, () => {
 
 ### 🔧 Tools
 
-- **[lrictl](../packages/lrictl/)** - CLI tool for LRI development
+- **[lpictl](../packages/lpictl/)** - CLI tool for LPI development
 - **WebSocket Examples** - See `examples/ws-echo/`
 - **LTP Examples** - See `examples/ltp-signing/`
 - **LSS Examples** - See `examples/lss-coherence/`
@@ -411,16 +411,16 @@ app.listen(3000, () => {
 - **Custom Validators** - Add your own validation rules
 - **Authentication** - Integrate with your auth system
 - **Rate Limiting** - Protect your servers
-- **Metrics** - Monitor LRI usage
+- **Metrics** - Monitor LPI usage
 
 ---
 
 ## Need Help?
 
-- 📖 **Documentation**: https://github.com/safal207/LRI-Liminal-Resonance-Interface.
-- 🐛 **Issues**: https://github.com/safal207/LRI-Liminal-Resonance-Interface./issues
-- 💬 **Discussions**: https://github.com/safal207/LRI-Liminal-Resonance-Interface./discussions
+- 📖 **Documentation**: https://github.com/safal207/Liminal-Presence-Interface-LPI
+- 🐛 **Issues**: https://github.com/safal207/Liminal-Presence-Interface-LPI/issues
+- 💬 **Discussions**: https://github.com/safal207/Liminal-Presence-Interface-LPI/discussions
 
 ---
 
-**Happy coding with LRI!** 🚀
+**Happy coding with LPI!** 🚀

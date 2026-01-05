@@ -1,17 +1,17 @@
-# LRI - Liminal Resonance Interface
+# LPI - Liminal Presence Interface
 
 > **Layer 8 for Human-AI Communication**
 
-[![CI](https://github.com/safal207/LRI-Liminal-Resonance-Interface./actions/workflows/ci.yml/badge.svg)](https://github.com/safal207/LRI-Liminal-Resonance-Interface./actions/workflows/ci.yml)
+[![CI](https://github.com/safal207/Liminal-Presence-Interface-LPI/actions/workflows/ci.yml/badge.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/lri/lri)
-[![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/lri/lri)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
+[![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
 
-LRI (Liminal Resonance Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
+LPI (Liminal Presence Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
 
-## What is LRI?
+## What is LPI?
 
-LRI introduces **Layer 8** - a semantic layer that wraps application-level messages with rich contextual metadata:
+LPI introduces **Layer 8** - a semantic layer that wraps application-level messages with rich contextual metadata:
 
 - **Intent** - What the message aims to achieve (ask, tell, propose, etc.)
 - **Affect** - Emotional context (PAD model: Pleasure, Arousal, Dominance)
@@ -22,9 +22,9 @@ LRI introduces **Layer 8** - a semantic layer that wraps application-level messa
 
 ### Why?
 
-Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LRI bridges this gap:
+Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LPI bridges this gap:
 
-| Traditional | With LRI |
+| Traditional | With LPI |
 |-------------|----------|
 | `{"query": "weather"}` | Intent: `ask`, Affect: `curious`, Consent: `private` |
 | Raw text | Rich semantic context |
@@ -33,7 +33,7 @@ Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LR
 
 ---
 
-📚 **[Get Started with LRI →](docs/getting-started.md)**
+📚 **[Get Started with LPI →](docs/getting-started.md)**
 
 Complete guide with WebSocket, LTP (cryptographic signing), LSS (session management), and production examples.
 
@@ -44,22 +44,22 @@ Complete guide with WebSocket, LTP (cryptographic signing), LSS (session managem
 ### Node.js (Express)
 
 ```bash
-npm install node-lri express
+npm install node-lpi express
 ```
 
 ```typescript
 import express from 'express';
-import { lriMiddleware } from 'node-lri';
+import { lpiMiddleware } from 'node-lpi';
 
 const app = express();
-app.use(lriMiddleware());
+app.use(lpiMiddleware());
 
 app.get('/api/data', (req: any, res) => {
-  const lce = req.lri?.lce;
+  const lce = req.lpi?.lce;
   console.log('Intent:', lce?.intent.type);
 
   res.json({
-    message: 'Hello from LRI!',
+    message: 'Hello from LPI!',
     intent: lce?.intent.type
   });
 });
@@ -70,25 +70,31 @@ app.listen(3000);
 ### Python (FastAPI)
 
 ```bash
-pip install python-lri fastapi
+pip install python-lpi fastapi
 ```
 
 ```python
 from fastapi import FastAPI, Request
-from lri import LRI
+from lpi import LPI
 
 app = FastAPI()
-lri = LRI()
+lpi = LPI()
 
 @app.get("/api/data")
 async def get_data(request: Request):
-    lce = await lri.parse_request(request, required=False)
+    lce = await lpi.parse_request(request, required=False)
 
     return {
-        "message": "Hello from LRI!",
+        "message": "Hello from LPI!",
         "intent": lce.intent.type if lce else None
     }
 ```
+
+## Renaming: LRI → LPI
+
+This repository now uses **LPI (Liminal Presence Interface)** for the interface
+layer. The old **LRI** label is reserved for Living Relational Identity only.
+See [MIGRATION.md](MIGRATION.md) for a concise upgrade checklist.
 
 ## LCE - Liminal Context Envelope
 
@@ -98,8 +104,8 @@ LSS keeps lightweight conversational state with coherence and drift metrics.
 It ships with pluggable storage adapters so you can run entirely in-memory or
 persist to Redis when scaling out workers.
 
-- **Node.js** – `import { LSS } from 'node-lri/lss'`
-- **Python** – `from lri.lss import LSS`
+- **Node.js** – `import { LSS } from 'node-lpi/lss'`
+- **Python** – `from lpi.lss import LSS`
 
 Use `store(threadId, lce)` to append messages, `getMetrics` / `get_metrics` to
 read coherence breakdowns, `updateMetrics` / `update_metrics` to override them,
@@ -110,7 +116,7 @@ specification and integration snippets.
 
 ```ts
 import Redis from 'ioredis';
-import { LSS, RedisSessionStorage } from 'node-lri/lss';
+import { LSS, RedisSessionStorage } from 'node-lpi/lss';
 
 const lss = new LSS({ storage: new RedisSessionStorage(new Redis()) });
 ```
@@ -145,8 +151,8 @@ lss.on('drift', (event) => {
 ```python
 from fastapi import Depends, FastAPI, Request
 
-from lri.lss import LSS
-from lri.types import LCE
+from lpi.lss import LSS
+from lpi.types import LCE
 
 lss = LSS()
 app = FastAPI()
@@ -183,7 +189,7 @@ async def handle_message(state = Depends(session_state)):
 lss.on("drift", lambda event: print("drift", event.thread_id, event.details))
 ```
 
-The core data structure of LRI is the **LCE** (Liminal Context Envelope):
+The core data structure of LPI is the **LCE** (Liminal Context Envelope):
 
 ```json
 {
@@ -235,7 +241,7 @@ The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 
 ```
 ┌─────────────────────────────────────────┐
-│  Layer 8: LRI (Semantic/Context)        │  ← LCE, Intent, Affect
+│  Layer 8: LPI (Semantic/Context)        │  ← LCE, Intent, Affect
 ├─────────────────────────────────────────┤
 │  Layer 7: Application (HTTP/WS/gRPC)    │  ← Traditional protocols
 ├─────────────────────────────────────────┤
@@ -245,7 +251,7 @@ The core data structure of LRI is the **LCE** (Liminal Context Envelope):
 └─────────────────────────────────────────┘
 ```
 
-LRI operates **on top of** existing Layer 7 protocols:
+LPI operates **on top of** existing Layer 7 protocols:
 
 - **HTTP** - LCE in headers (`LCE: base64(json)`)
 - **WebSocket** - LCE prefix on each frame
@@ -254,15 +260,15 @@ LRI operates **on top of** existing Layer 7 protocols:
 ## Project Structure
 
 ```
-lri/
+lpi/
 ├── schemas/              # JSON Schema for LCE
 │   └── lce-v0.1.json
 ├── vocab/               # Intent/Affect vocabularies
 │   ├── intent.yaml
 │   └── affect.yaml
 ├── packages/
-│   ├── node-lri/        # Node.js SDK
-│   └── python-lri/      # Python SDK
+│   ├── node-lpi/        # Node.js SDK
+│   └── python-lpi/      # Python SDK
 ├── examples/
 │   ├── express-app/     # Express example
 │   ├── fastapi-app/     # FastAPI example
@@ -288,7 +294,7 @@ lri/
 - ✅ LSS (Liminal Session Store) - coherence calculation
 - ✅ CBOR encoding for IoT
 - ✅ gRPC metadata adapter
-- ✅ CLI tool (`lrictl`)
+- ✅ CLI tool (`lpictl`)
 
 ### Future (v1.0)
 
@@ -309,13 +315,13 @@ lri/
   - Express.js integration & production examples
 
 ### Reference
-- [RFC-000: LRI Overview](docs/rfcs/rfc-000.md)
+- [RFC-000: LPI Overview](docs/rfcs/rfc-000.md)
 - [LHS Handshake Spec](docs/specs/lhs.md)
 - [LCE Schema Spec](schemas/lce-v0.1.json)
 - [Intent Vocabulary](vocab/intent.yaml)
 - [Affect Vocabulary](vocab/affect.yaml)
-- [Node SDK Guide](packages/node-lri/README.md) (Coming soon)
-- [Python SDK Guide](packages/python-lri/README.md) (Coming soon)
+- [Node SDK Guide](packages/node-lpi/README.md) (Coming soon)
+- [Python SDK Guide](packages/python-lpi/README.md) (Coming soon)
 
 ### Vocabulary Builds
 
@@ -387,7 +393,7 @@ Features:
 - **Tamper Detection**: Detect any modifications to signed messages
 
 ```javascript
-const { ltp } = require('node-lri');
+const { ltp } = require('node-lpi');
 
 // Generate keys
 const keys = await ltp.generateKeys();
@@ -402,7 +408,7 @@ console.log('Valid:', valid); // true
 
 ### LHS Negotiation Transcripts
 
-See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LRI-LHS-Step`, `LRI-LHS`, and `LCE` headers.
+See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LPI-LHS-Step`, `LPI-LHS`, and `LCE` headers.
 
 ## Contributing
 
@@ -412,12 +418,12 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
 # Clone repo
-git clone https://github.com/lri/lri.git
-cd lri
+git clone https://github.com/safal207/Liminal-Presence-Interface-LPI.git
+cd lpi
 
 # Install dependencies
-cd packages/node-lri && npm install
-cd ../python-lri && pip install -e ".[dev]"
+cd packages/node-lpi && npm install
+cd ../python-lpi && pip install -e ".[dev]"
 
 # Run tests
 npm test
@@ -451,7 +457,7 @@ We have 22 planned issues across spec, SDK, security, and tooling. See [docs/iss
 
 ## Philosophy
 
-LRI is built on these principles:
+LPI is built on these principles:
 
 1. **Semantic-first** - Meaning matters more than bytes
 2. **Privacy by design** - Explicit consent on every message
@@ -462,7 +468,7 @@ LRI is built on these principles:
 ## FAQ
 
 **Q: Do I need to change my existing API?**
-A: No! LRI wraps your existing API with metadata. Your endpoints work as-is.
+A: No! LPI wraps your existing API with metadata. Your endpoints work as-is.
 
 **Q: What's the performance overhead?**
 A: Minimal - typically <10% for size and <5% for CPU. See benchmarks (coming soon).
@@ -474,7 +480,7 @@ A: No, but it's optimized for human-AI interaction. Human-human chat benefits to
 A: We do! LCE is transmitted via headers, but with a standardized semantic structure.
 
 **Q: Does this work with REST/GraphQL/gRPC?**
-A: Yes! LRI sits above these protocols and works with all of them.
+A: Yes! LPI sits above these protocols and works with all of them.
 
 ## License
 
@@ -483,22 +489,22 @@ MIT - See [LICENSE](LICENSE) for details.
 ## Citation
 
 ```bibtex
-@misc{lri2025,
-  title={LRI: Liminal Resonance Interface},
-  author={LRI Contributors},
+@misc{lpi2025,
+  title={LPI: Liminal Presence Interface},
+  author={LPI Contributors},
   year={2025},
-  url={https://github.com/lri/lri}
+  url={https://github.com/safal207/Liminal-Presence-Interface-LPI}
 }
 ```
 
 ## Community
 
-- **GitHub Issues:** [Report bugs & request features](https://github.com/lri/lri/issues)
-- **Discussions:** [Join the conversation](https://github.com/lri/lri/discussions)
+- **GitHub Issues:** [Report bugs & request features](https://github.com/safal207/Liminal-Presence-Interface-LPI/issues)
+- **Discussions:** [Join the conversation](https://github.com/safal207/Liminal-Presence-Interface-LPI/discussions)
 - **Discord:** Coming soon
 
 ---
 
-**Built with ❤️ by the LRI community**
+**Built with ❤️ by the LPI community**
 
 *"Adding meaning to the message, context to the conversation."*

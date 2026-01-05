@@ -1,6 +1,6 @@
 {
   "version": 0.1,
-  "title": "LRI Intent Vocabulary",
+  "title": "LPI Intent Vocabulary",
   "description": "Communicative intent types for LCE",
   "intents": {
     "ask": {

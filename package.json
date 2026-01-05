@@ -1,14 +1,14 @@
 {
-  "name": "lri-monorepo",
+  "name": "lpi-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Liminal Resonance Interface - Layer 8 for Human-AI Communication",
+  "description": "Liminal Presence Interface - Layer 8 for Human-AI Communication",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lri/lri.git"
+    "url": "https://github.com/safal207/Liminal-Presence-Interface-LPI.git"
   },
   "keywords": [
-    "lri",
+    "lpi",
     "semantic",
     "context",
     "ai",
@@ -17,7 +17,7 @@
     "affect",
     "consent"
   ],
-  "author": "LRI Contributors",
+  "author": "LPI Contributors",
   "license": "MIT",
   "workspaces": [
     "packages/*",

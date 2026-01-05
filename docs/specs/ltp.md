@@ -22,8 +22,8 @@ The SDK helpers guarantee that the canonical form is produced as a UTF-8 string.
 
 Reference implementations:
 
-- **Node** – `canonicalizeLtpPayload` in `packages/node-lri/src/ltp/jcs.ts`.
-- **Python** – `canonicalize_ltp_payload` in `packages/python-lri/lri/ltp/jcs.py`.
+- **Node** – `canonicalizeLtpPayload` in `packages/node-lpi/src/ltp/jcs.ts`.
+- **Python** – `canonicalize_ltp_payload` in `packages/python-lpi/lpi/ltp/jcs.py`.
 
 Shared fixtures in `tests/fixtures/ltp/vectors.json` verify that both SDKs emit identical canonical strings across nested
 objects, arrays, booleans, and `null` values.
@@ -36,11 +36,11 @@ LTP uses detached Ed25519 signatures (EdDSA) over the canonical UTF-8 bytes.  Ea
 
 - Keys are represented as OKP/Ed25519 JWKs with Base64url-encoded public (`x`) and private (`d`) components (32 bytes each).
 - Helpers expose the underlying 32-byte seeds as well as the 64-byte expanded secret keys required by TweetNaCl:
-  - Node: `generateKeys()`, `importKeys()`, and `importPublicKey()` (`packages/node-lri/src/ltp/index.ts`).
-  - Python: `generate_key_pair()` and `jwk_to_key_pair()` (`packages/python-lri/lri/ltp/ed25519.py`).
+  - Node: `generateKeys()`, `importKeys()`, and `importPublicKey()` (`packages/node-lpi/src/ltp/index.ts`).
+  - Python: `generate_key_pair()` and `jwk_to_key_pair()` (`packages/python-lpi/lpi/ltp/ed25519.py`).
 - High-level helpers wrap canonicalisation and signing:
-  - Node: `ltp.sign()` / `ltp.verify()` (`packages/node-lri/src/ltp/index.ts`).
-  - Python: `sign_lce()` / `verify_lce()` (`packages/python-lri/lri/ltp/__init__.py`).
+  - Node: `ltp.sign()` / `ltp.verify()` (`packages/node-lpi/src/ltp/index.ts`).
+  - Python: `sign_lce()` / `verify_lce()` (`packages/python-lpi/lpi/ltp/__init__.py`).
 - Persist only the private component (`d`) in secure storage; the public component (`x`) may be distributed to verifiers or
   embedded in transport metadata as a JWK.
 
@@ -61,13 +61,13 @@ LTP uses detached Ed25519 signatures (EdDSA) over the canonical UTF-8 bytes.  Ea
    lifetime.
 5. Treat verification failure as a hard stop—do not attempt to repair or coerce invalid payloads.
 
-Cross-language verification is exercised by the Node Jest suite (`npm run test:workspace -- node-lri`) and the Python pytest
-suite (`pytest packages/python-lri/tests`).  The shared vectors are consumed directly by `packages/node-lri/tests/ltp.test.ts`
-and `packages/python-lri/tests/test_ltp_vectors.py`.
+Cross-language verification is exercised by the Node Jest suite (`npm run test:workspace -- node-lpi`) and the Python pytest
+suite (`pytest packages/python-lpi/tests`).  The shared vectors are consumed directly by `packages/node-lpi/tests/ltp.test.ts`
+and `packages/python-lpi/tests/test_ltp_vectors.py`.
 
 ## Interoperability Test Vectors
 
-`tests/fixtures/ltp/vectors.json` contains canonical LCE payloads, signing keys, and expected signatures.  Both SDKs consume these fixtures during their unit tests (`packages/node-lri/tests/ltp.test.ts` and `packages/python-lri/tests/test_ltp_vectors.py`), ensuring deterministic behaviour across languages before release.
+`tests/fixtures/ltp/vectors.json` contains canonical LCE payloads, signing keys, and expected signatures.  Both SDKs consume these fixtures during their unit tests (`packages/node-lpi/tests/ltp.test.ts` and `packages/python-lpi/tests/test_ltp_vectors.py`), ensuring deterministic behaviour across languages before release.
 
 ## Roadmap Status
 
