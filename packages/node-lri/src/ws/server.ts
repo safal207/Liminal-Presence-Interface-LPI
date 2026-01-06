@@ -98,7 +98,7 @@ export class LPIWSServer {
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
       encodings: options.encodings ?? ['json'],
-      lpiVersion: options.lpiVersion,
+      lpiVersion: resolveProtoVersion(options),
       lriVersion: options.lriVersion,
       authenticate: options.authenticate ?? (async () => true),
       sessionTimeout: options.sessionTimeout ?? 3600000, // 1 hour
@@ -265,13 +265,13 @@ export class LPIWSServer {
               if (feature === 'lss' && this.options.lss) conn.features!.add('lss');
             });
 
-          // Send Mirror
-          const mirror: LHSMirror = {
-            step: 'mirror',
-            lri_version: resolveProtoVersion(this.options, hello),
-            encoding: conn.encoding!,
-            features: Array.from(conn.features!) as ('ltp' | 'lss')[],
-          };
+            // Send Mirror
+            const mirror: LHSMirror = {
+              step: 'mirror',
+              lri_version: resolveProtoVersion(this.options, hello),
+              encoding: conn.encoding!,
+              features: Array.from(conn.features!) as ('ltp' | 'lss')[],
+            };
 
             ws.send(JSON.stringify(mirror));
             step = 'bind';
