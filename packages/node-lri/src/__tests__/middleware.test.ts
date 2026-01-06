@@ -59,6 +59,7 @@ describe('middleware', () => {
       expect(req.lpi.raw).toBe(JSON.stringify(lce));
       expect(req.lri).toBeDefined();
       expect(req.lri.lce).toEqual(lce);
+      expect(req.lri.raw).toBe(JSON.stringify(lce));
       expect(next).toHaveBeenCalledTimes(1);
       expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/liminal.lce+json');
     });

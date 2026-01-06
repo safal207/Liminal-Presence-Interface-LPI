@@ -20,6 +20,8 @@ Node.js SDK for Liminal Presence Interface (LPI)
 
 > **Note:** LCE (Liminal Context Envelope) remains the envelope name and schema across LPI naming.
 
+> **Silencing deprecation warnings:** set `LPI_NO_DEPRECATION_WARNINGS=1`.
+
 ## Features
 
 - ✅ **HTTP/Express** - Middleware for REST APIs

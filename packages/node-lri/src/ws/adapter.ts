@@ -21,7 +21,11 @@ import { createDeprecatedClass } from '../deprecation';
 interface BaseAdapterOptions {
   /** Underlying WebSocket instance */
   ws: WebSocket;
-  /** Protocol version */
+  /**
+   * Protocol version to advertise during LHS hello.
+   * Canonical: lpiVersion. Legacy: lriVersion.
+   */
+  lpiVersion?: string;
   lriVersion?: string;
   /** Optional frame listener that will be attached automatically */
   onFrame?: (lce: LCE, payload: Buffer) => void;
@@ -122,7 +126,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const serverOptions: ServerAdapterOptions = {
         role: 'server',
         ws: this.ws,
-        lriVersion: options.lriVersion ?? '0.1',
+        lriVersion: options.lpiVersion ?? options.lriVersion ?? '0.1',
         encodings: options.encodings ?? ['json'],
         features: options.features ?? [],
         sessionId: options.sessionId,
@@ -136,7 +140,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const clientOptions: ClientAdapterOptions = {
         role: 'client',
         ws: this.ws,
-        lriVersion: options.lriVersion ?? '0.1',
+        lriVersion: options.lpiVersion ?? options.lriVersion ?? '0.1',
         encoding: options.encoding ?? 'json',
         features: options.features ?? [],
         clientId: options.clientId,
@@ -209,7 +213,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
           const mirror: LHSMirror = {
             step: 'mirror',
-            lri_version: options.lriVersion ?? '0.1',
+            lri_version: options.lpiVersion ?? options.lriVersion ?? '0.1',
             encoding: negotiatedEncoding,
             features: negotiatedFeatures,
           };
@@ -342,7 +346,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: options.lriVersion ?? '0.1',
+        lri_version: options.lpiVersion ?? options.lriVersion ?? '0.1',
         encodings: [options.encoding ?? 'json'],
         features: options.features ?? [],
       };
