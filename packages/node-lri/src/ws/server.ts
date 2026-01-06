@@ -1,24 +1,26 @@
 /**
- * LRI WebSocket Server
+ * LPI WebSocket Server
  * Implements LHS protocol and LCE frame handling
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
+import type { AddressInfo } from 'node:net';
 import { randomUUID } from 'crypto';
 import { LCE } from '../types';
 import { LTP } from '../ltp';
 import {
-  LRIWSServerOptions,
-  LRIWSConnection,
-  LRIWSServerHandlers,
+  LPIWSServerOptions,
+  LPIWSConnection,
+  LPIWSServerHandlers,
   LHSHello,
   LHSMirror,
   LHSBind,
   LHSSeal,
   isLHSMessage,
-  parseLRIFrame,
-  encodeLRIFrame,
+  parseLPIFrame,
+  encodeLPIFrame,
 } from './types';
+import { createDeprecatedClass } from '../deprecation';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -32,8 +34,22 @@ const logError = (...args: Parameters<typeof console.error>): void => {
   }
 };
 
+const DEFAULT_PROTO_VERSION = '0.1';
+
+function resolveProtoVersion(
+  options: { lpiVersion?: string; lriVersion?: string },
+  hello?: LHSHello | null
+): string {
+  return (
+    options.lpiVersion ??
+    options.lriVersion ??
+    hello?.lri_version ??
+    DEFAULT_PROTO_VERSION
+  );
+}
+
 /**
- * LRI WebSocket Server
+ * LPI WebSocket Server
  *
  * Handles:
  * - LHS handshake sequence
@@ -42,7 +58,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  *
  * @example
  * ```typescript
- * const server = new LRIWSServer({
+ * const server = new LPIWSServer({
  *   port: 8080,
  *   ltp: false,
  *   lss: true,
@@ -61,21 +77,21 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * ```
  */
 type NormalizedServerOptions =
-  Required<Omit<LRIWSServerOptions, 'ltpPrivateKey'>> &
-  Pick<LRIWSServerOptions, 'ltpPrivateKey'>;
+  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey'>> &
+  Pick<LPIWSServerOptions, 'ltpPrivateKey'>;
 
-export class LRIWSServer {
+export class LPIWSServer {
   private wss: WebSocketServer;
   private options: NormalizedServerOptions;
-  private connections: Map<string, { ws: WebSocket; conn: LRIWSConnection }> = new Map();
+  private connections: Map<string, { ws: WebSocket; conn: LPIWSConnection }> = new Map();
 
   // Public handler properties
-  public onMessage?: LRIWSServerHandlers['onMessage'];
-  public onConnect?: LRIWSServerHandlers['onConnect'];
-  public onDisconnect?: LRIWSServerHandlers['onDisconnect'];
-  public onError?: LRIWSServerHandlers['onError'];
+  public onMessage?: LPIWSServerHandlers['onMessage'];
+  public onConnect?: LPIWSServerHandlers['onConnect'];
+  public onDisconnect?: LPIWSServerHandlers['onDisconnect'];
+  public onError?: LPIWSServerHandlers['onError'];
 
-  constructor(options: LRIWSServerOptions = {}) {
+  constructor(options: LPIWSServerOptions = {}) {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
@@ -96,12 +112,16 @@ export class LRIWSServer {
     this.wss.on('connection', (ws: WebSocket) => {
       this.handleConnection(ws);
     });
+
+    this.wss.on('error', (error: Error) => {
+      logError('[LPI WS] Server error:', error);
+    });
   }
 
   /**
    * Get sessions map (for compatibility)
    */
-  get sessions(): Map<string, { ws: WebSocket; conn: LRIWSConnection }> {
+  get sessions(): Map<string, { ws: WebSocket; conn: LPIWSConnection }> {
     return this.connections;
   }
 
@@ -121,24 +141,28 @@ export class LRIWSServer {
    */
   listen(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.wss = new WebSocketServer({
-        port: this.options.port,
-        host: this.options.host,
-      });
-
-      this.wss.on('listening', () => {
-        logInfo(`[LRI WS] Server listening on ${this.options.host}:${this.options.port}`);
+      try {
+        const address = this.wss.address() as AddressInfo | string | null;
+        if (address) {
+          resolve();
+          return;
+        }
+      } catch {
+        // Ignore; we'll resolve on the listening event.
+      }
+      const onListening = () => {
+        this.wss.off('error', onError);
+        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.port}`);
         resolve();
-      });
-
-      this.wss.on('error', (error: Error) => {
-        logError('[LRI WS] Server error:', error);
+      };
+      const onError = (error: Error) => {
+        this.wss.off('listening', onListening);
+        logError('[LPI WS] Server error:', error);
         reject(error);
-      });
+      };
 
-      this.wss.on('connection', (ws: WebSocket) => {
-        this.handleConnection(ws);
-      });
+      this.wss.once('listening', onListening);
+      this.wss.once('error', onError);
     });
   }
 
@@ -166,7 +190,7 @@ export class LRIWSServer {
         try {
           await this.handleMessage(sessionId!, data);
         } catch (error) {
-          logError('[LRI WS] Message error:', error);
+          logError('[LPI WS] Message error:', error);
           if (this.onError) {
             await this.onError(sessionId!, error as Error);
           }
@@ -181,13 +205,13 @@ export class LRIWSServer {
       });
 
       ws.on('error', async (error: Error) => {
-        logError('[LRI WS] Connection error:', error);
+        logError('[LPI WS] Connection error:', error);
         if (this.onError) {
           await this.onError(sessionId!, error);
         }
       });
     } catch (error) {
-      logError('[LRI WS] Handshake failed:', error);
+      logError('[LPI WS] Handshake failed:', error);
       ws.close(1002, 'Handshake failed');
     }
   }
@@ -195,10 +219,11 @@ export class LRIWSServer {
   /**
    * Perform LHS handshake
    */
-  private async performHandshake(ws: WebSocket): Promise<LRIWSConnection> {
+  private async performHandshake(ws: WebSocket): Promise<LPIWSConnection> {
     return new Promise((resolve, reject) => {
       let step: 'hello' | 'bind' = 'hello';
-      const conn: Partial<LRIWSConnection> = {
+      let helloMsg: LHSHello | null = null;
+      const conn: Partial<LPIWSConnection> = {
         sessionId: randomUUID(),
         encoding: 'json',
         features: new Set<'ltp' | 'lss' | 'compression'>(),
@@ -222,6 +247,7 @@ export class LRIWSServer {
           // Step 1: Hello
           if (step === 'hello' && msg.step === 'hello') {
             const hello = msg as LHSHello;
+            helloMsg = hello;
 
             if (hello.client_id) {
               conn.peer = { clientId: hello.client_id };
@@ -241,7 +267,7 @@ export class LRIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: '0.1',
+              lri_version: resolveProtoVersion(this.options, helloMsg),
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };
@@ -255,10 +281,31 @@ export class LRIWSServer {
 
             // Authenticate if auth provided
             if (bind.auth) {
-              const authenticated = await this.options.authenticate(bind.auth);
-              if (!authenticated) {
-                reject(new Error('Authentication failed'));
-                return;
+              const authFn = this.options.authenticate;
+              if (authFn) {
+                if (!helloMsg) {
+                  reject(new Error('Handshake state error: missing hello'));
+                  return;
+                }
+                const params = { auth: bind.auth, hello: helloMsg, bind };
+                let authenticated = false;
+                try {
+                  authenticated = await (authFn as (args: typeof params) => boolean | Promise<boolean>)(
+                    params
+                  );
+                } catch {
+                  try {
+                    authenticated = await (authFn as (auth?: string) => boolean | Promise<boolean>)(
+                      bind.auth
+                    );
+                  } catch {
+                    authenticated = false;
+                  }
+                }
+                if (!authenticated) {
+                  reject(new Error('Authentication failed'));
+                  return;
+                }
               }
             }
 
@@ -293,7 +340,7 @@ export class LRIWSServer {
                 const signed = await LTP.sign(sealLCE, this.options.ltpPrivateKey);
                 seal.sig = signed.sig;
               } catch (error) {
-                logError('[LRI WS] LTP signing failed:', error);
+                logError('[LPI WS] LTP signing failed:', error);
               }
             }
 
@@ -302,7 +349,7 @@ export class LRIWSServer {
 
             clearTimeout(timeout);
             ws.off('message', messageHandler);
-            resolve(conn as LRIWSConnection);
+            resolve(conn as LPIWSConnection);
           } else {
             reject(new Error(`Unexpected LHS step: ${msg.step}`));
           }
@@ -316,7 +363,7 @@ export class LRIWSServer {
   }
 
   /**
-   * Handle incoming LRI frame
+   * Handle incoming LPI frame
    */
   private async handleMessage(sessionId: string, data: Buffer): Promise<void> {
     const connData = this.connections.get(sessionId);
@@ -324,8 +371,8 @@ export class LRIWSServer {
       throw new Error('Connection not found');
     }
 
-    // Parse LRI frame
-    const frame = parseLRIFrame(data);
+    // Parse LPI frame
+    const frame = parseLPIFrame(data);
 
     // Call message handler with Buffer payload
     if (this.onMessage) {
@@ -350,7 +397,7 @@ export class LRIWSServer {
     const payloadBuffer = Buffer.from(payloadStr, 'utf-8');
 
     // Encode frame
-    const frame = encodeLRIFrame(lce, payloadBuffer);
+    const frame = encodeLPIFrame(lce, payloadBuffer);
 
     // Send
     ws.send(frame);
@@ -368,7 +415,7 @@ export class LRIWSServer {
   /**
    * Get all active connections
    */
-  getConnections(): LRIWSConnection[] {
+  getConnections(): LPIWSConnection[] {
     return Array.from(this.connections.values()).map((c) => c.conn);
   }
 
@@ -401,9 +448,15 @@ export class LRIWSServer {
 
       // Close server
       this.wss.close(() => {
-        logInfo('[LRI WS] Server closed');
+        logInfo('[LPI WS] Server closed');
         resolve();
       });
     });
   }
 }
+
+export const LRIWSServer = createDeprecatedClass(
+  'LRIWSServer',
+  'LPIWSServer',
+  LPIWSServer
+);

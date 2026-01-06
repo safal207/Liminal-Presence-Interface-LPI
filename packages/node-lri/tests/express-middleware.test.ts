@@ -2,26 +2,45 @@ import express, { type Express, type Request as ExpressRequest } from 'express';
 import request from 'supertest';
 
 import {
+  lpiMiddleware,
   lriMiddleware,
   createLCEHeader,
-  type LRIMiddlewareOptions,
+  type LPIMiddlewareOptions,
 } from '../src/middleware';
 import type { LCE } from '../src/types';
 
 type InspectableRequest = ExpressRequest & {
+  lpi?: { lce: LCE; raw: string };
   lri?: { lce: LCE; raw: string };
 };
 
-function createApp(opts?: LRIMiddlewareOptions): Express {
+function createApp(opts?: LPIMiddlewareOptions): Express {
+  const app = express();
+  app.use(express.json());
+  app.use(lpiMiddleware(opts));
+
+  app.get('/inspect', (req, res) => {
+    const { lpi } = req as InspectableRequest;
+    res.json({
+      lce: lpi?.lce ?? null,
+      raw: lpi?.raw ?? null,
+      header: res.get('Content-Type'),
+    });
+  });
+
+  return app;
+}
+
+function createLegacyApp(opts?: LPIMiddlewareOptions): Express {
   const app = express();
   app.use(express.json());
   app.use(lriMiddleware(opts));
 
   app.get('/inspect', (req, res) => {
-    const { lri } = req as InspectableRequest;
+    const { lpi, lri } = req as InspectableRequest;
     res.json({
-      lce: lri?.lce ?? null,
-      raw: lri?.raw ?? null,
+      lpi: lpi?.lce ?? null,
+      lri: lri?.lce ?? null,
       header: res.get('Content-Type'),
     });
   });
@@ -89,6 +108,34 @@ describe('Express middleware integration', () => {
         raw: null,
         header: 'application/liminal.lce+json',
       });
+    });
+
+    it('deprecated lriMiddleware still works and attaches both req.lpi and req.lri (warnings silenced)', async () => {
+      const prev = process.env.LPI_NO_DEPRECATION_WARNINGS;
+      process.env.LPI_NO_DEPRECATION_WARNINGS = '1';
+      try {
+        const app = createLegacyApp();
+        const lce: LCE = {
+          v: 1,
+          intent: { type: 'ask', goal: 'Legacy integration test' },
+          policy: { consent: 'private' },
+        };
+
+        const response = await request(app)
+          .get('/inspect')
+          .set('LCE', createLCEHeader(lce));
+
+        expect(response.status).toBe(200);
+        expect(response.body.lpi).toEqual(lce);
+        expect(response.body.lri).toEqual(lce);
+        expect(response.body.header).toEqual('application/liminal.lce+json');
+      } finally {
+        if (typeof prev === 'undefined') {
+          delete process.env.LPI_NO_DEPRECATION_WARNINGS;
+        } else {
+          process.env.LPI_NO_DEPRECATION_WARNINGS = prev;
+        }
+      }
     });
   });
 
