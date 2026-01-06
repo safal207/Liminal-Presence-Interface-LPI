@@ -333,7 +333,7 @@ store.destroy();
 
 ### Complete Examples
 
-- **[Express App](../../examples/express-app)** - REST API with LRI middleware
+- **[Express App](../../examples/express-app)** - REST API with LPI middleware
 - **[WebSocket Echo](../../examples/ws-echo)** - WebSocket server with LHS handshake
 - **[LTP Signing](../../examples/ltp-signing)** - Cryptographic signatures
 - **[LSS Coherence](../../examples/lss-coherence)** - Coherence tracking

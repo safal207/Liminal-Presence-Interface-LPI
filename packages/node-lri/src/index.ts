@@ -2,7 +2,7 @@
  * node-lri: Node.js SDK for Liminal Presence Interface
  *
  * @module node-lri
- * @version 0.1.0
+ * @version 0.2.0
  */
 
 export * from './types';

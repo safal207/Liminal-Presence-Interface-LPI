@@ -10,25 +10,6 @@ export function warnDeprecated(name: string, replacement: string): void {
   console.warn(`${name} is deprecated. Use ${replacement} instead.`);
 }
 
-export function defineDeprecatedExport<T>(
-  exportsObject: unknown,
-  name: string,
-  replacement: string,
-  value: T
-): void {
-  if (!exportsObject || typeof exportsObject !== 'object') {
-    return;
-  }
-
-  Object.defineProperty(exportsObject, name, {
-    enumerable: true,
-    get() {
-      warnDeprecated(name, replacement);
-      return value;
-    },
-  });
-}
-
 export function createDeprecatedFunction<T extends (...args: never[]) => unknown>(
   name: string,
   replacement: string,
