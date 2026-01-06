@@ -83,6 +83,10 @@ export interface LPIWSServerOptions {
   port?: number;
   /** Host to bind to */
   host?: string;
+  /** Protocol version to advertise during handshake */
+  lpiVersion?: string;
+  /** @deprecated Use lpiVersion */
+  lriVersion?: string;
   /** Enable LTP signatures */
   ltp?: boolean;
   /** LTP private key for signing (if ltp enabled) */

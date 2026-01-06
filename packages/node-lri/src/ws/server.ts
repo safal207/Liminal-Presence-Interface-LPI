@@ -22,6 +22,19 @@ import {
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
 
+const DEFAULT_PROTO_VERSION = '0.1';
+const resolveProtoVersion = (
+  options: { lpiVersion?: string; lriVersion?: string },
+  helloPayload?: LHSHello
+): string => {
+  return (
+    options.lpiVersion ??
+    options.lriVersion ??
+    helloPayload?.lri_version ??
+    DEFAULT_PROTO_VERSION
+  );
+};
+
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
   if (!isTestEnv) {
@@ -85,6 +98,8 @@ export class LPIWSServer {
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
       encodings: options.encodings ?? ['json'],
+      lpiVersion: options.lpiVersion,
+      lriVersion: options.lriVersion,
       authenticate: options.authenticate ?? (async () => true),
       sessionTimeout: options.sessionTimeout ?? 3600000, // 1 hour
     };
@@ -250,13 +265,13 @@ export class LPIWSServer {
               if (feature === 'lss' && this.options.lss) conn.features!.add('lss');
             });
 
-            // Send Mirror
-            const mirror: LHSMirror = {
-              step: 'mirror',
-              lri_version: '0.1',
-              encoding: conn.encoding!,
-              features: Array.from(conn.features!) as ('ltp' | 'lss')[],
-            };
+          // Send Mirror
+          const mirror: LHSMirror = {
+            step: 'mirror',
+            lri_version: resolveProtoVersion(this.options, hello),
+            encoding: conn.encoding!,
+            features: Array.from(conn.features!) as ('ltp' | 'lss')[],
+          };
 
             ws.send(JSON.stringify(mirror));
             step = 'bind';
