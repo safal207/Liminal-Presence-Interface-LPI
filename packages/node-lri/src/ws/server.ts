@@ -4,6 +4,7 @@
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
+import type { AddressInfo } from 'node:net';
 import { randomUUID } from 'crypto';
 import { LCE } from '../types';
 import { LTP } from '../ltp';
@@ -122,10 +123,14 @@ export class LPIWSServer {
    */
   listen(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const address = this.wss.address();
-      if (address) {
-        resolve();
-        return;
+      try {
+        const address = this.wss.address() as AddressInfo | string | null;
+        if (address) {
+          resolve();
+          return;
+        }
+      } catch {
+        // Ignore; we'll resolve on the listening event.
       }
 
       this.wss = new WebSocketServer({
@@ -263,16 +268,26 @@ export class LPIWSServer {
             const bind = msg as LHSBind;
 
             // Authenticate if auth provided
-            if (this.options.authenticate) {
+            const authFn = this.options.authenticate;
+            if (authFn) {
               if (!helloMsg) {
                 reject(new Error('Handshake state error: missing hello'));
                 return;
               }
-              const authenticated = await this.options.authenticate({
-                auth: bind.auth,
-                hello: helloMsg,
-                bind,
-              });
+              const params = { auth: bind.auth, hello: helloMsg, bind };
+              type AuthParams = typeof params;
+              type LegacyAuth = (auth?: string) => boolean | Promise<boolean>;
+              type ModernAuth = (params: AuthParams) => boolean | Promise<boolean>;
+              let authenticated = false;
+              try {
+                if (authFn.length <= 1) {
+                  authenticated = await (authFn as LegacyAuth)(bind.auth);
+                } else {
+                  authenticated = await (authFn as ModernAuth)(params);
+                }
+              } catch {
+                authenticated = false;
+              }
               if (!authenticated) {
                 reject(new Error('Authentication failed'));
                 return;
