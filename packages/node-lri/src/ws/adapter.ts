@@ -473,4 +473,4 @@ export const LRIWebSocketAdapter = createDeprecatedClass(
   LPIWebSocketAdapter
 );
 
-export default LPIWebSocketAdapter;
+export default LRIWebSocketAdapter;
