@@ -23,16 +23,8 @@ import {
 import { createDeprecatedClass } from '../deprecation';
 
 const DEFAULT_PROTO_VERSION = '0.1';
-const resolveProtoVersion = (
-  options: { lpiVersion?: string; lriVersion?: string },
-  helloPayload?: LHSHello
-): string => {
-  return (
-    options.lpiVersion ??
-    options.lriVersion ??
-    helloPayload?.lri_version ??
-    DEFAULT_PROTO_VERSION
-  );
+const resolveProtoVersion = (options: { lpiVersion?: string; lriVersion?: string }): string => {
+  return options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
 };
 
 const isTestEnv = process.env.NODE_ENV === 'test';
@@ -268,7 +260,7 @@ export class LPIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: resolveProtoVersion(this.options, hello),
+              lri_version: resolveProtoVersion(this.options),
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };
