@@ -92,7 +92,7 @@ export interface LPIWSServerOptions {
   /** Supported encodings */
   encodings?: ('json' | 'cbor')[];
   /** Authentication handler */
-  authenticate?: (auth: string) => Promise<boolean>;
+  authenticate?: (params: { auth?: string; hello: LHSHello; bind: LHSBind }) => Promise<boolean> | boolean;
   /** Session timeout in ms */
   sessionTimeout?: number;
 }

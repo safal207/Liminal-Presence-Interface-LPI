@@ -4,7 +4,7 @@ Node.js SDK for Liminal Presence Interface (LPI)
 
 **Version:** 0.2.0 (Beta)
 
-> **Naming update:** LPI is the canonical naming in the Node SDK. All legacy LRI exports remain available as backward-compatible aliases and emit a one-time deprecation warning when accessed. No breaking changes are introduced.
+> **Naming update:** LPI is the canonical naming in the Node SDK. All legacy LRI exports remain available as backward-compatible aliases and emit a one-time deprecation warning when used (called/instantiated). No breaking changes are introduced.
 
 > **Package rename roadmap:** the npm package name remains **node-lri** for now. A future **node-lpi** package will become the canonical install target, while **node-lri** will remain as a thin compatibility wrapper. This README will be updated when that publication happens.
 

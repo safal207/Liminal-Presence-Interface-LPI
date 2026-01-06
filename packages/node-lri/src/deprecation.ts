@@ -11,10 +11,10 @@ export function warnDeprecated(name: string, replacement: string): void {
 
   warned.add(name);
   // eslint-disable-next-line no-console
-  console.warn(`${name} is deprecated. Use ${replacement} instead.`);
+  console.warn(`[node-lri] ${name} is deprecated. Use ${replacement} instead.`);
 }
 
-export function createDeprecatedFunction<T extends (...args: never[]) => unknown>(
+export function createDeprecatedFunction<T extends (...args: any[]) => any>(
   name: string,
   replacement: string,
   fn: T
@@ -25,17 +25,17 @@ export function createDeprecatedFunction<T extends (...args: never[]) => unknown
   }) as T;
 }
 
-export function createDeprecatedClass<T extends new (...args: never[]) => unknown>(
+export function createDeprecatedClass<T extends new (...args: any[]) => any>(
   name: string,
   replacement: string,
   Klass: T
 ): T {
-  return class Deprecated extends (Klass as new (...args: never[]) => unknown) {
-    constructor(...args: Parameters<T>) {
+  return class Deprecated extends (Klass as new (...args: any[]) => any) {
+    constructor(...args: ConstructorParameters<T>) {
       warnDeprecated(name, replacement);
       super(...args);
     }
-  } as T;
+  } as unknown as T;
 }
 
 export function resetDeprecatedWarnings(): void {

@@ -205,6 +205,7 @@ export class LPIWSServer {
   private async performHandshake(ws: WebSocket): Promise<LPIWSConnection> {
     return new Promise((resolve, reject) => {
       let step: 'hello' | 'bind' = 'hello';
+      let helloMsg: LHSHello | null = null;
       const conn: Partial<LPIWSConnection> = {
         sessionId: randomUUID(),
         encoding: 'json',
@@ -229,6 +230,7 @@ export class LPIWSServer {
           // Step 1: Hello
           if (step === 'hello' && msg.step === 'hello') {
             const hello = msg as LHSHello;
+            helloMsg = hello;
 
             if (hello.client_id) {
               conn.peer = { clientId: hello.client_id };
@@ -261,8 +263,16 @@ export class LPIWSServer {
             const bind = msg as LHSBind;
 
             // Authenticate if auth provided
-            if (bind.auth) {
-              const authenticated = await this.options.authenticate(bind.auth);
+            if (this.options.authenticate) {
+              if (!helloMsg) {
+                reject(new Error('Handshake state error: missing hello'));
+                return;
+              }
+              const authenticated = await this.options.authenticate({
+                auth: bind.auth,
+                hello: helloMsg,
+                bind,
+              });
               if (!authenticated) {
                 reject(new Error('Authentication failed'));
                 return;
