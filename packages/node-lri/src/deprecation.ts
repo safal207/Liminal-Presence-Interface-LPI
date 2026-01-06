@@ -1,6 +1,10 @@
 const warned = new Set<string>();
 
 export function warnDeprecated(name: string, replacement: string): void {
+  if (process.env.LPI_NO_DEPRECATION_WARNINGS === '1') {
+    return;
+  }
+
   if (warned.has(name)) {
     return;
   }

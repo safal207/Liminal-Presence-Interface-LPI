@@ -8,6 +8,18 @@ Node.js SDK for Liminal Presence Interface (LPI)
 
 > **Package rename roadmap:** the npm package name remains **node-lri** for now. A future **node-lpi** package will become the canonical install target, while **node-lri** will remain as a thin compatibility wrapper. This README will be updated when that publication happens.
 
+**Old → New API names**
+
+| Legacy (LRI) | Canonical (LPI) |
+| --- | --- |
+| `lriMiddleware` | `lpiMiddleware` |
+| `LRIWSServer` | `LPIWSServer` |
+| `LRIWSClient` | `LPIWSClient` |
+| `parseLRIFrame` | `parseLPIFrame` |
+| `encodeLRIFrame` | `encodeLPIFrame` |
+
+> **Note:** LCE (Liminal Context Envelope) remains the envelope name and schema across LPI naming.
+
 ## Features
 
 - ✅ **HTTP/Express** - Middleware for REST APIs
