@@ -1,5 +1,5 @@
 /**
- * LRI WebSocket support
+ * LPI WebSocket support
  * Export server, client, and types
  */
 

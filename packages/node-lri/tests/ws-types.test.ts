@@ -3,19 +3,19 @@
  */
 
 import { LCE } from '../src/types';
-import { encodeLRIFrame, parseLRIFrame } from '../src/ws/types';
+import { encodeLPIFrame, parseLPIFrame } from '../src/ws/types';
 
-describe('LRI Frame Encoding', () => {
-  describe('encodeLRIFrame', () => {
+describe('LPI Frame Encoding', () => {
+  describe('encodeLPIFrame', () => {
     it('should encode LCE and string payload', () => {
       const lce: LCE = {
         v: 1,
         intent: { type: 'tell' },
         policy: { consent: 'private' },
       };
-      const payload = 'Hello, LRI!';
+      const payload = 'Hello, LPI!';
 
-      const frame = encodeLRIFrame(lce, payload);
+      const frame = encodeLPIFrame(lce, payload);
 
       expect(frame).toBeInstanceOf(Buffer);
       expect(frame.length).toBeGreaterThan(4);
@@ -42,7 +42,7 @@ describe('LRI Frame Encoding', () => {
       };
       const payload = Buffer.from([0x01, 0x02, 0x03, 0x04]);
 
-      const frame = encodeLRIFrame(lce, payload);
+      const frame = encodeLPIFrame(lce, payload);
 
       const lceLength = frame.readUInt32BE(0);
       const payloadData = frame.subarray(4 + lceLength);
@@ -61,7 +61,7 @@ describe('LRI Frame Encoding', () => {
       };
       const payload = 'Full LCE test';
 
-      const frame = encodeLRIFrame(lce, payload);
+      const frame = encodeLPIFrame(lce, payload);
       const lceLength = frame.readUInt32BE(0);
       const lceJson = frame.subarray(4, 4 + lceLength).toString('utf-8');
       const parsedLce = JSON.parse(lceJson);
@@ -77,7 +77,7 @@ describe('LRI Frame Encoding', () => {
       };
       const payload = '';
 
-      const frame = encodeLRIFrame(lce, payload);
+      const frame = encodeLPIFrame(lce, payload);
       const lceLength = frame.readUInt32BE(0);
 
       expect(frame.length).toBe(4 + lceLength);
@@ -91,7 +91,7 @@ describe('LRI Frame Encoding', () => {
       };
       const payload = 'A'.repeat(10000);
 
-      const frame = encodeLRIFrame(lce, payload);
+      const frame = encodeLPIFrame(lce, payload);
       const lceLength = frame.readUInt32BE(0);
       const payloadData = frame.subarray(4 + lceLength).toString('utf-8');
 
@@ -100,7 +100,7 @@ describe('LRI Frame Encoding', () => {
     });
   });
 
-  describe('parseLRIFrame', () => {
+  describe('parseLPIFrame', () => {
     it('should parse valid frame', () => {
       const lce: LCE = {
         v: 1,
@@ -109,8 +109,8 @@ describe('LRI Frame Encoding', () => {
       };
       const payload = 'Test payload';
 
-      const frame = encodeLRIFrame(lce, payload);
-      const parsed = parseLRIFrame(frame);
+      const frame = encodeLPIFrame(lce, payload);
+      const parsed = parseLPIFrame(frame);
 
       expect(parsed.lce).toEqual(lce);
       expect(parsed.payload.toString('utf-8')).toBe(payload);
@@ -124,8 +124,8 @@ describe('LRI Frame Encoding', () => {
       };
       const payload = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
 
-      const frame = encodeLRIFrame(lce, payload);
-      const parsed = parseLRIFrame(frame);
+      const frame = encodeLPIFrame(lce, payload);
+      const parsed = parseLPIFrame(frame);
 
       expect(parsed.lce).toEqual(lce);
       expect(parsed.payload).toEqual(payload);
@@ -134,7 +134,7 @@ describe('LRI Frame Encoding', () => {
     it('should throw on frame too small', () => {
       const tooSmall = Buffer.from([0x00, 0x00, 0x00]);
 
-      expect(() => parseLRIFrame(tooSmall)).toThrow('Frame too small');
+      expect(() => parseLPIFrame(tooSmall)).toThrow('Frame too small');
     });
 
     it('should throw on invalid LCE JSON', () => {
@@ -142,14 +142,14 @@ describe('LRI Frame Encoding', () => {
       buffer.writeUInt32BE(10, 0); // Length of 10
       buffer.write('not valid json', 4, 'utf-8');
 
-      expect(() => parseLRIFrame(buffer)).toThrow();
+      expect(() => parseLPIFrame(buffer)).toThrow();
     });
 
     it('should throw on LCE length mismatch', () => {
       const buffer = Buffer.alloc(100);
       buffer.writeUInt32BE(200, 0); // Claim 200 bytes but buffer is only 100
 
-      expect(() => parseLRIFrame(buffer)).toThrow('Invalid frame');
+      expect(() => parseLPIFrame(buffer)).toThrow('Invalid frame');
     });
 
     it('should handle empty payload after LCE', () => {
@@ -159,8 +159,8 @@ describe('LRI Frame Encoding', () => {
         policy: { consent: 'private' },
       };
 
-      const frame = encodeLRIFrame(lce, '');
-      const parsed = parseLRIFrame(frame);
+      const frame = encodeLPIFrame(lce, '');
+      const parsed = parseLPIFrame(frame);
 
       expect(parsed.lce).toEqual(lce);
       expect(parsed.payload.length).toBe(0);
@@ -188,8 +188,8 @@ describe('LRI Frame Encoding', () => {
       ];
 
       testCases.forEach(({ lce, payload }) => {
-        const frame = encodeLRIFrame(lce, payload);
-        const parsed = parseLRIFrame(frame);
+        const frame = encodeLPIFrame(lce, payload);
+        const parsed = parseLPIFrame(frame);
 
         expect(parsed.lce).toEqual(lce);
 

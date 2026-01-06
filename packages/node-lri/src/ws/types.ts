@@ -1,9 +1,10 @@
 /**
- * WebSocket types for LRI
+ * WebSocket types for LPI
  * Includes LHS (Liminal Handshake Sequence) protocol
  */
 
 import { LCE } from '../types';
+import { createDeprecatedFunction } from '../deprecation';
 
 /**
  * LHS Step types
@@ -62,20 +63,41 @@ export interface LHSSeal {
 export type LHSMessage = LHSHello | LHSMirror | LHSBind | LHSSeal;
 
 /**
- * LRI WebSocket frame structure
+ * Versioning note:
+ * - Wire field is still called `lri_version` for backwards compatibility.
+ * - Canonical API name is `lpiVersion`.
+ * - `lriVersion` is legacy alias and will be removed in a future major release.
+ */
+export interface VersionedOptions {
+  /**
+   * Canonical protocol version (LPI).
+   * Serialized into wire field `lri_version`.
+   */
+  lpiVersion?: string;
+  /**
+   * Legacy alias for `lpiVersion`.
+   * @deprecated Use `lpiVersion`.
+   */
+  lriVersion?: string;
+}
+
+/**
+ * LPI WebSocket frame structure
  *
  * Binary format:
  * [4 bytes: LCE length] [N bytes: LCE JSON] [remaining: payload]
  */
-export interface LRIFrame {
+export interface LPIFrame {
   lce: LCE;
   payload: Buffer;
 }
 
+export type LRIFrame = LPIFrame;
+
 /**
  * WebSocket server options
  */
-export interface LRIWSServerOptions {
+export interface LPIWSServerOptions extends VersionedOptions {
   /** Port to listen on */
   port?: number;
   /** Host to bind to */
@@ -89,7 +111,9 @@ export interface LRIWSServerOptions {
   /** Supported encodings */
   encodings?: ('json' | 'cbor')[];
   /** Authentication handler */
-  authenticate?: (auth: string) => Promise<boolean>;
+  authenticate?:
+    | ((auth?: string) => Promise<boolean> | boolean)
+    | ((params: { auth?: string; hello: LHSHello; bind: LHSBind }) => Promise<boolean> | boolean);
   /** Session timeout in ms */
   sessionTimeout?: number;
 }
@@ -97,7 +121,7 @@ export interface LRIWSServerOptions {
 /**
  * WebSocket client options
  */
-export interface LRIWSClientOptions {
+export interface LPIWSClientOptions extends VersionedOptions {
   /** WebSocket URL */
   url: string;
   /** Client ID */
@@ -115,7 +139,7 @@ export interface LRIWSClientOptions {
 /**
  * WebSocket connection state
  */
-export interface LRIWSConnection {
+export interface LPIWSConnection {
   /** Unique session ID */
   sessionId: string;
   /** Connection thread */
@@ -140,7 +164,7 @@ export interface LRIWSConnection {
 /**
  * WebSocket server event handlers
  */
-export interface LRIWSServerHandlers {
+export interface LPIWSServerHandlers {
   /** Message received */
   onMessage?: (sessionId: string, lce: LCE, payload: Buffer) => void | Promise<void>;
   /** Connection established (after handshake) */
@@ -154,7 +178,7 @@ export interface LRIWSServerHandlers {
 /**
  * WebSocket client event handlers
  */
-export interface LRIWSClientHandlers {
+export interface LPIWSClientHandlers {
   /** Message received */
   onMessage?: (lce: LCE, payload: Buffer) => void | Promise<void>;
   /** Connection established (after handshake) */
@@ -165,13 +189,15 @@ export interface LRIWSClientHandlers {
   onError?: (error: Error) => void | Promise<void>;
 }
 
-/** @deprecated Use LRIWSServerHandlers or LRIWSClientHandlers */
-export type LRIWSEventHandlers = LRIWSServerHandlers & LRIWSClientHandlers;
+export type LPIWSEventHandlers = LPIWSServerHandlers & LPIWSClientHandlers;
+
+/** @deprecated Use LPIWSServerHandlers or LPIWSClientHandlers */
+export type LRIWSEventHandlers = LPIWSServerHandlers & LPIWSClientHandlers;
 
 /**
- * Parse LRI frame from binary buffer
+ * Parse LPI frame from binary buffer
  */
-export function parseLRIFrame(buffer: Buffer): LRIFrame {
+export function parseLPIFrame(buffer: Buffer): LPIFrame {
   if (buffer.length < 4) {
     throw new Error('Frame too small');
   }
@@ -194,9 +220,9 @@ export function parseLRIFrame(buffer: Buffer): LRIFrame {
 }
 
 /**
- * Encode LRI frame to binary buffer
+ * Encode LPI frame to binary buffer
  */
-export function encodeLRIFrame(lce: LCE, payload: Buffer | string): Buffer {
+export function encodeLPIFrame(lce: LCE, payload: Buffer | string): Buffer {
   const lceJson = JSON.stringify(lce);
   const lceBuffer = Buffer.from(lceJson, 'utf-8');
   const lceLength = lceBuffer.length;
@@ -223,3 +249,20 @@ export function isLHSMessage(msg: unknown): msg is LHSMessage {
     typeof (msg as { step: unknown }).step === 'string'
   );
 }
+
+export type LRIWSServerOptions = LPIWSServerOptions;
+export type LRIWSClientOptions = LPIWSClientOptions;
+export type LRIWSConnection = LPIWSConnection;
+export type LRIWSServerHandlers = LPIWSServerHandlers;
+export type LRIWSClientHandlers = LPIWSClientHandlers;
+
+export const parseLRIFrame = createDeprecatedFunction(
+  'parseLRIFrame',
+  'parseLPIFrame',
+  parseLPIFrame
+);
+export const encodeLRIFrame = createDeprecatedFunction(
+  'encodeLRIFrame',
+  'encodeLPIFrame',
+  encodeLPIFrame
+);

@@ -1,7 +1,7 @@
 {
   "name": "node-lri",
   "version": "0.2.0",
-  "description": "Node.js SDK for Liminal Resonance Interface (LRI)",
+  "description": "Node.js SDK for Liminal Presence Interface (LPI), formerly LRI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -20,6 +20,9 @@
   },
   "keywords": [
     "lri",
+    "lpi",
+    "lce",
+    "websocket",
     "semantic",
     "context",
     "ai",

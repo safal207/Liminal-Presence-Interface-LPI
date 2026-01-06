@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { LCE } from './types';
 import { validateLCE } from './validator';
+import { createDeprecatedFunction } from './deprecation';
 
-export interface LRIMiddlewareOptions {
+export interface LPIMiddlewareOptions {
   /** Require LCE header on all requests */
   required?: boolean;
   /** Custom header name (default: 'LCE') */
@@ -11,29 +12,31 @@ export interface LRIMiddlewareOptions {
   validate?: boolean;
 }
 
+export type LRIMiddlewareOptions = LPIMiddlewareOptions;
+
 /**
- * Express middleware for LRI/LCE support
+ * Express middleware for LPI/LCE support
  *
  * Reads LCE from request header (Base64-encoded JSON)
  * Validates against schema
- * Attaches parsed LCE to req.lri
+ * Attaches parsed LCE to req.lpi (and req.lri for backward compatibility)
  *
  * @example
  * ```typescript
  * import express from 'express';
- * import { lriMiddleware } from 'node-lri';
+ * import { lpiMiddleware } from 'node-lri';
  *
  * const app = express();
- * app.use(lriMiddleware({ required: false, validate: true }));
+ * app.use(lpiMiddleware({ required: false, validate: true }));
  *
  * app.get('/api/data', (req: any, res) => {
- *   const lce = req.lri?.lce;
+ *   const lce = req.lpi?.lce;
  *   console.log('Intent:', lce?.intent.type);
  *   res.json({ ok: true });
  * });
  * ```
  */
-export function lriMiddleware(opts: LRIMiddlewareOptions = {}) {
+export function lpiMiddleware(opts: LPIMiddlewareOptions = {}) {
   const {
     required = false,
     headerName = 'LCE',
@@ -60,10 +63,13 @@ export function lriMiddleware(opts: LRIMiddlewareOptions = {}) {
 
         // Attach to request
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (req as any).lri = {
+        const payload = {
           lce,
           raw: json,
         };
+
+        (req as any).lpi = payload;
+        (req as any).lri = payload;
       } catch (err) {
         return res.status(400).json({
           error: 'Malformed LCE header',
@@ -73,7 +79,7 @@ export function lriMiddleware(opts: LRIMiddlewareOptions = {}) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (required && !(req as any).lri) {
+    if (required && !(req as any).lpi) {
       return res.status(428).json({
         error: 'LCE header required',
         header: headerName,
@@ -93,3 +99,9 @@ export function createLCEHeader(lce: LCE): string {
   const json = JSON.stringify(lce);
   return Buffer.from(json, 'utf-8').toString('base64');
 }
+
+export const lriMiddleware = createDeprecatedFunction(
+  'lriMiddleware',
+  'lpiMiddleware',
+  lpiMiddleware
+);

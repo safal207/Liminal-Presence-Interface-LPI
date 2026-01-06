@@ -1,5 +1,5 @@
 /**
- * LRI WebSocket Client
+ * LPI WebSocket Client
  * Implements LHS protocol and LCE frame handling
  */
 
@@ -7,16 +7,17 @@ import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
 import { LCE } from '../types';
 import {
-  LRIWSClientOptions,
-  LRIWSConnection,
-  LRIWSClientHandlers,
+  LPIWSClientOptions,
+  LPIWSConnection,
+  LPIWSClientHandlers,
   LHSHello,
   LHSBind,
   LHSSeal,
   isLHSMessage,
-  parseLRIFrame,
-  encodeLRIFrame,
+  parseLPIFrame,
+  encodeLPIFrame,
 } from './types';
+import { createDeprecatedClass } from '../deprecation';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -31,7 +32,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
 };
 
 /**
- * LRI WebSocket Client
+ * LPI WebSocket Client
  *
  * Handles:
  * - LHS handshake sequence
@@ -40,7 +41,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  *
  * @example
  * ```typescript
- * const client = new LRIWSClient({
+ * const client = new LPIWSClient({
  *   url: 'ws://localhost:8080',
  *   features: ['lss'],
  * });
@@ -58,25 +59,31 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * }, { question: 'Hello?' });
  * ```
  */
-export class LRIWSClient {
+export class LPIWSClient {
   private ws: WebSocket | null = null;
-  private options: Required<Omit<LRIWSClientOptions, 'auth'>> & { auth?: string };
-  private conn: LRIWSConnection | null = null;
+  private options: Required<Omit<LPIWSClientOptions, 'auth' | 'lpiVersion' | 'lriVersion'>> & {
+    auth?: string;
+    lpiVersion?: string;
+    lriVersion?: string;
+  };
+  private conn: LPIWSConnection | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
 
   // Public handler properties
-  public onMessage?: LRIWSClientHandlers['onMessage'];
-  public onConnect?: LRIWSClientHandlers['onConnect'];
-  public onClose?: LRIWSClientHandlers['onClose'];
-  public onError?: LRIWSClientHandlers['onError'];
+  public onMessage?: LPIWSClientHandlers['onMessage'];
+  public onConnect?: LPIWSClientHandlers['onConnect'];
+  public onClose?: LPIWSClientHandlers['onClose'];
+  public onError?: LPIWSClientHandlers['onError'];
 
-  constructor(urlOrOptions: string | LRIWSClientOptions) {
+  constructor(urlOrOptions: string | LPIWSClientOptions) {
     // Allow passing URL string directly
     const options = typeof urlOrOptions === 'string' ? { url: urlOrOptions } : urlOrOptions;
 
     this.options = {
       url: options.url,
       clientId: options.clientId ?? randomUUID(),
+      lpiVersion: options.lpiVersion,
+      lriVersion: options.lriVersion,
       encoding: options.encoding ?? 'json',
       features: options.features ?? [],
       auth: options.auth,
@@ -101,7 +108,7 @@ export class LRIWSClient {
             try {
               await this.handleMessage(data);
             } catch (error) {
-              logError('[LRI WS Client] Message error:', error);
+              logError('[LPI WS Client] Message error:', error);
               if (this.onError) {
                 await this.onError(error as Error);
               }
@@ -113,7 +120,7 @@ export class LRIWSClient {
       });
 
       this.ws.on('close', async () => {
-        logInfo('[LRI WS Client] Connection closed');
+        logInfo('[LPI WS Client] Connection closed');
         // Set conn to null BEFORE calling onClose handler
         this.conn = null;
 
@@ -128,7 +135,7 @@ export class LRIWSClient {
       });
 
       this.ws.on('error', async (error: Error) => {
-        logError('[LRI WS Client] Connection error:', error);
+        logError('[LPI WS Client] Connection error:', error);
         if (this.onError) {
           await this.onError(error);
         }
@@ -190,7 +197,7 @@ export class LRIWSClient {
               const result = this.onConnect();
               if (result instanceof Promise) {
                 result.catch((error) => {
-                  logError('[LRI WS Client] onConnect handler error:', error);
+                  logError('[LPI WS Client] onConnect handler error:', error);
                 });
               }
             }
@@ -209,7 +216,7 @@ export class LRIWSClient {
       // Send Hello
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: '0.1',
+        lri_version: this.options.lpiVersion ?? this.options.lriVersion ?? '0.1',
         encodings: [this.options.encoding],
         features: this.options.features,
         client_id: this.options.clientId,
@@ -220,15 +227,15 @@ export class LRIWSClient {
   }
 
   /**
-   * Handle incoming LRI frame
+   * Handle incoming LPI frame
    */
   private async handleMessage(data: Buffer): Promise<void> {
     if (!this.conn) {
       throw new Error('Connection not established');
     }
 
-    // Parse LRI frame
-    const frame = parseLRIFrame(data);
+    // Parse LPI frame
+    const frame = parseLPIFrame(data);
 
     // Call message handler with Buffer payload
     if (this.onMessage) {
@@ -250,7 +257,7 @@ export class LRIWSClient {
     const payloadBuffer = Buffer.from(payloadStr, 'utf-8');
 
     // Encode frame
-    const frame = encodeLRIFrame(lce, payloadBuffer);
+    const frame = encodeLPIFrame(lce, payloadBuffer);
 
     // Send
     this.ws.send(frame);
@@ -259,7 +266,7 @@ export class LRIWSClient {
   /**
    * Get connection info
    */
-  getConnection(): LRIWSConnection | null {
+  getConnection(): LPIWSConnection | null {
     return this.conn;
   }
 
@@ -279,12 +286,12 @@ export class LRIWSClient {
     }
 
     const delay = 5000; // 5 seconds
-    logInfo(`[LRI WS Client] Reconnecting in ${delay}ms...`);
+    logInfo(`[LPI WS Client] Reconnecting in ${delay}ms...`);
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect().catch((error) => {
-        logError('[LRI WS Client] Reconnect failed:', error);
+        logError('[LPI WS Client] Reconnect failed:', error);
       });
     }, delay);
 
@@ -311,3 +318,9 @@ export class LRIWSClient {
     this.conn = null;
   }
 }
+
+export const LRIWSClient = createDeprecatedClass(
+  'LRIWSClient',
+  'LPIWSClient',
+  LPIWSClient
+);
