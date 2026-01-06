@@ -35,6 +35,8 @@ Node.js SDK for Liminal Presence Interface (LPI)
 
 ## Installation
 
+> Install target is `node-lri` (package name). Canonical API naming is **LPI**.
+
 ```bash
 npm install node-lri
 ```
