@@ -1,8 +1,10 @@
 # node-lri
 
-Node.js SDK for Liminal Resonance Interface (LRI)
+Node.js SDK for Liminal Presence Interface (LPI)
 
 **Version:** 0.2.0 (Beta)
+
+> **Naming update:** LPI is the canonical naming in the Node SDK. All legacy LRI exports remain available as backward-compatible aliases and emit a one-time deprecation warning when accessed. No breaking changes are introduced.
 
 ## Features
 
@@ -23,22 +25,34 @@ npm install node-lri
 
 ## Quick Start
 
+### Backward compatibility (LRI aliases)
+
+All LRI-prefixed exports are still available as aliases. They are deprecated and will emit a one-time warning per process:
+
+```typescript
+import { lriMiddleware } from 'node-lri';
+import { LRIWSServer } from 'node-lri/ws';
+
+// Works with a deprecation warning.
+const server = new LRIWSServer({ port: 8080 });
+```
+
 ### Express Middleware
 
 ```typescript
 import express from 'express';
-import { lriMiddleware, createLCEHeader, LCE } from 'node-lri';
+import { lpiMiddleware, createLCEHeader, LCE } from 'node-lri';
 
 const app = express();
 
-// Add LRI middleware
-app.use(lriMiddleware({
+// Add LPI middleware
+app.use(lpiMiddleware({
   required: false,  // Make LCE optional
   validate: true,   // Validate against schema
 }));
 
 app.get('/api/data', (req: any, res) => {
-  const lce = req.lri?.lce;
+  const lce = req.lpi?.lce;
 
   // Access LCE metadata
   console.log('Intent:', lce?.intent.type);
@@ -62,9 +76,9 @@ app.listen(3000);
 ### WebSocket Server
 
 ```typescript
-import { LRIWSServer } from 'node-lri/ws';
+import { LPIWSServer } from 'node-lri/ws';
 
-const server = new LRIWSServer({ port: 8080 });
+const server = new LPIWSServer({ port: 8080 });
 
 server.on('connected', (ws, sessionId) => {
   console.log('Client connected:', sessionId);
@@ -206,9 +220,10 @@ function handler(call, callback) {
 
 #### Functions
 
-**`lriMiddleware(options?)`**
+**`lpiMiddleware(options?)`**
 - Express middleware for HTTP
 - Options: `required`, `headerName`, `validate`
+> Legacy alias: `lriMiddleware` (deprecated, emits a warning).
 
 **`createLCEHeader(lce: LCE): string`**
 - Create Base64-encoded LCE header
@@ -221,10 +236,10 @@ function handler(call, callback) {
 
 ### WebSocket (`node-lri/ws`)
 
-#### `LRIWSServer`
+#### `LPIWSServer`
 
 ```typescript
-const server = new LRIWSServer(options);
+const server = new LPIWSServer(options);
 
 // Events
 server.on('connected', (ws, sessionId) => {});
@@ -237,16 +252,18 @@ server.broadcast(lce, payload);
 server.close();
 ```
 
-#### `LRIWSClient`
+#### `LPIWSClient`
 
 ```typescript
-const client = new LRIWSClient(url, options);
+const client = new LPIWSClient(url, options);
 
 await client.connect();
 client.on('message', (lce, payload) => {});
 client.send(lce, payload);
 await client.close();
 ```
+
+> Legacy aliases: `LRIWSServer`, `LRIWSClient` (deprecated, emit warnings).
 
 ### LTP - Liminal Trust Protocol (`node-lri/ltp`)
 
@@ -327,7 +344,7 @@ store.destroy();
 
 ```typescript
 app.get('/api/data', (req: any, res) => {
-  const lce = req.lri?.lce;
+  const lce = req.lpi?.lce;
 
   switch (lce?.intent.type) {
     case 'ask':
@@ -345,10 +362,10 @@ app.get('/api/data', (req: any, res) => {
 #### WebSocket with LSS
 
 ```typescript
-import { LRIWSServer } from 'node-lri/ws';
+import { LPIWSServer } from 'node-lri/ws';
 import { lss } from 'node-lri';
 
-const server = new LRIWSServer({ port: 8080 });
+const server = new LPIWSServer({ port: 8080 });
 const store = new lss.LSS();
 
 server.on('message', async (ws, lce, payload) => {
@@ -389,7 +406,7 @@ res.setHeader('LCE', createLCEHeader(signed));
 
 // Verify incoming
 app.use(async (req: any, res, next) => {
-  const lce = req.lri?.lce;
+  const lce = req.lpi?.lce;
 
   if (lce?.sig) {
     const valid = await ltp.verify(lce, publicKey);

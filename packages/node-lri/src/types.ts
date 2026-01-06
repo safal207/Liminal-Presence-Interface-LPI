@@ -1,5 +1,5 @@
 /**
- * LRI Core Types
+ * LPI Core Types
  * Based on LCE v0.1 schema
  */
 
@@ -77,9 +77,18 @@ export interface LCE {
   sig?: string;
 }
 
-export interface LRIRequest extends Request {
+export type LPIContext = LCE;
+export type LRIContext = LPIContext;
+
+export interface LPIRequest extends Request {
+  lpi?: {
+    lce: LCE;
+    raw: string;
+  };
   lri?: {
     lce: LCE;
     raw: string;
   };
 }
+
+export type LRIRequest = LPIRequest;

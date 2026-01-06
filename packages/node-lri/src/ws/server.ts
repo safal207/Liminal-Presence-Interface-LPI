@@ -1,5 +1,5 @@
 /**
- * LRI WebSocket Server
+ * LPI WebSocket Server
  * Implements LHS protocol and LCE frame handling
  */
 
@@ -8,17 +8,18 @@ import { randomUUID } from 'crypto';
 import { LCE } from '../types';
 import { LTP } from '../ltp';
 import {
-  LRIWSServerOptions,
-  LRIWSConnection,
-  LRIWSServerHandlers,
+  LPIWSServerOptions,
+  LPIWSConnection,
+  LPIWSServerHandlers,
   LHSHello,
   LHSMirror,
   LHSBind,
   LHSSeal,
   isLHSMessage,
-  parseLRIFrame,
-  encodeLRIFrame,
+  parseLPIFrame,
+  encodeLPIFrame,
 } from './types';
+import { defineDeprecatedExport } from '../deprecation';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -33,7 +34,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
 };
 
 /**
- * LRI WebSocket Server
+ * LPI WebSocket Server
  *
  * Handles:
  * - LHS handshake sequence
@@ -42,7 +43,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  *
  * @example
  * ```typescript
- * const server = new LRIWSServer({
+ * const server = new LPIWSServer({
  *   port: 8080,
  *   ltp: false,
  *   lss: true,
@@ -61,21 +62,21 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * ```
  */
 type NormalizedServerOptions =
-  Required<Omit<LRIWSServerOptions, 'ltpPrivateKey'>> &
-  Pick<LRIWSServerOptions, 'ltpPrivateKey'>;
+  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey'>> &
+  Pick<LPIWSServerOptions, 'ltpPrivateKey'>;
 
-export class LRIWSServer {
+export class LPIWSServer {
   private wss: WebSocketServer;
   private options: NormalizedServerOptions;
-  private connections: Map<string, { ws: WebSocket; conn: LRIWSConnection }> = new Map();
+  private connections: Map<string, { ws: WebSocket; conn: LPIWSConnection }> = new Map();
 
   // Public handler properties
-  public onMessage?: LRIWSServerHandlers['onMessage'];
-  public onConnect?: LRIWSServerHandlers['onConnect'];
-  public onDisconnect?: LRIWSServerHandlers['onDisconnect'];
-  public onError?: LRIWSServerHandlers['onError'];
+  public onMessage?: LPIWSServerHandlers['onMessage'];
+  public onConnect?: LPIWSServerHandlers['onConnect'];
+  public onDisconnect?: LPIWSServerHandlers['onDisconnect'];
+  public onError?: LPIWSServerHandlers['onError'];
 
-  constructor(options: LRIWSServerOptions = {}) {
+  constructor(options: LPIWSServerOptions = {}) {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
@@ -101,7 +102,7 @@ export class LRIWSServer {
   /**
    * Get sessions map (for compatibility)
    */
-  get sessions(): Map<string, { ws: WebSocket; conn: LRIWSConnection }> {
+  get sessions(): Map<string, { ws: WebSocket; conn: LPIWSConnection }> {
     return this.connections;
   }
 
@@ -195,10 +196,10 @@ export class LRIWSServer {
   /**
    * Perform LHS handshake
    */
-  private async performHandshake(ws: WebSocket): Promise<LRIWSConnection> {
+  private async performHandshake(ws: WebSocket): Promise<LPIWSConnection> {
     return new Promise((resolve, reject) => {
       let step: 'hello' | 'bind' = 'hello';
-      const conn: Partial<LRIWSConnection> = {
+      const conn: Partial<LPIWSConnection> = {
         sessionId: randomUUID(),
         encoding: 'json',
         features: new Set<'ltp' | 'lss' | 'compression'>(),
@@ -302,7 +303,7 @@ export class LRIWSServer {
 
             clearTimeout(timeout);
             ws.off('message', messageHandler);
-            resolve(conn as LRIWSConnection);
+            resolve(conn as LPIWSConnection);
           } else {
             reject(new Error(`Unexpected LHS step: ${msg.step}`));
           }
@@ -316,7 +317,7 @@ export class LRIWSServer {
   }
 
   /**
-   * Handle incoming LRI frame
+   * Handle incoming LPI frame
    */
   private async handleMessage(sessionId: string, data: Buffer): Promise<void> {
     const connData = this.connections.get(sessionId);
@@ -324,8 +325,8 @@ export class LRIWSServer {
       throw new Error('Connection not found');
     }
 
-    // Parse LRI frame
-    const frame = parseLRIFrame(data);
+    // Parse LPI frame
+    const frame = parseLPIFrame(data);
 
     // Call message handler with Buffer payload
     if (this.onMessage) {
@@ -350,7 +351,7 @@ export class LRIWSServer {
     const payloadBuffer = Buffer.from(payloadStr, 'utf-8');
 
     // Encode frame
-    const frame = encodeLRIFrame(lce, payloadBuffer);
+    const frame = encodeLPIFrame(lce, payloadBuffer);
 
     // Send
     ws.send(frame);
@@ -368,7 +369,7 @@ export class LRIWSServer {
   /**
    * Get all active connections
    */
-  getConnections(): LRIWSConnection[] {
+  getConnections(): LPIWSConnection[] {
     return Array.from(this.connections.values()).map((c) => c.conn);
   }
 
@@ -407,3 +408,8 @@ export class LRIWSServer {
     });
   }
 }
+
+const LRIWSServer = LPIWSServer;
+export { LRIWSServer };
+
+defineDeprecatedExport(exports, 'LRIWSServer', 'LPIWSServer', LPIWSServer);

@@ -1,5 +1,5 @@
 /**
- * node-lri: Node.js SDK for Liminal Resonance Interface
+ * node-lri: Node.js SDK for Liminal Presence Interface
  *
  * @module node-lri
  * @version 0.1.0

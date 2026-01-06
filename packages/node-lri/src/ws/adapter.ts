@@ -4,15 +4,16 @@ import { WebSocket } from 'ws';
 import type { RawData } from 'ws';
 import { LCE } from '../types';
 import {
-  LRIWSConnection,
+  LPIWSConnection,
   LHSHello,
   LHSMirror,
   LHSBind,
   LHSSeal,
   isLHSMessage,
-  parseLRIFrame,
-  encodeLRIFrame,
+  parseLPIFrame,
+  encodeLPIFrame,
 } from './types';
+import { defineDeprecatedExport } from '../deprecation';
 
 /**
  * Base options shared between client and server adapters
@@ -20,7 +21,7 @@ import {
 interface BaseAdapterOptions {
   /** Underlying WebSocket instance */
   ws: WebSocket;
-  /** LRI protocol version */
+  /** LPI protocol version */
   lriVersion?: string;
   /** Optional frame listener that will be attached automatically */
   onFrame?: (lce: LCE, payload: Buffer) => void;
@@ -62,27 +63,27 @@ export interface ClientAdapterOptions extends BaseAdapterOptions {
   threadId?: string;
 }
 
-export type LRIWebSocketAdapterOptions = ServerAdapterOptions | ClientAdapterOptions;
+export type LPIWebSocketAdapterOptions = ServerAdapterOptions | ClientAdapterOptions;
 
 export type FrameListener = (lce: LCE, payload: Buffer) => void;
-export type ReadyListener = (connection: LRIWSConnection) => void;
+export type ReadyListener = (connection: LPIWSConnection) => void;
 
 /**
  * Adapter that encapsulates the LHS handshake and LCE frame parsing for raw WebSocket instances.
  */
-export class LRIWebSocketAdapter extends EventEmitter {
+export class LPIWebSocketAdapter extends EventEmitter {
   public readonly role: 'client' | 'server';
   private readonly ws: WebSocket;
   private handshakeListener: ((data: RawData) => void) | null = null;
   private resolved = false;
-  private readyResolve!: (value: LRIWSConnection) => void;
+  private readyResolve!: (value: LPIWSConnection) => void;
   private readyReject!: (reason: Error) => void;
-  public readonly ready: Promise<LRIWSConnection>;
-  public connection: LRIWSConnection | null = null;
+  public readonly ready: Promise<LPIWSConnection>;
+  public connection: LPIWSConnection | null = null;
   private serverOptions?: ServerAdapterOptions;
   private clientOptions?: ClientAdapterOptions;
 
-  constructor(options: LRIWebSocketAdapterOptions) {
+  constructor(options: LPIWebSocketAdapterOptions) {
     super();
     this.role = options.role;
     this.ws = options.ws;
@@ -90,7 +91,7 @@ export class LRIWebSocketAdapter extends EventEmitter {
       this.on('frame', options.onFrame);
     }
 
-    this.ready = new Promise<LRIWSConnection>((resolve, reject) => {
+    this.ready = new Promise<LPIWSConnection>((resolve, reject) => {
       this.readyResolve = resolve;
       this.readyReject = reject;
     });
@@ -166,7 +167,7 @@ export class LRIWebSocketAdapter extends EventEmitter {
 
     const payloadBuffer = this.normalizePayload(payload);
 
-    const frame = encodeLRIFrame(lce, payloadBuffer);
+    const frame = encodeLPIFrame(lce, payloadBuffer);
     this.ws.send(frame);
   }
 
@@ -360,7 +361,7 @@ export class LRIWebSocketAdapter extends EventEmitter {
     }
   }
 
-  private setConnection(connection: LRIWSConnection): void {
+  private setConnection(connection: LPIWSConnection): void {
     if (this.handshakeListener) {
       this.ws.off('message', this.handshakeListener);
       this.handshakeListener = null;
@@ -377,7 +378,7 @@ export class LRIWebSocketAdapter extends EventEmitter {
   private handleFrame = (raw: RawData): void => {
     try {
       const buffer = this.rawDataToBuffer(raw);
-      const frame = parseLRIFrame(buffer);
+      const frame = parseLPIFrame(buffer);
       this.emit('frame', frame.lce, frame.payload);
     } catch (error) {
       this.emit('error', error as Error);
@@ -461,4 +462,15 @@ export class LRIWebSocketAdapter extends EventEmitter {
   }
 }
 
-export default LRIWebSocketAdapter;
+export type LRIWebSocketAdapterOptions = LPIWebSocketAdapterOptions;
+const LRIWebSocketAdapter = LPIWebSocketAdapter;
+export { LRIWebSocketAdapter };
+
+defineDeprecatedExport(
+  exports,
+  'LRIWebSocketAdapter',
+  'LPIWebSocketAdapter',
+  LPIWebSocketAdapter
+);
+
+export default LPIWebSocketAdapter;

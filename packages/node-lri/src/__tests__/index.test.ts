@@ -14,8 +14,8 @@ describe('index exports', () => {
   });
 
   it('should export middleware functions', () => {
-    expect(lri.lriMiddleware).toBeDefined();
-    expect(typeof lri.lriMiddleware).toBe('function');
+    expect(lri.lpiMiddleware).toBeDefined();
+    expect(typeof lri.lpiMiddleware).toBe('function');
     expect(lri.createLCEHeader).toBeDefined();
     expect(typeof lri.createLCEHeader).toBe('function');
   });

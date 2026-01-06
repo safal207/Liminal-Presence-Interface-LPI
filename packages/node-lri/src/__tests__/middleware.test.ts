@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { lriMiddleware, createLCEHeader } from '../middleware';
+import { lpiMiddleware, createLCEHeader } from '../middleware';
 import { LCE } from '../types';
 
 // Mock request/response helpers
@@ -38,7 +38,7 @@ const createMockResponse = (): Partial<Response> & {
 const createMockNext = (): jest.Mock<NextFunction> => jest.fn();
 
 describe('middleware', () => {
-  describe('lriMiddleware', () => {
+  describe('lpiMiddleware', () => {
     it('should parse valid LCE header and attach to request', () => {
       const lce: LCE = {
         v: 1,
@@ -51,12 +51,13 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(req, res, next);
 
-      expect(req.lri).toBeDefined();
+      expect(req.lpi).toBeDefined();
+      expect(req.lpi.lce).toEqual(lce);
+      expect(req.lpi.raw).toBe(JSON.stringify(lce));
       expect(req.lri.lce).toEqual(lce);
-      expect(req.lri.raw).toBe(JSON.stringify(lce));
       expect(next).toHaveBeenCalledTimes(1);
       expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/liminal.lce+json');
     });
@@ -66,10 +67,10 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware({ required: false });
+      const middleware = lpiMiddleware({ required: false });
       middleware(req, res, next);
 
-      expect(req.lri).toBeUndefined();
+      expect(req.lpi).toBeUndefined();
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -78,7 +79,7 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware({ required: true });
+      const middleware = lpiMiddleware({ required: true });
       middleware(req, res, next);
 
       expect(res.statusCode).toBe(428);
@@ -94,7 +95,7 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(req, res, next);
 
       expect(res.statusCode).toBe(400);
@@ -108,7 +109,7 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(req, res, next);
 
       expect(res.statusCode).toBe(400);
@@ -128,7 +129,7 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware({ validate: true });
+      const middleware = lpiMiddleware({ validate: true });
       middleware(req, res, next);
 
       expect(res.statusCode).toBe(422);
@@ -150,11 +151,11 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware({ validate: false });
+      const middleware = lpiMiddleware({ validate: false });
       middleware(req, res, next);
 
-      expect(req.lri).toBeDefined();
-      expect(req.lri.lce).toEqual(invalidLce);
+      expect(req.lpi).toBeDefined();
+      expect(req.lpi.lce).toEqual(invalidLce);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -175,11 +176,11 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware({ headerName: 'X-Custom-LCE' });
+      const middleware = lpiMiddleware({ headerName: 'X-Custom-LCE' });
       middleware(req, res, next);
 
-      expect(req.lri).toBeDefined();
-      expect(req.lri.lce).toEqual(lce);
+      expect(req.lpi).toBeDefined();
+      expect(req.lpi.lce).toEqual(lce);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -225,11 +226,11 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(req, res, next);
 
-      expect(req.lri).toBeDefined();
-      expect(req.lri.lce).toEqual(lce);
+      expect(req.lpi).toBeDefined();
+      expect(req.lpi.lce).toEqual(lce);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -238,7 +239,7 @@ describe('middleware', () => {
       const res = createMockResponse() as any;
       const next = createMockNext();
 
-      const middleware = lriMiddleware({ required: false });
+      const middleware = lpiMiddleware({ required: false });
       middleware(req, res, next);
 
       expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/liminal.lce+json');

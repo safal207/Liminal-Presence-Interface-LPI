@@ -1,5 +1,5 @@
 /**
- * Integration tests for the LRI WebSocket adapter using node:test.
+ * Integration tests for the LPI WebSocket adapter using node:test.
  */
 
 import test from 'node:test';
@@ -7,9 +7,9 @@ import assert from 'node:assert/strict';
 import { WebSocketServer } from 'ws';
 import WebSocket from 'ws';
 import { LCE } from '../src/types';
-import { LRIWebSocketAdapter } from '../src/ws/adapter';
-import type { LRIWSConnection } from '../src/ws/types';
-type AdapterInstance = InstanceType<typeof LRIWebSocketAdapter>;
+import { LPIWebSocketAdapter } from '../src/ws/adapter';
+import type { LPIWSConnection } from '../src/ws/types';
+type AdapterInstance = InstanceType<typeof LPIWebSocketAdapter>;
 
 const createServer = async () => {
   const server = new WebSocketServer({ port: 0 });
@@ -30,7 +30,7 @@ const createServer = async () => {
   return { server, port: address.port };
 };
 
-test('LRIWebSocketAdapter performs handshake and echoes frames', async (t) => {
+test('LPIWebSocketAdapter performs handshake and echoes frames', async (t) => {
   const { server, port } = await createServer();
   t.after(() =>
     new Promise<void>((resolve) => {
@@ -48,9 +48,9 @@ test('LRIWebSocketAdapter performs handshake and echoes frames', async (t) => {
     frameResolve = resolve;
   });
 
-  const serverReady = new Promise<LRIWSConnection>((resolve) => {
+  const serverReady = new Promise<LPIWSConnection>((resolve) => {
     server.on('connection', (socket) => {
-      serverAdapter = new LRIWebSocketAdapter({
+      serverAdapter = new LPIWebSocketAdapter({
         role: 'server',
         ws: socket,
         features: ['lss'],
@@ -77,7 +77,7 @@ test('LRIWebSocketAdapter performs handshake and echoes frames', async (t) => {
   });
 
   const clientSocket = new WebSocket(`ws://127.0.0.1:${port}`);
-  const clientAdapter = new LRIWebSocketAdapter({
+  const clientAdapter = new LPIWebSocketAdapter({
     role: 'client',
     ws: clientSocket,
     features: ['lss'],
@@ -132,7 +132,7 @@ test('LRIWebSocketAdapter performs handshake and echoes frames', async (t) => {
 
 });
 
-test('LRIWebSocketAdapter rejects invalid handshake sequences', async (t) => {
+test('LPIWebSocketAdapter rejects invalid handshake sequences', async (t) => {
   const { server, port } = await createServer();
   t.after(() =>
     new Promise<void>((resolve) => {
@@ -142,7 +142,7 @@ test('LRIWebSocketAdapter rejects invalid handshake sequences', async (t) => {
 
   const handshakeError = new Promise<Error>((resolve) => {
     server.on('connection', (socket) => {
-      const adapter = new LRIWebSocketAdapter({ role: 'server', ws: socket });
+      const adapter = new LPIWebSocketAdapter({ role: 'server', ws: socket });
       adapter.on('error', () => {
         // prevent unhandled error events during negative handshake test
       });
@@ -165,7 +165,7 @@ test('LRIWebSocketAdapter rejects invalid handshake sequences', async (t) => {
   assert.equal(closeCode, 1002);
 });
 
-test('LRIWebSocketAdapter rejects when the socket closes mid-handshake', async (t) => {
+test('LPIWebSocketAdapter rejects when the socket closes mid-handshake', async (t) => {
   const { server, port } = await createServer();
   t.after(() =>
     new Promise<void>((resolve) => {
@@ -178,7 +178,7 @@ test('LRIWebSocketAdapter rejects when the socket closes mid-handshake', async (
   });
 
   const clientSocket = new WebSocket(`ws://127.0.0.1:${port}`);
-  const adapter = new LRIWebSocketAdapter({
+  const adapter = new LPIWebSocketAdapter({
     role: 'client',
     ws: clientSocket,
   });

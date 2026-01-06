@@ -2,26 +2,26 @@ import express, { type Express, type Request as ExpressRequest } from 'express';
 import request from 'supertest';
 
 import {
-  lriMiddleware,
+  lpiMiddleware,
   createLCEHeader,
-  type LRIMiddlewareOptions,
+  type LPIMiddlewareOptions,
 } from '../src/middleware';
 import type { LCE } from '../src/types';
 
 type InspectableRequest = ExpressRequest & {
-  lri?: { lce: LCE; raw: string };
+  lpi?: { lce: LCE; raw: string };
 };
 
-function createApp(opts?: LRIMiddlewareOptions): Express {
+function createApp(opts?: LPIMiddlewareOptions): Express {
   const app = express();
   app.use(express.json());
-  app.use(lriMiddleware(opts));
+  app.use(lpiMiddleware(opts));
 
   app.get('/inspect', (req, res) => {
-    const { lri } = req as InspectableRequest;
+    const { lpi } = req as InspectableRequest;
     res.json({
-      lce: lri?.lce ?? null,
-      raw: lri?.raw ?? null,
+      lce: lpi?.lce ?? null,
+      raw: lpi?.raw ?? null,
       header: res.get('Content-Type'),
     });
   });

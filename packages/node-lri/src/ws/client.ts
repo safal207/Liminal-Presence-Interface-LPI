@@ -1,5 +1,5 @@
 /**
- * LRI WebSocket Client
+ * LPI WebSocket Client
  * Implements LHS protocol and LCE frame handling
  */
 
@@ -7,16 +7,17 @@ import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
 import { LCE } from '../types';
 import {
-  LRIWSClientOptions,
-  LRIWSConnection,
-  LRIWSClientHandlers,
+  LPIWSClientOptions,
+  LPIWSConnection,
+  LPIWSClientHandlers,
   LHSHello,
   LHSBind,
   LHSSeal,
   isLHSMessage,
-  parseLRIFrame,
-  encodeLRIFrame,
+  parseLPIFrame,
+  encodeLPIFrame,
 } from './types';
+import { defineDeprecatedExport } from '../deprecation';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -31,7 +32,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
 };
 
 /**
- * LRI WebSocket Client
+ * LPI WebSocket Client
  *
  * Handles:
  * - LHS handshake sequence
@@ -40,7 +41,7 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  *
  * @example
  * ```typescript
- * const client = new LRIWSClient({
+ * const client = new LPIWSClient({
  *   url: 'ws://localhost:8080',
  *   features: ['lss'],
  * });
@@ -58,19 +59,19 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * }, { question: 'Hello?' });
  * ```
  */
-export class LRIWSClient {
+export class LPIWSClient {
   private ws: WebSocket | null = null;
-  private options: Required<Omit<LRIWSClientOptions, 'auth'>> & { auth?: string };
-  private conn: LRIWSConnection | null = null;
+  private options: Required<Omit<LPIWSClientOptions, 'auth'>> & { auth?: string };
+  private conn: LPIWSConnection | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
 
   // Public handler properties
-  public onMessage?: LRIWSClientHandlers['onMessage'];
-  public onConnect?: LRIWSClientHandlers['onConnect'];
-  public onClose?: LRIWSClientHandlers['onClose'];
-  public onError?: LRIWSClientHandlers['onError'];
+  public onMessage?: LPIWSClientHandlers['onMessage'];
+  public onConnect?: LPIWSClientHandlers['onConnect'];
+  public onClose?: LPIWSClientHandlers['onClose'];
+  public onError?: LPIWSClientHandlers['onError'];
 
-  constructor(urlOrOptions: string | LRIWSClientOptions) {
+  constructor(urlOrOptions: string | LPIWSClientOptions) {
     // Allow passing URL string directly
     const options = typeof urlOrOptions === 'string' ? { url: urlOrOptions } : urlOrOptions;
 
@@ -220,15 +221,15 @@ export class LRIWSClient {
   }
 
   /**
-   * Handle incoming LRI frame
+   * Handle incoming LPI frame
    */
   private async handleMessage(data: Buffer): Promise<void> {
     if (!this.conn) {
       throw new Error('Connection not established');
     }
 
-    // Parse LRI frame
-    const frame = parseLRIFrame(data);
+    // Parse LPI frame
+    const frame = parseLPIFrame(data);
 
     // Call message handler with Buffer payload
     if (this.onMessage) {
@@ -250,7 +251,7 @@ export class LRIWSClient {
     const payloadBuffer = Buffer.from(payloadStr, 'utf-8');
 
     // Encode frame
-    const frame = encodeLRIFrame(lce, payloadBuffer);
+    const frame = encodeLPIFrame(lce, payloadBuffer);
 
     // Send
     this.ws.send(frame);
@@ -259,7 +260,7 @@ export class LRIWSClient {
   /**
    * Get connection info
    */
-  getConnection(): LRIWSConnection | null {
+  getConnection(): LPIWSConnection | null {
     return this.conn;
   }
 
@@ -311,3 +312,8 @@ export class LRIWSClient {
     this.conn = null;
   }
 }
+
+const LRIWSClient = LPIWSClient;
+export { LRIWSClient };
+
+defineDeprecatedExport(exports, 'LRIWSClient', 'LPIWSClient', LPIWSClient);
