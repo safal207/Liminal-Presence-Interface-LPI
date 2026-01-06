@@ -98,6 +98,10 @@ export class LPIWSServer {
     this.wss.on('connection', (ws: WebSocket) => {
       this.handleConnection(ws);
     });
+
+    this.wss.on('error', (error: Error) => {
+      logError('[LPI WS] Server error:', error);
+    });
   }
 
   /**
@@ -132,25 +136,19 @@ export class LPIWSServer {
       } catch {
         // Ignore; we'll resolve on the listening event.
       }
-
-      this.wss = new WebSocketServer({
-        port: this.options.port,
-        host: this.options.host,
-      });
-
-      this.wss.on('listening', () => {
-        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.options.port}`);
+      const onListening = () => {
+        this.wss.off('error', onError);
+        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.port}`);
         resolve();
-      });
-
-      this.wss.on('error', (error: Error) => {
+      };
+      const onError = (error: Error) => {
+        this.wss.off('listening', onListening);
         logError('[LPI WS] Server error:', error);
         reject(error);
-      });
+      };
 
-      this.wss.on('connection', (ws: WebSocket) => {
-        this.handleConnection(ws);
-      });
+      this.wss.once('listening', onListening);
+      this.wss.once('error', onError);
     });
   }
 
@@ -268,30 +266,32 @@ export class LPIWSServer {
             const bind = msg as LHSBind;
 
             // Authenticate if auth provided
-            const authFn = this.options.authenticate;
-            if (authFn) {
-              if (!helloMsg) {
-                reject(new Error('Handshake state error: missing hello'));
-                return;
-              }
-              const params = { auth: bind.auth, hello: helloMsg, bind };
-              let authenticated = false;
-              try {
-                authenticated = await (authFn as (args: typeof params) => boolean | Promise<boolean>)(
-                  params
-                );
-              } catch {
+            if (bind.auth) {
+              const authFn = this.options.authenticate;
+              if (authFn) {
+                if (!helloMsg) {
+                  reject(new Error('Handshake state error: missing hello'));
+                  return;
+                }
+                const params = { auth: bind.auth, hello: helloMsg, bind };
+                let authenticated = false;
                 try {
-                  authenticated = await (authFn as (auth?: string) => boolean | Promise<boolean>)(
-                    bind.auth
+                  authenticated = await (authFn as (args: typeof params) => boolean | Promise<boolean>)(
+                    params
                   );
                 } catch {
-                  authenticated = false;
+                  try {
+                    authenticated = await (authFn as (auth?: string) => boolean | Promise<boolean>)(
+                      bind.auth
+                    );
+                  } catch {
+                    authenticated = false;
+                  }
                 }
-              }
-              if (!authenticated) {
-                reject(new Error('Authentication failed'));
-                return;
+                if (!authenticated) {
+                  reject(new Error('Authentication failed'));
+                  return;
+                }
               }
             }
 
