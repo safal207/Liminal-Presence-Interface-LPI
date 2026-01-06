@@ -3,11 +3,11 @@
  */
 
 import WebSocket from 'ws';
-import { LRIWSClient } from '../src/ws/client';
+import { LPIWSClient } from '../src/ws/client';
 import { LCE } from '../src/types';
-import { encodeLRIFrame, parseLRIFrame } from '../src/ws/types';
+import { encodeLPIFrame, parseLPIFrame } from '../src/ws/types';
 
-describe('LRIWSClient', () => {
+describe('LPIWSClient', () => {
   let mockServer: WebSocket.Server;
   const TEST_PORT = 8766;
   const TEST_URL = `ws://localhost:${TEST_PORT}`;
@@ -57,7 +57,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.connect().then(() => {
         expect(client.isReady()).toBe(true);
@@ -67,7 +67,7 @@ describe('LRIWSClient', () => {
     });
 
     it('should reject on connection failure', (done) => {
-      const client = new LRIWSClient('ws://localhost:9999'); // Non-existent server
+      const client = new LPIWSClient('ws://localhost:9999'); // Non-existent server
 
       // Handle connection error through onError handler
       client.onError = (error) => {
@@ -90,7 +90,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       // Handle connection close through onClose handler
       client.onClose = () => {
@@ -134,7 +134,7 @@ describe('LRIWSClient', () => {
           } else {
             // This should be an LCE frame
             const frame = data as Buffer;
-            const parsed = parseLRIFrame(frame);
+            const parsed = parseLPIFrame(frame);
 
             expect(parsed.lce.intent.type).toBe('tell');
             expect(parsed.lce.intent.goal).toBe('Test message');
@@ -146,7 +146,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.connect().then(() => {
         const lce: LCE = {
@@ -160,7 +160,7 @@ describe('LRIWSClient', () => {
     });
 
     it('should throw when sending before connected', () => {
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       const lce: LCE = {
         v: 1,
@@ -206,14 +206,14 @@ describe('LRIWSClient', () => {
                 policy: { consent: 'private' },
               };
 
-              const frame = encodeLRIFrame(lce, 'Message from server');
+              const frame = encodeLPIFrame(lce, 'Message from server');
               ws.send(frame);
             }, 50);
           }
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.onMessage = (lce, payload) => {
         expect(lce.intent.type).toBe('notify');
@@ -260,7 +260,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.onError = (error) => {
         expect(error).toBeDefined();
@@ -306,7 +306,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.connect().then(() => {
         expect(client.isReady()).toBe(true);
@@ -343,7 +343,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.onClose = () => {
         done();
@@ -387,7 +387,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       client.onClose = () => {
         expect(client.isReady()).toBe(false);
@@ -427,7 +427,7 @@ describe('LRIWSClient', () => {
         });
       });
 
-      const client = new LRIWSClient(TEST_URL);
+      const client = new LPIWSClient(TEST_URL);
 
       expect(client.isReady()).toBe(false);
 

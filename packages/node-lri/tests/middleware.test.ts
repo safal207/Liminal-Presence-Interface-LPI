@@ -3,11 +3,12 @@
  */
 
 import { Request, Response } from 'express';
-import { lriMiddleware, createLCEHeader } from '../src/middleware';
+import { lpiMiddleware, createLCEHeader } from '../src/middleware';
 import { LCE } from '../src/types';
 
 // Mock Express types
 type MockRequest = Partial<Request> & {
+  lpi?: { lce: LCE; raw: string };
   lri?: { lce: LCE; raw: string };
   header: jest.Mock;
 };
@@ -20,7 +21,7 @@ type MockResponse = Partial<Response> & {
 
 type NextFunction = jest.Mock;
 
-describe('lriMiddleware', () => {
+describe('lpiMiddleware', () => {
   let mockReq: MockRequest;
   let mockRes: MockResponse;
   let mockNext: NextFunction;
@@ -50,10 +51,11 @@ describe('lriMiddleware', () => {
       const header = createLCEHeader(lce);
       mockReq.header = jest.fn().mockReturnValue(header);
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockReq.lri).toBeDefined();
+      expect(mockReq.lpi).toBeDefined();
+      expect(mockReq.lpi!.lce).toEqual(lce);
       expect(mockReq.lri!.lce).toEqual(lce);
       expect(mockNext).toHaveBeenCalled();
       expect(mockRes.setHeader).toHaveBeenCalledWith(
@@ -73,9 +75,10 @@ describe('lriMiddleware', () => {
       const header = createLCEHeader(lce);
       mockReq.header = jest.fn().mockReturnValue(header);
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
+      expect(mockReq.lpi!.lce).toEqual(lce);
       expect(mockReq.lri!.lce).toEqual(lce);
       expect(mockNext).toHaveBeenCalled();
     });
@@ -85,17 +88,17 @@ describe('lriMiddleware', () => {
     it('should continue when not required', () => {
       mockReq.header = jest.fn().mockReturnValue(undefined);
 
-      const middleware = lriMiddleware({ required: false });
+      const middleware = lpiMiddleware({ required: false });
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(mockReq.lri).toBeUndefined();
+      expect(mockReq.lpi).toBeUndefined();
       expect(mockNext).toHaveBeenCalled();
     });
 
     it('should return 428 when required', () => {
       mockReq.header = jest.fn().mockReturnValue(undefined);
 
-      const middleware = lriMiddleware({ required: true });
+      const middleware = lpiMiddleware({ required: true });
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(428);
@@ -111,7 +114,7 @@ describe('lriMiddleware', () => {
     it('should return 400 for malformed Base64', () => {
       mockReq.header = jest.fn().mockReturnValue('not-valid-base64!!!');
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
@@ -123,7 +126,7 @@ describe('lriMiddleware', () => {
       const invalidJson = Buffer.from('not json', 'utf-8').toString('base64');
       mockReq.header = jest.fn().mockReturnValue(invalidJson);
 
-      const middleware = lriMiddleware();
+      const middleware = lpiMiddleware();
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
@@ -142,7 +145,7 @@ describe('lriMiddleware', () => {
       );
       mockReq.header = jest.fn().mockReturnValue(header);
 
-      const middleware = lriMiddleware({ validate: true });
+      const middleware = lpiMiddleware({ validate: true });
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(422);
@@ -166,7 +169,7 @@ describe('lriMiddleware', () => {
       );
       mockReq.header = jest.fn().mockReturnValue(header);
 
-      const middleware = lriMiddleware({ validate: false });
+      const middleware = lpiMiddleware({ validate: false });
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
@@ -184,7 +187,7 @@ describe('lriMiddleware', () => {
       const header = createLCEHeader(lce);
       mockReq.header = jest.fn().mockReturnValue(header);
 
-      const middleware = lriMiddleware({ headerName: 'X-Custom-LCE' });
+      const middleware = lpiMiddleware({ headerName: 'X-Custom-LCE' });
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockReq.header).toHaveBeenCalledWith('X-Custom-LCE');
@@ -200,7 +203,7 @@ describe('lriMiddleware', () => {
       const header = createLCEHeader(lce);
       mockReq.header = jest.fn().mockReturnValue(header);
 
-      const middleware = lriMiddleware({ validate: false });
+      const middleware = lpiMiddleware({ validate: false });
       middleware(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
