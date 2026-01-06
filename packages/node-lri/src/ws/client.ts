@@ -61,7 +61,11 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  */
 export class LPIWSClient {
   private ws: WebSocket | null = null;
-  private options: Required<Omit<LPIWSClientOptions, 'auth'>> & { auth?: string };
+  private options: Required<Omit<LPIWSClientOptions, 'auth' | 'lpiVersion' | 'lriVersion'>> & {
+    auth?: string;
+    lpiVersion?: string;
+    lriVersion?: string;
+  };
   private conn: LPIWSConnection | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
 
@@ -78,6 +82,8 @@ export class LPIWSClient {
     this.options = {
       url: options.url,
       clientId: options.clientId ?? randomUUID(),
+      lpiVersion: options.lpiVersion,
+      lriVersion: options.lriVersion,
       encoding: options.encoding ?? 'json',
       features: options.features ?? [],
       auth: options.auth,
@@ -210,7 +216,7 @@ export class LPIWSClient {
       // Send Hello
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: '0.1',
+        lri_version: this.options.lpiVersion ?? this.options.lriVersion ?? '0.1',
         encodings: [this.options.encoding],
         features: this.options.features,
         client_id: this.options.clientId,

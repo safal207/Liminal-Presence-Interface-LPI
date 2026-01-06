@@ -96,6 +96,9 @@ import { LPIWSServer } from 'node-lri/ws';
 
 const server = new LPIWSServer({ port: 8080 });
 
+// Note: the server begins listening immediately on construction.
+// Calling server.listen() is safe but typically unnecessary.
+
 server.on('connected', (ws, sessionId) => {
   console.log('Client connected:', sessionId);
 });
@@ -267,6 +270,8 @@ server.send(ws, lce, payload);
 server.broadcast(lce, payload);
 server.close();
 ```
+
+> **Protocol note:** the wire field remains `lri_version` for backward compatibility. It represents the LPI protocol version in canonical naming.
 
 #### `LPIWSClient`
 
