@@ -122,6 +122,12 @@ export class LPIWSServer {
    */
   listen(): Promise<void> {
     return new Promise((resolve, reject) => {
+      const address = this.wss.address();
+      if (address) {
+        resolve();
+        return;
+      }
+
       this.wss = new WebSocketServer({
         port: this.options.port,
         host: this.options.host,

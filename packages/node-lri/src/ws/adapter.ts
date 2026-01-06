@@ -21,7 +21,7 @@ import { createDeprecatedClass } from '../deprecation';
 interface BaseAdapterOptions {
   /** Underlying WebSocket instance */
   ws: WebSocket;
-  /** LRI protocol version */
+  /** Protocol version */
   lriVersion?: string;
   /** Optional frame listener that will be attached automatically */
   onFrame?: (lce: LCE, payload: Buffer) => void;
