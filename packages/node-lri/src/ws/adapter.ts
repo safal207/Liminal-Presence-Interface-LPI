@@ -13,7 +13,7 @@ import {
   parseLPIFrame,
   encodeLPIFrame,
 } from './types';
-import { defineDeprecatedExport } from '../deprecation';
+import { createDeprecatedClass } from '../deprecation';
 
 /**
  * Base options shared between client and server adapters
@@ -463,11 +463,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 }
 
 export type LRIWebSocketAdapterOptions = LPIWebSocketAdapterOptions;
-const LRIWebSocketAdapter = LPIWebSocketAdapter;
-export { LRIWebSocketAdapter };
-
-defineDeprecatedExport(
-  exports,
+export const LRIWebSocketAdapter = createDeprecatedClass(
   'LRIWebSocketAdapter',
   'LPIWebSocketAdapter',
   LPIWebSocketAdapter

@@ -12,28 +12,35 @@ describe('deprecated LRI aliases', () => {
     warnSpy.mockRestore();
   });
 
-  it('warns once when accessing lriMiddleware', () => {
+  it('warns once when calling lriMiddleware', () => {
     const { lpiMiddleware, lriMiddleware } = require('../src/middleware') as typeof import('../src/middleware');
 
-    expect(lriMiddleware).toBe(lpiMiddleware);
+    expect(typeof lriMiddleware).toBe('function');
+    lriMiddleware();
     expect(warnSpy).toHaveBeenCalledTimes(1);
 
-    const { lriMiddleware: lriMiddlewareAgain } = require('../src/middleware') as typeof import('../src/middleware');
-    expect(lriMiddlewareAgain).toBe(lpiMiddleware);
+    lriMiddleware();
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('warns once when accessing LRIWSClient', () => {
+  it('warns once when instantiating LRIWSClient', () => {
     const { LPIWSClient, LRIWSClient } = require('../src/ws/client') as typeof import('../src/ws/client');
 
-    expect(LRIWSClient).toBe(LPIWSClient);
+    expect(LRIWSClient).not.toBeUndefined();
+    expect(warnSpy).toHaveBeenCalledTimes(0);
+
+    const client = new LRIWSClient('ws://localhost:1234');
+    expect(client).toBeInstanceOf(LPIWSClient);
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('warns once when accessing parseLRIFrame', () => {
+  it('warns once when calling parseLRIFrame', () => {
     const { parseLPIFrame, parseLRIFrame } = require('../src/ws/types') as typeof import('../src/ws/types');
 
-    expect(parseLRIFrame).toBe(parseLPIFrame);
+    expect(typeof parseLRIFrame).toBe('function');
+    expect(warnSpy).toHaveBeenCalledTimes(0);
+
+    expect(() => parseLRIFrame(Buffer.alloc(0))).toThrow();
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 });

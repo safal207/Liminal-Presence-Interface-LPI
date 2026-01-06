@@ -19,7 +19,7 @@ import {
   parseLPIFrame,
   encodeLPIFrame,
 } from './types';
-import { defineDeprecatedExport } from '../deprecation';
+import { createDeprecatedClass } from '../deprecation';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -128,12 +128,12 @@ export class LPIWSServer {
       });
 
       this.wss.on('listening', () => {
-        logInfo(`[LRI WS] Server listening on ${this.options.host}:${this.options.port}`);
+        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.options.port}`);
         resolve();
       });
 
       this.wss.on('error', (error: Error) => {
-        logError('[LRI WS] Server error:', error);
+        logError('[LPI WS] Server error:', error);
         reject(error);
       });
 
@@ -167,7 +167,7 @@ export class LPIWSServer {
         try {
           await this.handleMessage(sessionId!, data);
         } catch (error) {
-          logError('[LRI WS] Message error:', error);
+          logError('[LPI WS] Message error:', error);
           if (this.onError) {
             await this.onError(sessionId!, error as Error);
           }
@@ -182,13 +182,13 @@ export class LPIWSServer {
       });
 
       ws.on('error', async (error: Error) => {
-        logError('[LRI WS] Connection error:', error);
+        logError('[LPI WS] Connection error:', error);
         if (this.onError) {
           await this.onError(sessionId!, error);
         }
       });
     } catch (error) {
-      logError('[LRI WS] Handshake failed:', error);
+      logError('[LPI WS] Handshake failed:', error);
       ws.close(1002, 'Handshake failed');
     }
   }
@@ -294,7 +294,7 @@ export class LPIWSServer {
                 const signed = await LTP.sign(sealLCE, this.options.ltpPrivateKey);
                 seal.sig = signed.sig;
               } catch (error) {
-                logError('[LRI WS] LTP signing failed:', error);
+                logError('[LPI WS] LTP signing failed:', error);
               }
             }
 
@@ -402,14 +402,15 @@ export class LPIWSServer {
 
       // Close server
       this.wss.close(() => {
-        logInfo('[LRI WS] Server closed');
+        logInfo('[LPI WS] Server closed');
         resolve();
       });
     });
   }
 }
 
-const LRIWSServer = LPIWSServer;
-export { LRIWSServer };
-
-defineDeprecatedExport(exports, 'LRIWSServer', 'LPIWSServer', LPIWSServer);
+export const LRIWSServer = createDeprecatedClass(
+  'LRIWSServer',
+  'LPIWSServer',
+  LPIWSServer
+);

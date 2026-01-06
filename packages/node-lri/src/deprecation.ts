@@ -11,11 +11,15 @@ export function warnDeprecated(name: string, replacement: string): void {
 }
 
 export function defineDeprecatedExport<T>(
-  exportsObject: typeof exports,
+  exportsObject: unknown,
   name: string,
   replacement: string,
   value: T
 ): void {
+  if (!exportsObject || typeof exportsObject !== 'object') {
+    return;
+  }
+
   Object.defineProperty(exportsObject, name, {
     enumerable: true,
     get() {

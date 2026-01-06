@@ -17,7 +17,7 @@ import {
   parseLPIFrame,
   encodeLPIFrame,
 } from './types';
-import { defineDeprecatedExport } from '../deprecation';
+import { createDeprecatedClass } from '../deprecation';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -102,7 +102,7 @@ export class LPIWSClient {
             try {
               await this.handleMessage(data);
             } catch (error) {
-              logError('[LRI WS Client] Message error:', error);
+              logError('[LPI WS Client] Message error:', error);
               if (this.onError) {
                 await this.onError(error as Error);
               }
@@ -114,7 +114,7 @@ export class LPIWSClient {
       });
 
       this.ws.on('close', async () => {
-        logInfo('[LRI WS Client] Connection closed');
+        logInfo('[LPI WS Client] Connection closed');
         // Set conn to null BEFORE calling onClose handler
         this.conn = null;
 
@@ -129,7 +129,7 @@ export class LPIWSClient {
       });
 
       this.ws.on('error', async (error: Error) => {
-        logError('[LRI WS Client] Connection error:', error);
+        logError('[LPI WS Client] Connection error:', error);
         if (this.onError) {
           await this.onError(error);
         }
@@ -191,7 +191,7 @@ export class LPIWSClient {
               const result = this.onConnect();
               if (result instanceof Promise) {
                 result.catch((error) => {
-                  logError('[LRI WS Client] onConnect handler error:', error);
+                  logError('[LPI WS Client] onConnect handler error:', error);
                 });
               }
             }
@@ -280,12 +280,12 @@ export class LPIWSClient {
     }
 
     const delay = 5000; // 5 seconds
-    logInfo(`[LRI WS Client] Reconnecting in ${delay}ms...`);
+    logInfo(`[LPI WS Client] Reconnecting in ${delay}ms...`);
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect().catch((error) => {
-        logError('[LRI WS Client] Reconnect failed:', error);
+        logError('[LPI WS Client] Reconnect failed:', error);
       });
     }, delay);
 
@@ -313,7 +313,8 @@ export class LPIWSClient {
   }
 }
 
-const LRIWSClient = LPIWSClient;
-export { LRIWSClient };
-
-defineDeprecatedExport(exports, 'LRIWSClient', 'LPIWSClient', LPIWSClient);
+export const LRIWSClient = createDeprecatedClass(
+  'LRIWSClient',
+  'LPIWSClient',
+  LPIWSClient
+);

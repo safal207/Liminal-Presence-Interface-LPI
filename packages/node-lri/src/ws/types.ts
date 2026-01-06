@@ -4,7 +4,7 @@
  */
 
 import { LCE } from '../types';
-import { defineDeprecatedExport } from '../deprecation';
+import { createDeprecatedFunction } from '../deprecation';
 
 /**
  * LHS Step types
@@ -235,10 +235,13 @@ export type LRIWSConnection = LPIWSConnection;
 export type LRIWSServerHandlers = LPIWSServerHandlers;
 export type LRIWSClientHandlers = LPIWSClientHandlers;
 
-const parseLRIFrame = parseLPIFrame;
-const encodeLRIFrame = encodeLPIFrame;
-
-export { parseLRIFrame, encodeLRIFrame };
-
-defineDeprecatedExport(exports, 'parseLRIFrame', 'parseLPIFrame', parseLPIFrame);
-defineDeprecatedExport(exports, 'encodeLRIFrame', 'encodeLPIFrame', encodeLPIFrame);
+export const parseLRIFrame = createDeprecatedFunction(
+  'parseLRIFrame',
+  'parseLPIFrame',
+  parseLPIFrame
+);
+export const encodeLRIFrame = createDeprecatedFunction(
+  'encodeLRIFrame',
+  'encodeLPIFrame',
+  encodeLPIFrame
+);

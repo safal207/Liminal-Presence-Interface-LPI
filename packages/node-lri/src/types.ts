@@ -1,3 +1,5 @@
+import type { Request } from 'express';
+
 /**
  * LPI Core Types
  * Based on LCE v0.1 schema

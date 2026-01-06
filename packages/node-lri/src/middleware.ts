@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { LCE } from './types';
 import { validateLCE } from './validator';
-import { defineDeprecatedExport } from './deprecation';
+import { createDeprecatedFunction } from './deprecation';
 
 export interface LPIMiddlewareOptions {
   /** Require LCE header on all requests */
@@ -100,7 +100,8 @@ export function createLCEHeader(lce: LCE): string {
   return Buffer.from(json, 'utf-8').toString('base64');
 }
 
-const lriMiddleware = lpiMiddleware;
-export { lriMiddleware };
-
-defineDeprecatedExport(exports, 'lriMiddleware', 'lpiMiddleware', lpiMiddleware);
+export const lriMiddleware = createDeprecatedFunction(
+  'lriMiddleware',
+  'lpiMiddleware',
+  lpiMiddleware
+);
