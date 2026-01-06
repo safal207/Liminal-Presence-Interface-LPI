@@ -275,18 +275,19 @@ export class LPIWSServer {
                 return;
               }
               const params = { auth: bind.auth, hello: helloMsg, bind };
-              type AuthParams = typeof params;
-              type LegacyAuth = (auth?: string) => boolean | Promise<boolean>;
-              type ModernAuth = (params: AuthParams) => boolean | Promise<boolean>;
               let authenticated = false;
               try {
-                if (authFn.length <= 1) {
-                  authenticated = await (authFn as LegacyAuth)(bind.auth);
-                } else {
-                  authenticated = await (authFn as ModernAuth)(params);
-                }
+                authenticated = await (authFn as (args: typeof params) => boolean | Promise<boolean>)(
+                  params
+                );
               } catch {
-                authenticated = false;
+                try {
+                  authenticated = await (authFn as (auth?: string) => boolean | Promise<boolean>)(
+                    bind.auth
+                  );
+                } catch {
+                  authenticated = false;
+                }
               }
               if (!authenticated) {
                 reject(new Error('Authentication failed'));
