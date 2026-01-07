@@ -14,12 +14,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
-
-const DEFAULT_PROTO_VERSION = '0.1';
-
-function resolveProtoVersion(options: { lpiVersion?: string; lriVersion?: string }): string {
-  return options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
-}
+import { resolveProtoVersion } from './proto';
 
 /**
  * Base options shared between client and server adapters
@@ -84,6 +79,7 @@ export type ReadyListener = (connection: LPIWSConnection) => void;
 export class LPIWebSocketAdapter extends EventEmitter {
   public readonly role: 'client' | 'server';
   private readonly ws: WebSocket;
+  private readonly protoVersion: string;
   private handshakeListener: ((data: RawData) => void) | null = null;
   private resolved = false;
   private readyResolve!: (value: LPIWSConnection) => void;
@@ -97,6 +93,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
     super();
     this.role = options.role;
     this.ws = options.ws;
+    this.protoVersion = resolveProtoVersion(options);
     if (options.onFrame) {
       this.on('frame', options.onFrame);
     }
@@ -132,8 +129,8 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const serverOptions: ServerAdapterOptions = {
         role: 'server',
         ws: this.ws,
-        lpiVersion: options.lpiVersion,
-        lriVersion: resolveProtoVersion(options),
+        lpiVersion: this.protoVersion,
+        lriVersion: options.lriVersion,
         encodings: options.encodings ?? ['json'],
         features: options.features ?? [],
         sessionId: options.sessionId,
@@ -147,8 +144,8 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const clientOptions: ClientAdapterOptions = {
         role: 'client',
         ws: this.ws,
-        lpiVersion: options.lpiVersion,
-        lriVersion: resolveProtoVersion(options),
+        lpiVersion: this.protoVersion,
+        lriVersion: options.lriVersion,
         encoding: options.encoding ?? 'json',
         features: options.features ?? [],
         clientId: options.clientId,
@@ -221,7 +218,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
           const mirror: LHSMirror = {
             step: 'mirror',
-            lri_version: resolveProtoVersion(options),
+            lri_version: this.protoVersion,
             encoding: negotiatedEncoding,
             features: negotiatedFeatures,
           };
@@ -354,7 +351,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: resolveProtoVersion(options),
+        lri_version: this.protoVersion,
         encodings: [options.encoding ?? 'json'],
         features: options.features ?? [],
       };
