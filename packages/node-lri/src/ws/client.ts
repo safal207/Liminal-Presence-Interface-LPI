@@ -18,6 +18,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
+import { resolveProtoVersion } from './proto';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -63,7 +64,7 @@ export class LPIWSClient {
   private ws: WebSocket | null = null;
   private options: Required<Omit<LPIWSClientOptions, 'auth' | 'lpiVersion' | 'lriVersion'>> & {
     auth?: string;
-    lpiVersion?: string;
+    lpiVersion: string;
     lriVersion?: string;
   };
   private conn: LPIWSConnection | null = null;
@@ -82,7 +83,7 @@ export class LPIWSClient {
     this.options = {
       url: options.url,
       clientId: options.clientId ?? randomUUID(),
-      lpiVersion: options.lpiVersion,
+      lpiVersion: resolveProtoVersion(options),
       lriVersion: options.lriVersion,
       encoding: options.encoding ?? 'json',
       features: options.features ?? [],
@@ -216,7 +217,7 @@ export class LPIWSClient {
       // Send Hello
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: this.options.lpiVersion ?? this.options.lriVersion ?? '0.1',
+        lri_version: this.options.lpiVersion,
         encodings: [this.options.encoding],
         features: this.options.features,
         client_id: this.options.clientId,

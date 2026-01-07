@@ -21,6 +21,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
+import { resolveProtoVersion } from './proto';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -33,20 +34,6 @@ const logError = (...args: Parameters<typeof console.error>): void => {
     console.error(...args);
   }
 };
-
-const DEFAULT_PROTO_VERSION = '0.1';
-
-function resolveProtoVersion(
-  options: { lpiVersion?: string; lriVersion?: string },
-  hello?: LHSHello | null
-): string {
-  return (
-    options.lpiVersion ??
-    options.lriVersion ??
-    hello?.lri_version ??
-    DEFAULT_PROTO_VERSION
-  );
-}
 
 /**
  * LPI WebSocket Server
@@ -76,9 +63,11 @@ function resolveProtoVersion(
  * server.listen();
  * ```
  */
-type NormalizedServerOptions =
-  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey' | 'lpiVersion' | 'lriVersion'>> &
-  Pick<LPIWSServerOptions, 'ltpPrivateKey' | 'lpiVersion' | 'lriVersion'>;
+type NormalizedServerOptions = Required<Omit<LPIWSServerOptions, 'ltpPrivateKey' | 'lriVersion'>> & {
+  ltpPrivateKey?: Uint8Array;
+  lriVersion?: string;
+  lpiVersion: string;
+};
 
 export class LPIWSServer {
   private wss: WebSocketServer;
@@ -95,7 +84,7 @@ export class LPIWSServer {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
-      lpiVersion: options.lpiVersion,
+      lpiVersion: resolveProtoVersion(options),
       lriVersion: options.lriVersion,
       ltp: options.ltp ?? false,
       ltpPrivateKey: options.ltpPrivateKey,
@@ -155,9 +144,7 @@ export class LPIWSServer {
       const onListening = () => {
         this.wss.off('error', onError);
         logInfo(
-          `[LPI WS] Server listening on ${this.options.host}:${this.port} (proto=${resolveProtoVersion(
-            this.options
-          )})`
+          `[LPI WS] Server listening on ${this.options.host}:${this.port} (proto=${this.options.lpiVersion})`
         );
         resolve();
       };
@@ -273,7 +260,7 @@ export class LPIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: resolveProtoVersion(this.options, helloMsg),
+              lri_version: this.options.lpiVersion,
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };
