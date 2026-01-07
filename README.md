@@ -265,6 +265,18 @@ LPI operates **on top of** existing Layer 7 protocols:
 - **WebSocket** - LCE prefix on each frame
 - **gRPC** - LCE in metadata
 
+### Protocol versioning (WebSocket handshake)
+
+This SDK uses `lpiVersion` as the canonical option to advertise a protocol version during the LHS handshake.
+
+- **Canonical option:** `lpiVersion`
+- **Legacy alias (deprecated):** `lriVersion`
+- **Wire compatibility:** handshake field remains `lri_version`
+
+Version resolution is centralized and follows:
+
+`lpiVersion` → `lriVersion` → default (`0.1`)
+
 ## Project Structure
 
 ```
