@@ -34,6 +34,20 @@ const logError = (...args: Parameters<typeof console.error>): void => {
   }
 };
 
+const DEFAULT_PROTO_VERSION = '0.1';
+
+function resolveProtoVersion(
+  options: { lpiVersion?: string; lriVersion?: string },
+  hello?: LHSHello | null
+): string {
+  return (
+    options.lpiVersion ??
+    options.lriVersion ??
+    hello?.lri_version ??
+    DEFAULT_PROTO_VERSION
+  );
+}
+
 /**
  * LPI WebSocket Server
  *
@@ -63,8 +77,8 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * ```
  */
 type NormalizedServerOptions =
-  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey'>> &
-  Pick<LPIWSServerOptions, 'ltpPrivateKey'>;
+  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey' | 'lpiVersion' | 'lriVersion'>> &
+  Pick<LPIWSServerOptions, 'ltpPrivateKey' | 'lpiVersion' | 'lriVersion'>;
 
 export class LPIWSServer {
   private wss: WebSocketServer;
@@ -81,6 +95,8 @@ export class LPIWSServer {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
+      lpiVersion: options.lpiVersion,
+      lriVersion: options.lriVersion,
       ltp: options.ltp ?? false,
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
@@ -138,7 +154,11 @@ export class LPIWSServer {
       }
       const onListening = () => {
         this.wss.off('error', onError);
-        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.port}`);
+        logInfo(
+          `[LPI WS] Server listening on ${this.options.host}:${this.port} (proto=${resolveProtoVersion(
+            this.options
+          )})`
+        );
         resolve();
       };
       const onError = (error: Error) => {
@@ -253,7 +273,7 @@ export class LPIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: '0.1',
+              lri_version: resolveProtoVersion(this.options, helloMsg),
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };

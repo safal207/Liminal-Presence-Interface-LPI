@@ -15,6 +15,12 @@ import {
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
 
+const DEFAULT_PROTO_VERSION = '0.1';
+
+function resolveProtoVersion(options: { lpiVersion?: string; lriVersion?: string }): string {
+  return options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
+}
+
 /**
  * Base options shared between client and server adapters
  */
@@ -126,7 +132,8 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const serverOptions: ServerAdapterOptions = {
         role: 'server',
         ws: this.ws,
-        lriVersion: options.lpiVersion ?? options.lriVersion ?? '0.1',
+        lpiVersion: options.lpiVersion,
+        lriVersion: resolveProtoVersion(options),
         encodings: options.encodings ?? ['json'],
         features: options.features ?? [],
         sessionId: options.sessionId,
@@ -140,7 +147,8 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const clientOptions: ClientAdapterOptions = {
         role: 'client',
         ws: this.ws,
-        lriVersion: options.lpiVersion ?? options.lriVersion ?? '0.1',
+        lpiVersion: options.lpiVersion,
+        lriVersion: resolveProtoVersion(options),
         encoding: options.encoding ?? 'json',
         features: options.features ?? [],
         clientId: options.clientId,
@@ -213,7 +221,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
           const mirror: LHSMirror = {
             step: 'mirror',
-            lri_version: options.lpiVersion ?? options.lriVersion ?? '0.1',
+            lri_version: resolveProtoVersion(options),
             encoding: negotiatedEncoding,
             features: negotiatedFeatures,
           };
@@ -346,7 +354,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: options.lpiVersion ?? options.lriVersion ?? '0.1',
+        lri_version: resolveProtoVersion(options),
         encodings: [options.encoding ?? 'json'],
         features: options.features ?? [],
       };
@@ -473,4 +481,8 @@ export const LRIWebSocketAdapter = createDeprecatedClass(
   LPIWebSocketAdapter
 );
 
-export default LRIWebSocketAdapter;
+/**
+ * Default export is the canonical adapter.
+ * Legacy consumers should use the named deprecated alias `LRIWebSocketAdapter`.
+ */
+export default LPIWebSocketAdapter;

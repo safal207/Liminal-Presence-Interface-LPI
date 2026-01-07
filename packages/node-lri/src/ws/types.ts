@@ -63,6 +63,25 @@ export interface LHSSeal {
 export type LHSMessage = LHSHello | LHSMirror | LHSBind | LHSSeal;
 
 /**
+ * Versioning note:
+ * - Wire field is still called `lri_version` for backwards compatibility.
+ * - Canonical API name is `lpiVersion`.
+ * - `lriVersion` is legacy alias and will be removed in a future major release.
+ */
+export interface VersionedOptions {
+  /**
+   * Canonical protocol version (LPI).
+   * Serialized into wire field `lri_version`.
+   */
+  lpiVersion?: string;
+  /**
+   * Legacy alias for `lpiVersion`.
+   * @deprecated Use `lpiVersion`.
+   */
+  lriVersion?: string;
+}
+
+/**
  * LPI WebSocket frame structure
  *
  * Binary format:
@@ -78,7 +97,7 @@ export type LRIFrame = LPIFrame;
 /**
  * WebSocket server options
  */
-export interface LPIWSServerOptions {
+export interface LPIWSServerOptions extends VersionedOptions {
   /** Port to listen on */
   port?: number;
   /** Host to bind to */
@@ -102,7 +121,7 @@ export interface LPIWSServerOptions {
 /**
  * WebSocket client options
  */
-export interface LPIWSClientOptions {
+export interface LPIWSClientOptions extends VersionedOptions {
   /** WebSocket URL */
   url: string;
   /** Client ID */
