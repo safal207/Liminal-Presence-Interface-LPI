@@ -11,6 +11,7 @@ jobs:
   validate-schemas:
     name: Validate Schemas
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +47,55 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm install
+
+      - name: Lint
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm run lint
+
+      - name: Build
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm run build
+
+      - name: Test
+        run: |
+          SDK_DIR="packages/node-lpi"
+          if [ ! -d "$SDK_DIR" ]; then
+            SDK_DIR="packages/node-lri"
+          fi
+          cd "$SDK_DIR"
+          npm test
+
+  # Node.js SDK (latest) - non-blocking smoke check
+  node-sdk-latest:
+    name: Node SDK (latest)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js (latest)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
 
       - name: Install dependencies
         run: |
@@ -153,6 +203,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        working-directory: packages/lpictl
+        run: npm install
+
+      - name: Lint
+        working-directory: packages/lpictl
+        run: npm run lint
+
+      - name: Build
+        working-directory: packages/lpictl
+        run: npm run build
+
+      - name: Test
+        working-directory: packages/lpictl
+        run: npm test
+
+  # CLI (latest) - non-blocking smoke check
+  lpictl-latest:
+    name: CLI Tool (lpictl) (latest)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js (latest)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
 
       - name: Install dependencies
         working-directory: packages/lpictl
