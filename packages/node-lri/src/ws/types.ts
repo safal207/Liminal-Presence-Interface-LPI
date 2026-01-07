@@ -17,6 +17,7 @@ export type LHSStep = 'hello' | 'mirror' | 'bind' | 'seal' | 'flow';
  */
 export interface LHSHello {
   step: 'hello';
+  /** Wire field kept as `lri_version` for backwards compatibility. */
   lri_version: string;
   encodings: ('json' | 'cbor')[];
   features: ('ltp' | 'lss' | 'compression')[];
@@ -29,6 +30,7 @@ export interface LHSHello {
  */
 export interface LHSMirror {
   step: 'mirror';
+  /** Wire field kept as `lri_version` for backwards compatibility. */
   lri_version: string;
   encoding: 'json' | 'cbor';
   features: ('ltp' | 'lss' | 'compression')[];

@@ -14,12 +14,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
-
-const DEFAULT_PROTO_VERSION = '0.1';
-
-function resolveProtoVersion(options: { lpiVersion?: string; lriVersion?: string }): string {
-  return options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
-}
+import { DEFAULT_PROTO_VERSION, resolveProtoVersion } from './proto';
 
 /**
  * Base options shared between client and server adapters
@@ -222,9 +217,11 @@ export class LPIWebSocketAdapter extends EventEmitter {
             supportedFeatures.includes(feature)
           ) as ('ltp' | 'lss' | 'compression')[];
 
+          const protoVersion = options.lpiVersion ?? DEFAULT_PROTO_VERSION;
           const mirror: LHSMirror = {
             step: 'mirror',
-            lri_version: resolveProtoVersion(options),
+            // Wire field stays `lri_version` for backwards compatibility.
+            lri_version: protoVersion,
             encoding: negotiatedEncoding,
             features: negotiatedFeatures,
           };
@@ -357,7 +354,8 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: resolveProtoVersion(options),
+        // Wire field stays `lri_version` for backwards compatibility.
+        lri_version: options.lpiVersion ?? DEFAULT_PROTO_VERSION,
         encodings: [options.encoding ?? 'json'],
         features: options.features ?? [],
       };

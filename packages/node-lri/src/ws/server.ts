@@ -21,11 +21,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
-
-const DEFAULT_PROTO_VERSION = '0.1';
-const resolveProtoVersion = (options: { lpiVersion?: string; lriVersion?: string }): string => {
-  return options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
-};
+import { resolveProtoVersion } from './proto';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -260,7 +256,8 @@ export class LPIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: resolveProtoVersion(this.options),
+              // Wire field stays `lri_version` for backwards compatibility.
+              lri_version: this.options.lpiVersion,
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };

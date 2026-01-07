@@ -18,10 +18,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
-
-const DEFAULT_PROTO_VERSION = '0.1';
-const resolveProtoVersion = (options: { lpiVersion?: string; lriVersion?: string }): string =>
-  options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
+import { DEFAULT_PROTO_VERSION } from './proto';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -220,7 +217,8 @@ export class LPIWSClient {
       // Send Hello
       const hello: LHSHello = {
         step: 'hello',
-        lri_version: resolveProtoVersion(this.options),
+        // Wire field stays `lri_version` for backwards compatibility.
+        lri_version: this.options.lpiVersion ?? DEFAULT_PROTO_VERSION,
         encodings: [this.options.encoding],
         features: this.options.features,
         client_id: this.options.clientId,
