@@ -132,6 +132,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const serverOptions: ServerAdapterOptions = {
         role: 'server',
         ws: this.ws,
+        lpiVersion: options.lpiVersion,
         lriVersion: resolveProtoVersion(options),
         encodings: options.encodings ?? ['json'],
         features: options.features ?? [],
@@ -146,6 +147,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
       const clientOptions: ClientAdapterOptions = {
         role: 'client',
         ws: this.ws,
+        lpiVersion: options.lpiVersion,
         lriVersion: resolveProtoVersion(options),
         encoding: options.encoding ?? 'json',
         features: options.features ?? [],
