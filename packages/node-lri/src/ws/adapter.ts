@@ -16,6 +16,12 @@ import {
 import { createDeprecatedClass } from '../deprecation';
 import { resolveProtoVersion } from './proto';
 
+const DEFAULT_PROTO_VERSION = '0.1';
+
+function resolveProtoVersion(options: { lpiVersion?: string; lriVersion?: string }): string {
+  return options.lpiVersion ?? options.lriVersion ?? DEFAULT_PROTO_VERSION;
+}
+
 /**
  * Base options shared between client and server adapters
  */
@@ -481,4 +487,8 @@ export const LRIWebSocketAdapter = createDeprecatedClass(
   LPIWebSocketAdapter
 );
 
-export default LRIWebSocketAdapter;
+/**
+ * Default export is the canonical adapter.
+ * Legacy consumers should use the named deprecated alias `LRIWebSocketAdapter`.
+ */
+export default LPIWebSocketAdapter;

@@ -35,6 +35,20 @@ const logError = (...args: Parameters<typeof console.error>): void => {
   }
 };
 
+const DEFAULT_PROTO_VERSION = '0.1';
+
+function resolveProtoVersion(
+  options: { lpiVersion?: string; lriVersion?: string },
+  hello?: LHSHello | null
+): string {
+  return (
+    options.lpiVersion ??
+    options.lriVersion ??
+    hello?.lri_version ??
+    DEFAULT_PROTO_VERSION
+  );
+}
+
 /**
  * LPI WebSocket Server
  *
@@ -91,6 +105,8 @@ export class LPIWSServer {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
+      lpiVersion: options.lpiVersion,
+      lriVersion: options.lriVersion,
       ltp: options.ltp ?? false,
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
@@ -150,7 +166,11 @@ export class LPIWSServer {
       }
       const onListening = () => {
         this.wss.off('error', onError);
-        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.port}`);
+        logInfo(
+          `[LPI WS] Server listening on ${this.options.host}:${this.port} (proto=${resolveProtoVersion(
+            this.options
+          )})`
+        );
         resolve();
       };
       const onError = (error: Error) => {
