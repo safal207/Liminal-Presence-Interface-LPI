@@ -21,6 +21,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
+import { resolveProtoVersion } from './proto';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -62,9 +63,18 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * server.listen();
  * ```
  */
-type NormalizedServerOptions =
-  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey'>> &
-  Pick<LPIWSServerOptions, 'ltpPrivateKey'>;
+type NormalizedServerOptions = {
+  port: number;
+  host: string;
+  ltp: boolean;
+  ltpPrivateKey?: Uint8Array;
+  lss: boolean;
+  encodings: ('json' | 'cbor')[];
+  lpiVersion: string;
+  lriVersion?: string;
+  authenticate: NonNullable<LPIWSServerOptions['authenticate']>;
+  sessionTimeout: number;
+};
 
 export class LPIWSServer {
   private wss: WebSocketServer;
@@ -78,6 +88,7 @@ export class LPIWSServer {
   public onError?: LPIWSServerHandlers['onError'];
 
   constructor(options: LPIWSServerOptions = {}) {
+    const normalizedVersion = resolveProtoVersion(options);
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
@@ -85,6 +96,8 @@ export class LPIWSServer {
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
       encodings: options.encodings ?? ['json'],
+      lpiVersion: normalizedVersion,
+      lriVersion: options.lriVersion,
       authenticate: options.authenticate ?? (async () => true),
       sessionTimeout: options.sessionTimeout ?? 3600000, // 1 hour
     };
@@ -253,7 +266,8 @@ export class LPIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: '0.1',
+              // Wire field stays `lri_version` for backwards compatibility.
+              lri_version: this.options.lpiVersion,
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };
