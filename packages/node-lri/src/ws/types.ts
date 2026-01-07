@@ -126,6 +126,10 @@ export interface LPIWSClientOptions extends VersionedOptions {
   url: string;
   /** Client ID */
   clientId?: string;
+  /** Protocol version to advertise during hello */
+  lpiVersion?: string;
+  /** @deprecated Use lpiVersion */
+  lriVersion?: string;
   /** Preferred encoding */
   encoding?: 'json' | 'cbor';
   /** Request features */

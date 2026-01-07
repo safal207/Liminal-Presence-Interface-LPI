@@ -95,6 +95,8 @@ export class LPIWSServer {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
+      lpiVersion: options.lpiVersion,
+      lriVersion: options.lriVersion,
       ltp: options.ltp ?? false,
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
