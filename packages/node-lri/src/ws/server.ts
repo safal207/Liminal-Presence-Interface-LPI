@@ -92,6 +92,8 @@ export class LPIWSServer {
     this.options = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
+      lpiVersion: resolveProtoVersion(options),
+      lriVersion: options.lriVersion,
       ltp: options.ltp ?? false,
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
@@ -151,7 +153,9 @@ export class LPIWSServer {
       }
       const onListening = () => {
         this.wss.off('error', onError);
-        logInfo(`[LPI WS] Server listening on ${this.options.host}:${this.port}`);
+        logInfo(
+          `[LPI WS] Server listening on ${this.options.host}:${this.port} (proto=${this.options.lpiVersion})`
+        );
         resolve();
       };
       const onError = (error: Error) => {

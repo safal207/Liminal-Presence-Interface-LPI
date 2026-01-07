@@ -64,7 +64,7 @@ export class LPIWSClient {
   private ws: WebSocket | null = null;
   private options: Required<Omit<LPIWSClientOptions, 'auth' | 'lpiVersion' | 'lriVersion'>> & {
     auth?: string;
-    lpiVersion?: string;
+    lpiVersion: string;
     lriVersion?: string;
   };
   private conn: LPIWSConnection | null = null;
@@ -83,7 +83,7 @@ export class LPIWSClient {
     this.options = {
       url: options.url,
       clientId: options.clientId ?? randomUUID(),
-      lpiVersion: options.lpiVersion,
+      lpiVersion: resolveProtoVersion(options),
       lriVersion: options.lriVersion,
       encoding: options.encoding ?? 'json',
       features: options.features ?? [],
