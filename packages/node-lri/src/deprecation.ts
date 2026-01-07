@@ -1,7 +1,8 @@
 const warned = new Set<string>();
 
 export function warnDeprecated(name: string, replacement: string): void {
-  if (process.env.LPI_NO_DEPRECATION_WARNINGS === '1') {
+  const warnSetting = process.env.LPI_NO_DEPRECATION_WARNINGS?.toLowerCase();
+  if (warnSetting === '1' || warnSetting === 'true' || warnSetting === 'yes') {
     return;
   }
 
