@@ -14,7 +14,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
-import { DEFAULT_PROTO_VERSION, resolveProtoVersion } from './proto';
+import { resolveProtoVersion } from './proto';
 
 /**
  * Base options shared between client and server adapters
@@ -217,7 +217,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
             supportedFeatures.includes(feature)
           ) as ('ltp' | 'lss' | 'compression')[];
 
-          const protoVersion = options.lpiVersion ?? DEFAULT_PROTO_VERSION;
+          const protoVersion = resolveProtoVersion(options);
           const mirror: LHSMirror = {
             step: 'mirror',
             // Wire field stays `lri_version` for backwards compatibility.
@@ -352,13 +352,13 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
       this.ws.on('message', this.handshakeListener);
 
-      const hello: LHSHello = {
-        step: 'hello',
-        // Wire field stays `lri_version` for backwards compatibility.
-        lri_version: options.lpiVersion ?? DEFAULT_PROTO_VERSION,
-        encodings: [options.encoding ?? 'json'],
-        features: options.features ?? [],
-      };
+        const hello: LHSHello = {
+          step: 'hello',
+          // Wire field stays `lri_version` for backwards compatibility.
+          lri_version: resolveProtoVersion(options),
+          encodings: [options.encoding ?? 'json'],
+          features: options.features ?? [],
+        };
 
       if (options.clientId) {
         hello.client_id = options.clientId;
