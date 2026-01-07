@@ -104,6 +104,68 @@ describe('LPIWSServer', () => {
       });
     });
 
+    it('should allow version mismatch when strictVersion is false', (done) => {
+      const port = getTestPort();
+      server = new LPIWSServer({ port, strictVersion: false });
+
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
+      let step = 0;
+
+      client.on('message', (data) => {
+        const msg = JSON.parse(data.toString());
+
+        if (step === 0) {
+          expect(msg.step).toBe('mirror');
+          expect(msg.lri_version).toBe('0.1');
+          client.send(
+            JSON.stringify({
+              step: 'bind',
+              thread: 'test-thread-456',
+            })
+          );
+          step++;
+        } else if (step === 1) {
+          expect(msg.step).toBe('seal');
+          client.close();
+          done();
+        }
+      });
+
+      client.on('open', () => {
+        client.send(
+          JSON.stringify({
+            step: 'hello',
+            lri_version: '0.9',
+            encodings: ['json'],
+            features: [],
+          })
+        );
+      });
+    });
+
+    it('should reject version mismatch when strictVersion is true', (done) => {
+      const port = getTestPort();
+      server = new LPIWSServer({ port, strictVersion: true });
+
+      const client = new WebSocket(`ws://127.0.0.1:${port}`);
+
+      client.on('close', (code) => {
+        expect(code).toBe(1002);
+        done();
+      });
+
+      client.on('open', () => {
+        client.send(
+          JSON.stringify({
+            step: 'hello',
+            lri_version: '0.9',
+            encodings: ['json'],
+            features: [],
+          })
+        );
+      });
+    });
+
     it('should reject invalid hello', (done) => {
       const port = getTestPort();
       server = new LPIWSServer({ port });

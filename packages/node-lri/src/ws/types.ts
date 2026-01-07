@@ -17,6 +17,7 @@ export type LHSStep = 'hello' | 'mirror' | 'bind' | 'seal' | 'flow';
  */
 export interface LHSHello {
   step: 'hello';
+  /** Wire field kept as `lri_version` for backwards compatibility. */
   lri_version: string;
   encodings: ('json' | 'cbor')[];
   features: ('ltp' | 'lss' | 'compression')[];
@@ -29,6 +30,7 @@ export interface LHSHello {
  */
 export interface LHSMirror {
   step: 'mirror';
+  /** Wire field kept as `lri_version` for backwards compatibility. */
   lri_version: string;
   encoding: 'json' | 'cbor';
   features: ('ltp' | 'lss' | 'compression')[];
@@ -83,6 +85,15 @@ export interface LPIWSServerOptions {
   port?: number;
   /** Host to bind to */
   host?: string;
+  /** Protocol version to advertise during handshake */
+  lpiVersion?: string;
+  /** @deprecated Use lpiVersion */
+  lriVersion?: string;
+  /**
+   * If true, reject handshake when client hello version differs from server lpiVersion.
+   * If false/undefined, log a warning and continue.
+   */
+  strictVersion?: boolean;
   /** Enable LTP signatures */
   ltp?: boolean;
   /** LTP private key for signing (if ltp enabled) */

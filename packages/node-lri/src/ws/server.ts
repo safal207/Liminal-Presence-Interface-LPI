@@ -21,6 +21,7 @@ import {
   encodeLPIFrame,
 } from './types';
 import { createDeprecatedClass } from '../deprecation';
+import { resolveProtoVersion } from './proto';
 
 const isTestEnv = process.env.NODE_ENV === 'test';
 const logInfo = (...args: Parameters<typeof console.log>): void => {
@@ -62,9 +63,19 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * server.listen();
  * ```
  */
-type NormalizedServerOptions =
-  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey'>> &
-  Pick<LPIWSServerOptions, 'ltpPrivateKey'>;
+type NormalizedServerOptions = {
+  port: number;
+  host: string;
+  ltp: boolean;
+  ltpPrivateKey?: Uint8Array;
+  lss: boolean;
+  encodings: ('json' | 'cbor')[];
+  lpiVersion: string;
+  lriVersion?: string;
+  strictVersion: boolean;
+  authenticate: NonNullable<LPIWSServerOptions['authenticate']>;
+  sessionTimeout: number;
+};
 
 export class LPIWSServer {
   private wss: WebSocketServer;
@@ -78,16 +89,21 @@ export class LPIWSServer {
   public onError?: LPIWSServerHandlers['onError'];
 
   constructor(options: LPIWSServerOptions = {}) {
-    this.options = {
+    const normalizedVersion = resolveProtoVersion(options);
+    const normalizedOptions: NormalizedServerOptions = {
       port: options.port ?? 8080,
       host: options.host ?? '0.0.0.0',
       ltp: options.ltp ?? false,
       ltpPrivateKey: options.ltpPrivateKey,
       lss: options.lss ?? false,
       encodings: options.encodings ?? ['json'],
+      lpiVersion: normalizedVersion,
+      lriVersion: options.lriVersion,
+      strictVersion: options.strictVersion ?? false,
       authenticate: options.authenticate ?? (async () => true),
       sessionTimeout: options.sessionTimeout ?? 3600000, // 1 hour
     };
+    this.options = normalizedOptions;
 
     // Start listening immediately
     this.wss = new WebSocketServer({
@@ -235,6 +251,18 @@ export class LPIWSServer {
             const hello = msg as LHSHello;
             helloMsg = hello;
 
+            // Version mismatch handling (server-authoritative)
+            const serverVersion = this.options.lpiVersion;
+            const clientVersion = hello.lri_version;
+            if (clientVersion && clientVersion !== serverVersion) {
+              const message = `[LPI WS] Protocol version mismatch: client=${clientVersion} server=${serverVersion}`;
+              if (this.options.strictVersion) {
+                reject(new Error(message));
+                return;
+              }
+              logInfo(message);
+            }
+
             if (hello.client_id) {
               conn.peer = { clientId: hello.client_id };
             }
@@ -253,7 +281,8 @@ export class LPIWSServer {
             // Send Mirror
             const mirror: LHSMirror = {
               step: 'mirror',
-              lri_version: '0.1',
+              // Wire field stays `lri_version` for backwards compatibility.
+              lri_version: this.options.lpiVersion,
               encoding: conn.encoding!,
               features: Array.from(conn.features!) as ('ltp' | 'lss')[],
             };
