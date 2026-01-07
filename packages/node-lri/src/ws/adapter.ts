@@ -80,6 +80,7 @@ export type ReadyListener = (connection: LPIWSConnection) => void;
 export class LPIWebSocketAdapter extends EventEmitter {
   public readonly role: 'client' | 'server';
   private readonly ws: WebSocket;
+  private readonly protoVersion: string;
   private handshakeListener: ((data: RawData) => void) | null = null;
   private resolved = false;
   private readyResolve!: (value: LPIWSConnection) => void;
@@ -93,6 +94,7 @@ export class LPIWebSocketAdapter extends EventEmitter {
     super();
     this.role = options.role;
     this.ws = options.ws;
+    this.protoVersion = resolveProtoVersion(options);
     if (options.onFrame) {
       this.on('frame', options.onFrame);
     }
@@ -125,11 +127,10 @@ export class LPIWebSocketAdapter extends EventEmitter {
     });
 
     if (options.role === 'server') {
-      const protoVersion = resolveProtoVersion(options);
       const serverOptions: ServerAdapterOptions = {
         role: 'server',
         ws: this.ws,
-        lpiVersion: protoVersion,
+        lpiVersion: this.protoVersion,
         lriVersion: options.lriVersion,
         encodings: options.encodings ?? ['json'],
         features: options.features ?? [],
@@ -141,11 +142,10 @@ export class LPIWebSocketAdapter extends EventEmitter {
       this.serverOptions = serverOptions;
       this.startServerHandshake(serverOptions);
     } else {
-      const protoVersion = resolveProtoVersion(options);
       const clientOptions: ClientAdapterOptions = {
         role: 'client',
         ws: this.ws,
-        lpiVersion: protoVersion,
+        lpiVersion: this.protoVersion,
         lriVersion: options.lriVersion,
         encoding: options.encoding ?? 'json',
         features: options.features ?? [],
@@ -217,11 +217,10 @@ export class LPIWebSocketAdapter extends EventEmitter {
             supportedFeatures.includes(feature)
           ) as ('ltp' | 'lss' | 'compression')[];
 
-          const protoVersion = resolveProtoVersion(options);
           const mirror: LHSMirror = {
             step: 'mirror',
             // Wire field stays `lri_version` for backwards compatibility.
-            lri_version: protoVersion,
+            lri_version: this.protoVersion,
             encoding: negotiatedEncoding,
             features: negotiatedFeatures,
           };
@@ -352,13 +351,13 @@ export class LPIWebSocketAdapter extends EventEmitter {
 
       this.ws.on('message', this.handshakeListener);
 
-        const hello: LHSHello = {
-          step: 'hello',
-          // Wire field stays `lri_version` for backwards compatibility.
-          lri_version: resolveProtoVersion(options),
-          encodings: [options.encoding ?? 'json'],
-          features: options.features ?? [],
-        };
+      const hello: LHSHello = {
+        step: 'hello',
+        // Wire field stays `lri_version` for backwards compatibility.
+        lri_version: this.protoVersion,
+        encodings: [options.encoding ?? 'json'],
+        features: options.features ?? [],
+      };
 
       if (options.clientId) {
         hello.client_id = options.clientId;
