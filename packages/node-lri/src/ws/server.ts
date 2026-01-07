@@ -63,9 +63,18 @@ const logError = (...args: Parameters<typeof console.error>): void => {
  * server.listen();
  * ```
  */
-type NormalizedServerOptions =
-  Required<Omit<LPIWSServerOptions, 'ltpPrivateKey'>> &
-  Pick<LPIWSServerOptions, 'ltpPrivateKey'>;
+type NormalizedServerOptions = {
+  port: number;
+  host: string;
+  ltp: boolean;
+  ltpPrivateKey?: Uint8Array;
+  lss: boolean;
+  encodings: ('json' | 'cbor')[];
+  lpiVersion: string;
+  lriVersion?: string;
+  authenticate: NonNullable<LPIWSServerOptions['authenticate']>;
+  sessionTimeout: number;
+};
 
 export class LPIWSServer {
   private wss: WebSocketServer;
