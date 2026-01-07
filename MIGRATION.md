@@ -14,3 +14,35 @@ Some package and tool names still carry legacy identifiers and should be treated
 - `packages/lrictl`
 
 This PR is documentation-only and does not rename any code or packages.
+
+# Migration: protocol version option rename (lriVersion -> lpiVersion)
+
+## What changed
+The canonical option for configuring the advertised WebSocket protocol version is now:
+
+- `lpiVersion` (new, canonical)
+
+The legacy alias is still supported:
+
+- `lriVersion` (deprecated)
+
+Wire-level handshake payload remains unchanged:
+- the JSON field is still `lri_version` for backwards compatibility.
+
+## Do I need to change anything?
+Only if you set `lriVersion` explicitly.
+
+### Before
+```ts
+new LPIWSClient({ url, lriVersion: "0.1" });
+new LPIWSServer({ port, lriVersion: "0.1" });
+```
+
+### After (recommended)
+```ts
+new LPIWSClient({ url, lpiVersion: "0.1" });
+new LPIWSServer({ port, lpiVersion: "0.1" });
+```
+
+### Resolution order
+`lpiVersion` -> `lriVersion` -> default (`0.1`)
