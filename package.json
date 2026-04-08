@@ -2,10 +2,10 @@
   "name": "lri-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Liminal Resonance Interface - Layer 8 for Human-AI Communication",
+  "description": "Liminal Presence Interface monorepo - Layer 8 for Human-AI Communication",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lri/lri.git"
+    "url": "https://github.com/safal207/Liminal-Presence-Interface-LPI.git"
   },
   "keywords": [
     "lri",
@@ -32,13 +32,15 @@
     "clean": "rm -rf packages/*/dist packages/*/build examples/*/dist",
     "validate": "npm run validate:schemas && npm run validate:vocab",
     "validate:schemas": "ajv validate -s schemas/lce-v0.1.json -d 'schemas/examples/*.json' --spec=draft2020 || echo 'Install ajv-cli: npm install -g ajv-cli ajv-formats'",
-    "validate:vocab": "python -c \"import yaml; yaml.safe_load(open('vocab/intent.yaml')); yaml.safe_load(open('vocab/affect.yaml')); print('✓ Vocabularies valid')\" || echo 'Install PyYAML: pip install pyyaml'",
+    "validate:vocab": "python -c \"import yaml; yaml.safe_load(open('vocab/intent.yaml')); yaml.safe_load(open('vocab/affect.yaml')); print('Vocabularies valid')\" || echo \"Install PyYAML: pip install pyyaml\"",
     "vocab:build": "node tools/build-vocab.mjs",
     "docs:serve": "cd docs && python -m http.server 8000",
     "example:express": "cd examples/express-app && npm install && npm run dev",
     "example:fastapi": "cd examples/fastapi-app && pip install -r requirements.txt && python main.py",
     "test:root": "node --test tests",
-    "test:workspaces": "CI=1 npm run --workspaces --if-present test"
+    "test:workspaces": "CI=1 npm run --workspaces --if-present test",
+    "validate:project": "python scripts/validate_project.py",
+    "report:validation": "python scripts/generate_validation_results.py"
   },
   "devDependencies": {
     "ajv-cli": "^5.0.0",
