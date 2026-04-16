@@ -270,7 +270,11 @@ jobs:
       - name: Test Express example builds
         working-directory: examples/express-app
         run: |
-          npm install
+          for i in 1 2 3; do
+            npm install && break
+            echo "npm install failed (attempt $i); retrying..."
+            sleep $((i * 10))
+          done
           npm run build || echo "Build not configured yet"
 
       - name: Test FastAPI example
