@@ -1,61 +1,79 @@
-# LPI — Liminal Presence Interface
+# LPI - Liminal Presence Interface
 
-> **Layer 8 for Human-AI Communication**
+> Semantic context, consent, trust, and session coherence for human-AI communication.
 
 [![CI](https://github.com/safal207/Liminal-Presence-Interface-LPI/actions/workflows/ci.yml/badge.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
 [![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
 
-LPI (Liminal Presence Interface) is a semantic communication protocol that sits above the traditional OSI Layer 7 (Application), adding context, intent, affect, and consent to every interaction between humans and AI systems.
+LPI is a Layer 8 protocol for wrapping application messages with structured intent, affect, consent, trust, and memory metadata. In practical terms, it gives agentic systems and human-AI applications a portable envelope for saying not only what was sent, but why it was sent, under what consent, with what trust material, and with what session continuity.
 
-## What is LPI?
+## Why This Matters
 
-LPI introduces **Layer 8** - a semantic layer that wraps application-level messages with rich contextual metadata:
+Output-only interfaces hide important control signals. A message may be syntactically valid while still being unsafe, underspecified, or disconnected from user intent.
 
-- **Intent** - What the message aims to achieve (ask, tell, propose, etc.)
-- **Affect** - Emotional context (PAD model: Pleasure, Arousal, Dominance)
-- **Consent** - Privacy and data sharing policies
-- **Coherence** - Quality metrics for semantic alignment
-- **Trust** - Cryptographic proof and attestations
-- **Memory** - Session context and continuity
+LPI addresses that gap by making communication state explicit:
 
-### Why?
+- `intent` captures what the message is trying to do
+- `affect` and `meaning` preserve semantic context
+- `policy` carries consent and sharing expectations
+- `trust` attaches cryptographic verification material
+- `memory` and `LSS` preserve thread continuity and drift metrics
 
-Current protocols (HTTP, WebSocket, gRPC) transport *data* but not *meaning*. LPI bridges this gap:
+This makes LPI relevant for:
 
-| Traditional | With LPI |
-|-------------|----------|
-| `{"query": "weather"}` | Intent: `ask`, Affect: `curious`, Consent: `private` |
-| Raw text | Rich semantic context |
-| No quality metrics | Coherence tracking |
-| Implicit trust | Cryptographic proof |
+- agentic oversight
+- consent-aware human-AI interfaces
+- secure message signing and validation
+- session coherence monitoring
+- structured handshakes across transports
 
----
+## Repository Contents
 
-📚 **[Get Started with LPI →](docs/getting-started.md)**
+This monorepo currently contains:
 
-Complete guide with WebSocket, LTP (cryptographic signing), LSS (session management), and production examples.
+- `packages/node-lri` - Node.js SDK and middleware
+- `packages/python-lri` - Python SDK, FastAPI integration, validator, and LSS support
+- `packages/lpictl` and `packages/lrictl` - CLI tooling
+- `docs/specs` - LHS, LTP, LSS, and transport specifications
+- `docs/security/THREAT-MODEL.md` - STRIDE-style security review
+- `vocab/` and `schemas/` - canonical protocol vocabularies and schema artifacts
+- `examples/` - Express, FastAPI, WebSocket, and signing examples
 
----
+## Safety and Oversight Framing
 
-## Terminology
+LPI is useful as a communication and interface layer in a broader safety stack.
 
-Quick definitions:
+It is especially relevant for cases where a system needs to validate:
 
-- **LPI** = Liminal Presence Interface (the protocol layer)
-- **LRI** = Living Relational Identity (entity/invariant; persists even in silence)
+- whether a message carried the right consent state
+- whether a signed context envelope was tampered with or replayed
+- whether a session is drifting semantically across turns
+- whether a transport handshake preserved context correctly
+- whether trust, context, and routing metadata stay attached across boundaries
 
-For a concise glossary and historical naming notes, see:
+For a concise safety-facing summary, see [docs/safety/agentic_presence_threat_model.md](docs/safety/agentic_presence_threat_model.md).
 
-- [Glossary](docs/glossary.md)
-- [Migration notes](MIGRATION.md)
+## Validation Status
 
----
+The repository now includes a root-level validation snapshot at [VALIDATION_RESULTS.md](VALIDATION_RESULTS.md).
+
+The current reproducible validation path covers:
+
+- vocabulary artifact generation and verification
+- Python SDK core tests for parsing, validation, and LSS behavior
+
+Run it locally with:
+
+```bash
+python scripts/validate_project.py
+python scripts/generate_validation_results.py
+```
 
 ## Quick Start
 
-### Node.js (Express)
+### Node.js
 
 ```bash
 npm install node-lri express
@@ -70,18 +88,16 @@ app.use(lriMiddleware());
 
 app.get('/api/data', (req: any, res) => {
   const lce = req.lri?.lce;
-  console.log('Intent:', lce?.intent.type);
-
   res.json({
-    message: 'Hello from LPI!',
-    intent: lce?.intent.type
+    message: 'Hello from LPI',
+    intent: lce?.intent.type ?? null,
   });
 });
 
 app.listen(3000);
 ```
 
-### Python (FastAPI)
+### Python
 
 ```bash
 pip install python-lri fastapi
@@ -94,178 +110,26 @@ from lri import LRI
 app = FastAPI()
 lri = LRI()
 
-@app.get("/api/data")
+@app.get('/api/data')
 async def get_data(request: Request):
     lce = await lri.parse_request(request, required=False)
-
     return {
-        "message": "Hello from LPI!",
-        "intent": lce.intent.type if lce else None
+        'message': 'Hello from LPI',
+        'intent': lce.intent.type if lce else None,
     }
 ```
 
-## LCE - Liminal Context Envelope
+## Protocol Building Blocks
 
-## LSS - Liminal Session Store
+### LCE
 
-LSS keeps lightweight conversational state with coherence and drift metrics.
-It ships with pluggable storage adapters so you can run entirely in-memory or
-persist to Redis when scaling out workers.
+The Liminal Context Envelope is the structured payload that carries semantic context.
 
-- **Node.js** – `import { LSS } from 'node-lri/lss'`
-- **Python** – `from lri.lss import LSS`
+### LHS
 
-Use `store(threadId, lce)` to append messages, `getMetrics` / `get_metrics` to
-read coherence breakdowns, `updateMetrics` / `update_metrics` to override them,
-and subscribe to the `drift` event to react when conversations lose alignment.
-`getStats()` / `get_stats()` provide quick session counts and average coherence
-for dashboards. See [docs/specs/lss.md](docs/specs/lss.md) for the full
-specification and integration snippets.
+The Liminal Handshake Sequence defines the context-establishing transport handshake.
 
-```ts
-import Redis from 'ioredis';
-import { LSS, RedisSessionStorage } from 'node-lri/lss';
-
-const lss = new LSS({ storage: new RedisSessionStorage(new Redis()) });
-```
-
-#### Message flow (Node.js)
-
-```ts
-app.post('/messages', async (req, res) => {
-  const { lce } = req.body;
-  const threadId = lce?.memory?.thread ?? req.headers['x-thread-id'];
-
-  if (threadId && lce) {
-    await lss.store(threadId, lce);
-    const metrics = await lss.getMetrics(threadId);
-
-    if (metrics && metrics.coherence.overall < 0.5) {
-      res.status(202).json({ action: 'clarify', coherence: metrics.coherence });
-      return;
-    }
-  }
-
-  res.json({ action: 'continue' });
-});
-
-lss.on('drift', (event) => {
-  console.warn('Thread drift detected', event.threadId, event.details);
-});
-```
-
-#### Message flow (Python)
-
-```python
-from fastapi import Depends, FastAPI, Request
-
-from lri.lss import LSS
-from lri.types import LCE
-
-lss = LSS()
-app = FastAPI()
-
-
-def session_state_payload(payload: dict | None) -> tuple[str | None, dict | None]:
-    if not payload:
-        return None, None
-    lce = payload.get("lce")
-    if not isinstance(lce, dict):
-        return None, None
-    thread = lce.get("memory", {}).get("thread") if isinstance(lce.get("memory"), dict) else None
-    return thread, lce
-
-
-async def session_state(request: Request) -> dict[str, float]:
-    payload = await request.json()
-    thread, lce_payload = session_state_payload(payload)
-    if thread and lce_payload:
-        lss.store(thread, LCE.model_validate(lce_payload))
-        metrics = lss.get_metrics(thread)
-        if metrics and metrics.coherence.overall < 0.5:
-            return {"coherence": metrics.coherence.overall}
-    return {"coherence": 1.0}
-
-
-@app.post("/messages")
-async def handle_message(state = Depends(session_state)):
-    if state["coherence"] < 0.5:
-        return {"action": "clarify"}
-    return {"action": "continue"}
-
-
-lss.on("drift", lambda event: print("drift", event.thread_id, event.details))
-```
-
-The core data structure of LPI is the **LCE** (Liminal Context Envelope):
-
-```json
-{
-  "v": 1,
-  "intent": {
-    "type": "ask",
-    "goal": "Get weather information"
-  },
-  "affect": {
-    "pad": [0.3, 0.1, 0.0],
-    "tags": ["curious", "casual"]
-  },
-  "meaning": {
-    "topic": "weather",
-    "ontology": "https://schema.org/WeatherForecast"
-  },
-  "memory": {
-    "thread": "550e8400-e29b-41d4-a716-446655440000",
-    "t": "2025-01-15T10:30:00Z"
-  },
-  "policy": {
-    "consent": "private"
-  },
-  "qos": {
-    "coherence": 0.87
-  }
-}
-```
-
-### Intent Types
-
-- `ask` - Request information
-- `tell` - Provide information
-- `propose` - Suggest action
-- `confirm` - Acknowledge
-- `notify` - Alert
-- `sync` - Synchronize context
-- `plan` - Outline strategy
-- `agree` / `disagree` - Response to proposal
-- `reflect` - Introspection
-
-### Consent Levels
-
-- `private` - Personal use only
-- `team` - Shared within team
-- `public` - Publicly shareable
-
-## Architecture
-
-```
-┌─────────────────────────────────────────┐
-│  Layer 8: LPI (Semantic/Context)        │  ← LCE, Intent, Affect
-├─────────────────────────────────────────┤
-│  Layer 7: Application (HTTP/WS/gRPC)    │  ← Traditional protocols
-├─────────────────────────────────────────┤
-│  Layer 6: Presentation                   │
-│  ...                                     │
-│  Layer 1: Physical                       │
-└─────────────────────────────────────────┘
-```
-
-LPI operates **on top of** existing Layer 7 protocols:
-
-- **HTTP** - LCE in headers (`LCE: base64(json)`)
-- **WebSocket** - LCE prefix on each frame
-- **gRPC** - LCE in metadata
-
-### Protocol versioning (WebSocket handshake)
+#### Protocol versioning (WebSocket handshake)
 
 This SDK uses `lpiVersion` as the canonical option to advertise a protocol version during the LHS handshake.
 
@@ -277,254 +141,46 @@ Version resolution is centralized and follows:
 
 `lpiVersion` → `lriVersion` → default (`0.1`)
 
-## Project Structure
+### LTP
 
-```
-lri/
-├── schemas/              # JSON Schema for LCE
-│   └── lce-v0.1.json
-├── vocab/               # Intent/Affect vocabularies
-│   ├── intent.yaml
-│   └── affect.yaml
-├── packages/
-│   ├── node-lri/        # Node.js SDK
-│   └── python-lri/      # Python SDK
-├── examples/
-│   ├── express-app/     # Express example
-│   ├── fastapi-app/     # FastAPI example
-│   ├── lhs/             # Handshake traces (HTTP + WS)
-│   └── ws-echo/         # WebSocket example
-├── sidecar/             # Transparent proxy
-├── tools/               # CLI tools
-└── docs/                # Documentation
-```
+The Liminal Trust Protocol signs envelopes with detached Ed25519 signatures.
 
-## Features
+### LSS
 
-### Current (v0.2.0 - Beta)
+The Liminal Session Store tracks thread-level continuity, coherence, and drift.
 
-- ✅ LCE JSON Schema v1
-- ✅ Intent/Affect vocabularies
-- ✅ Node.js SDK (Express middleware)
-- ✅ Python SDK (FastAPI integration)
-- ✅ Base64 HTTP header encoding
-- ✅ Schema validation
-- ✅ LHS (Liminal Handshake Sequence) specification and transport transcripts
-- ✅ LTP (Liminal Trust Protocol) - Ed25519 detached signatures
-- ✅ LSS (Liminal Session Store) - coherence calculation
-- ✅ CBOR encoding for IoT
-- ✅ gRPC metadata adapter
-- ✅ CLI tool (`lrictl`, legacy package name)
+## Key Documents
 
-### Future (v1.0)
+- [Getting Started](docs/getting-started.md)
+- [RFC-000 Overview](docs/rfcs/rfc-000.md)
+- [LHS Spec](docs/specs/lhs.md)
+- [LTP Spec](docs/specs/ltp.md)
+- [LSS Spec](docs/specs/lss.md)
+- [Transport Notes](docs/specs/transports.md)
+- [Security Threat Model](docs/security/THREAT-MODEL.md)
+- [Agentic Presence Threat Model](docs/safety/agentic_presence_threat_model.md)
+- [Validation Snapshot](VALIDATION_RESULTS.md)
 
-- [ ] Sidecar proxy with Prometheus metrics
-- [ ] Interactive web demo
-- [ ] Audit trail for compliance
-- [ ] Comprehensive benchmarks
-- [ ] Production-ready SDKs
+## Development Notes
 
-## Documentation
-
-### Getting Started
-- **[📘 Getting Started Guide](docs/getting-started.md)** - Complete tutorial with examples
-  - Installation & First LCE message
-  - WebSocket server & client setup
-  - LTP (Trust Protocol) with Ed25519 signatures
-  - LSS (Session Store) for coherence tracking
-  - Express.js integration & production examples
-
-### Reference
-- [RFC-000: LPI Overview](docs/rfcs/rfc-000.md)
-- [LHS Handshake Spec](docs/specs/lhs.md)
-- [LCE Schema Spec](schemas/lce-v0.1.json)
-- [Intent Vocabulary](vocab/intent.yaml)
-- [Affect Vocabulary](vocab/affect.yaml)
-- [Node SDK Guide](packages/node-lri/README.md) (Coming soon)
-- [Python SDK Guide](packages/python-lri/README.md) (Coming soon)
-
-### Vocabulary Builds
-
-Generate distributable JSON vocabularies from the canonical YAML files:
+The full workspace test matrix still depends on complete Node workspace setup. For a stable review path, use the root validation scripts first and then drill down into individual packages.
 
 ```bash
-npm run vocab:build
+node --test tests/vocab.artifacts.test.mjs
+cd packages/python-lri
+python -m pytest -q tests/test_lri.py tests/test_lss.py tests/test_validator.py
 ```
 
-Artifacts are written to `vocab/dist/*.json` for publishing or SDK bundling.
+## Positioning
 
-## Examples
+LPI should be evaluated as a semantic communication and interface-control layer for human-AI systems.
 
-### Express App
+It is not just a messaging wrapper. The repository combines:
 
-See [examples/express-app](examples/express-app/) for a complete Express example.
+- structured semantic envelopes
+- transport handshake semantics
+- consent-carrying policy fields
+- signed trust material
+- session drift and coherence tracking
 
-```bash
-cd examples/express-app
-npm install
-npm run dev
-```
-
-### FastAPI App
-
-See [examples/fastapi-app](examples/fastapi-app/) for a complete FastAPI example.
-
-```bash
-cd examples/fastapi-app
-pip install -r requirements.txt
-python main.py
-```
-
-### WebSocket Echo Server
-
-See [examples/ws-echo](examples/ws-echo/) for a WebSocket server with LHS handshake protocol.
-
-```bash
-cd examples/ws-echo
-npm install
-
-# Terminal 1: Start server
-npm run server
-
-# Terminal 2: Run client
-npm run client
-```
-
-Features:
-- **LHS Handshake**: Hello → Mirror → Bind → Seal sequence
-- **LCE Framing**: Length-prefixed encoding for metadata + payload
-- **Session Management**: Track multiple concurrent connections
-- **Context Preservation**: Thread continuity and affect metadata
-
-### LTP Cryptographic Signatures
-
-See [examples/ltp-signing](examples/ltp-signing/) for cryptographic signatures with Ed25519.
-
-```bash
-cd examples/ltp-signing
-npm install
-npm start
-```
-
-Features:
-- **Ed25519 Keys**: Generate and manage cryptographic key pairs
-- **Ed25519 Signatures**: Sign LCE messages with detached Base64url signatures
-- **Verification**: Validate message authenticity and integrity
-- **Tamper Detection**: Detect any modifications to signed messages
-
-```javascript
-const { ltp } = require('node-lri');
-
-// Generate keys
-const keys = await ltp.generateKeys();
-
-// Sign LCE
-const signed = await ltp.sign(lce, keys.privateKey);
-
-// Verify
-const valid = await ltp.verify(signed, keys.publicKey);
-console.log('Valid:', valid); // true
-```
-
-### LHS Negotiation Transcripts
-
-See [`examples/lhs`](examples/lhs/) for canonical HTTP and WebSocket transcripts of the Hello → Mirror → Bind → Seal → Flow sequence using the finalized `LPI-LHS-Step`, `LPI-LHS`, and `LCE` headers.
-
-## Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-# Clone repo
-git clone https://github.com/lri/lri.git
-cd lri
-
-# Install dependencies
-cd packages/node-lri && npm install
-cd ../python-lri && pip install -e ".[dev]"
-
-# Run tests
-npm test
-pytest
-```
-
-### Opening Issues
-
-We have 22 planned issues across spec, SDK, security, and tooling. See [docs/issues/ALL-ISSUES.md](docs/issues/ALL-ISSUES.md) for the complete list.
-
-**Good first issues:**
-- #2: LCE JSON Schema validation
-- #5: Node SDK documentation
-- #22: Improve this README
-
-## Roadmap
-
-| Milestone | Version | Target | Status |
-|-----------|---------|--------|--------|
-| Core spec + basic SDKs | v0.1.0 | Q1 2025 | ✅ Complete |
-| WebSocket + Crypto | v0.2.0 | Nov 2025 | ✅ Complete |
-| Production ready | v1.0.0 | Q1 2026 | 📋 Planned |
-
-## Use Cases
-
-- **AI Chat Apps** - Add intent and affect to conversations
-- **Multi-Agent Systems** - Semantic routing based on intent
-- **Compliance** - Built-in consent and audit trail
-- **Context Preservation** - Maintain coherence across sessions
-- **Human-AI Collaboration** - Rich context for better understanding
-
-## Philosophy
-
-LPI is built on these principles:
-
-1. **Semantic-first** - Meaning matters more than bytes
-2. **Privacy by design** - Explicit consent on every message
-3. **Layered approach** - Works with existing protocols
-4. **Human-centric** - Optimized for human-AI interaction
-5. **Open standard** - Community-driven, vendor-neutral
-
-## FAQ
-
-**Q: Do I need to change my existing API?**
-A: No! LPI wraps your existing API with metadata. Your endpoints work as-is.
-
-**Q: What's the performance overhead?**
-A: Minimal - typically <10% for size and <5% for CPU. See benchmarks (coming soon).
-
-**Q: Is this only for AI?**
-A: No, but it's optimized for human-AI interaction. Human-human chat benefits too!
-
-**Q: Why not just use HTTP headers?**
-A: We do! LCE is transmitted via headers, but with a standardized semantic structure.
-
-**Q: Does this work with REST/GraphQL/gRPC?**
-A: Yes! LPI sits above these protocols and works with all of them.
-
-## License
-
-MIT - See [LICENSE](LICENSE) for details.
-
-## Citation
-
-```bibtex
-@misc{lri2025,
-  title={LPI: Liminal Presence Interface},
-  author={LPI Contributors},
-  year={2025},
-  url={https://github.com/lri/lri}
-}
-```
-
-## Community
-
-- **GitHub Issues:** [Report bugs & request features](https://github.com/lri/lri/issues)
-- **Discussions:** [Join the conversation](https://github.com/lri/lri/discussions)
-- **Discord:** Coming soon
-
----
-
-**Built with ❤️ by the LPI community**
-
-*"Adding meaning to the message, context to the conversation."*
+That combination makes it useful as a supporting artifact for agentic oversight and safety-oriented interface design.

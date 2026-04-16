@@ -39,7 +39,7 @@ async function buildVocab() {
   );
 
   for (const { filePath, targetPath } of results) {
-    console.log(`Converted ${path.relative(ROOT, filePath)} → ${path.relative(ROOT, targetPath)}`);
+    console.log(`Converted ${path.relative(ROOT, filePath)} -> ${path.relative(ROOT, targetPath)}`);
   }
 
   console.log(`Vocabulary build complete. ${results.length} file(s) written.`);
