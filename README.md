@@ -129,6 +129,18 @@ The Liminal Context Envelope is the structured payload that carries semantic con
 
 The Liminal Handshake Sequence defines the context-establishing transport handshake.
 
+#### Protocol versioning (WebSocket handshake)
+
+This SDK uses `lpiVersion` as the canonical option to advertise a protocol version during the LHS handshake.
+
+- **Canonical option:** `lpiVersion`
+- **Legacy alias (deprecated):** `lriVersion`
+- **Wire compatibility:** handshake field remains `lri_version`
+
+Version resolution is centralized and follows:
+
+`lpiVersion` → `lriVersion` → default (`0.1`)
+
 ### LTP
 
 The Liminal Trust Protocol signs envelopes with detached Ed25519 signatures.

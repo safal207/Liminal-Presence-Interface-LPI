@@ -8,10 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- N/A
+- `packages/node-lri/src/ws/proto.ts` with `DEFAULT_PROTO_VERSION` and `resolveProtoVersion()` as a single source of truth for protocol version resolution.
 
 ### Changed
-- N/A
+- Canonicalized WebSocket protocol version option to `lpiVersion`.
+- Kept `lriVersion` as a deprecated alias for backwards compatibility.
+- Preserved wire-level handshake field name `lri_version` to avoid breaking existing peers.
+
+### Internal
+- Removed duplicated version fallback logic across WS adapter/client/server.
+- Normalized handshake emission so `hello` and `mirror` use the resolved version consistently.
 
 ### Deprecated
 - N/A
