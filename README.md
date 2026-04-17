@@ -7,6 +7,22 @@
 [![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
 [![Status](https://img.shields.io/badge/status-beta-green.svg)](https://github.com/safal207/Liminal-Presence-Interface-LPI)
 
+**Fast validation path (review-ready):**
+
+```bash
+python scripts/validate_project.py
+node --test tests/vocab.artifacts.test.mjs
+```
+
+## Review Links
+
+- Architecture and specs: `docs/specs/`
+- Security model: `docs/security/THREAT-MODEL.md`
+- Safety framing: `docs/safety/agentic_presence_threat_model.md`
+- Validation snapshot: `VALIDATION_RESULTS.md`
+- Security policy: `SECURITY.md`
+- Contribution process: `CONTRIBUTING.md`
+
 LPI is a Layer 8 protocol for wrapping application messages with structured intent, affect, consent, trust, and memory metadata. In practical terms, it gives agentic systems and human-AI applications a portable envelope for saying not only what was sent, but why it was sent, under what consent, with what trust material, and with what session continuity.
 
 ## Why This Matters
