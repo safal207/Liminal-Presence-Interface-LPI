@@ -1,0 +1,30 @@
+name: Release Gate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Root validation path
+        run: |
+          python scripts/validate_project.py
+          node --test tests/vocab.artifacts.test.mjs
+      - name: Build release notes
+        run: |
+          echo "Release gate passed for $GITHUB_REF" > RELEASE_NOTES.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-gate-notes
+          path: RELEASE_NOTES.txt
