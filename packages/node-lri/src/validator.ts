@@ -11,7 +11,7 @@ let validateFn: ValidateFunction | null = null;
 function getValidator(): ValidateFunction {
   if (!validateFn) {
     const ajv = new Ajv({
-      allErrors: true,
+      allErrors: false,
       strict: false,
       validateSchema: false, // Skip meta-schema validation to support draft 2020-12
       validateFormats: true,
