@@ -24,7 +24,7 @@ jobs:
       - name: Build release notes
         run: |
           echo "Release gate passed for $GITHUB_REF" > RELEASE_NOTES.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-gate-notes
           path: RELEASE_NOTES.txt
