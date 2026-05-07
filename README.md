@@ -16,6 +16,7 @@ node --test tests/vocab.artifacts.test.mjs
 
 ## Review Links
 
+- Grant evidence: `docs/GRANT_EVIDENCE.md`
 - Architecture and specs: `docs/specs/`
 - Security model: `docs/security/THREAT-MODEL.md`
 - Safety framing: `docs/safety/agentic_presence_threat_model.md`
