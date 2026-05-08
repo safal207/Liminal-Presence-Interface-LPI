@@ -39,7 +39,7 @@
     "ajv-formats-draft2019": "^1.6.1",
     "canonicalize": "^3.0.0",
     "cbor": "^10.0.11",
-    "jose": "^6.2.2",
+    "jose": "^6.2.3",
     "tweetnacl": "^1.0.3",
     "ws": "^8.16.0"
   },
