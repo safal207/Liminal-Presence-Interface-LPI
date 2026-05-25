@@ -1,0 +1,16 @@
+title = "Liminal Presence Interface Gitleaks config"
+
+[allowlist]
+description = "Known false positives in example/documentation files"
+
+[[allowlist.regexps]]
+regexp = '''"sig":\s*"eyJhbGciOiJFZERTQSJ9\.\.signature"'''
+
+[[allowlist.regexps]]
+regexp = '''"token":\s*"'''
+
+[[allowlist.regexps]]
+regexp = '''private_key:\s*ed25519\.Ed25519PrivateKey'''
+
+[[allowlist.regexps]]
+regexp = '''Sec-WebSocket-Key'''
