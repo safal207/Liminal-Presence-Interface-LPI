@@ -9,7 +9,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.22.2",
     "node-lri": "file:../../packages/node-lri"
   },
   "devDependencies": {
