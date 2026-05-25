@@ -58,6 +58,7 @@ jobs:
           npm install
 
       - name: Lint
+        if: ${{ matrix.node-version != 18 }}
         run: |
           SDK_DIR="packages/node-lpi"
           if [ ! -d "$SDK_DIR" ]; then
@@ -209,6 +210,7 @@ jobs:
         run: npm install
 
       - name: Lint
+        if: ${{ matrix.node-version != 18 }}
         working-directory: packages/lpictl
         run: npm run lint
 
