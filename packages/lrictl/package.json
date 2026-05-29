@@ -34,7 +34,7 @@
     "@types/inquirer": "^8.2.10",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.59.4",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
